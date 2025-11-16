@@ -15,6 +15,7 @@ body {
   min-height: 100vh;
   display: flex;
   background: #f7fbfc;
+  padding-top: 70px; /* Header 높이만큼 여백 */
 }
 
 /* 사이드바 전체 (근로자 버전) */
@@ -22,14 +23,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;   /* ← 중앙이 아니라 위쪽 기준 */
-  width: 96px;            /* 약간 넓게 */
+  justify-content: flex-start; /* ← 중앙이 아니라 위쪽 기준 */
+  width: 96px; /* 약간 넓게 */
   padding: 40px 0;
   position: fixed;
   left: 0;
-  top: 0;
+  top: 70px; /* Header 아래에 위치 */
   bottom: 0;
-  background: #f7fbfc;    /* 페이지 전체 배경에 맞게 조정 */
+  background: #f7fbfc; /* 페이지 전체 배경에 맞게 조정 */
   z-index: 10;
 }
 
@@ -38,8 +39,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 120px;        /* ← 아이콘 묶음을 위에서 120px 아래로 */
-
+  margin-top: 120px; /* ← 아이콘 묶음을 위에서 120px 아래로 */
 }
 
 /* 기본 상태: 흰 원 + 파란 아이콘 */
@@ -83,11 +83,11 @@ body {
 /* 오른쪽 컨텐츠 영역 */
 .app-main-with-sidebar {
   flex: 1;
-  margin-left: 96px;      /* 사이드바 폭과 맞추기 */
+  margin-left: 96px; /* 사이드바 폭과 맞추기 */
   padding: 32px 48px;
   display: flex;
   flex-direction: column;
-  align-items: center;    /* 가운데 정렬 */
+  align-items: center; /* 가운데 정렬 */
   box-sizing: border-box;
 }
 
