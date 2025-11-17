@@ -15,6 +15,7 @@ body {
   min-height: 100vh;
   display: flex;
   background: #f7fbfc;
+  padding-top: 70px; /* Header 높이만큼 여백 */
 }
 
 /* 사이드바 전체 (고용자 버전) */
@@ -27,7 +28,7 @@ body {
   padding: 40px 0;
   position: fixed;
   left: 0;
-  top: 0;
+  top: 70px; /* Header 아래에 위치 */
   bottom: 0;
   background: #f7fbfc; /* 페이지 전체 배경에 맞게 조정 */
   z-index: 10;
