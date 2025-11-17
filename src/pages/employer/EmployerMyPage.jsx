@@ -91,6 +91,7 @@ export default function EmployerMyPage() {
               <button
                 type="button"
                 className="mypage-nav-li"
+                //페이지 추가 후 경로 변경 필요
                 onClick={() => handleNavClick("/employer/worker-manage")}
               >
                 받은 근무 요청
