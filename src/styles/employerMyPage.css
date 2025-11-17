@@ -1,0 +1,279 @@
+@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap");
+
+.mypage-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mypage-main-heading {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-size: 2rem;
+  color: #2a2a2a;
+  margin: 0;
+}
+
+.mypage-content {
+  width: 100%;
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
+}
+.mypage-nav {
+  width: 300px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: "Do Hyeon", sans-serif;
+  color: #4d4d4d;
+}
+
+.mypage-profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.mypage-avatar-wrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background-color: #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mypage-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mypage-avatar-placeholder {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: #d3d3d3;
+}
+
+.mypage-avatar-camera {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  color: #666666;
+}
+
+.mypage-avatar-camera input {
+  display: none;
+}
+
+.mypage-profile-name {
+  font-size: 1.8rem;
+  font-weight: 400;
+}
+
+.mypage-profile-card hr {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 16px 0 0;
+}
+
+.mypage-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mypage-nav-checked {
+  width: 100%;
+  border: none;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 1.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  font-family: inherit;
+}
+
+.mypage-nav-li {
+  width: 100%;
+  border: none;
+  background-color: #ffffff;
+  color: #848484;
+  font-size: 1.7rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  font-family: inherit;
+}
+
+.mypage-container {
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-sizing: border-box;
+}
+
+.mypage-title {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 2em;
+  margin: 20px;
+  color: #333333;
+  font-weight: bold;
+}
+
+.mypage-basic-info {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  color: #848484;
+  font-size: 1.5em;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px;
+  position: relative;
+}
+
+.mypage-name,
+.mypage-brith,
+.mypage-gender {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mypage-label {
+  display: inline-block;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.mypage-phone {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  color: #848484;
+  font-size: 1.5em;
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  margin: 20px;
+  align-items: center;
+}
+
+.mypage-email {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  color: #848484;
+  font-size: 1.5em;
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  margin: 20px;
+  align-items: center;
+}
+
+.mypage-password {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  color: #848484;
+  font-size: 1.5em;
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  margin: 20px;
+  align-items: center;
+}
+
+.mypage-edit-button {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  width: 70px;
+  background-color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border-color: #d9d9d9;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #848484;
+  margin-left: auto;
+  margin-right: 40px;
+}
+
+.mypage-basic-info .mypage-edit-button {
+  position: absolute;
+  top: 50%;
+  right: 40px;
+  transform: translateY(-50%);
+  margin: 0;
+}
+
+input,
+select {
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1em;
+  padding: 7px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  width: 40%;
+  height: 40px;
+  box-sizing: border-box;
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.mypage-password-input-wrapper {
+  position: relative;
+  width: 40%;
+}
+
+.mypage-password-input-wrapper input {
+  width: 100%;
+  padding-right: 70px;
+}
+
+.mypage-view-button {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #848484;
+  cursor: pointer;
+  padding: 0;
+}
