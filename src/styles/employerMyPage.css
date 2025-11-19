@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap");
 
 .mypage-main {
   width: 100%;
@@ -8,9 +8,10 @@
 }
 
 .mypage-main-heading {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
-  font-size: 2rem;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
   color: #2a2a2a;
   margin: 0;
 }
@@ -86,8 +87,11 @@
 }
 
 .mypage-profile-name {
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
   font-size: 1.8rem;
-  font-weight: 400;
 }
 
 .mypage-profile-card hr {
@@ -112,7 +116,10 @@
   background-color: #ffffff;
   color: #000000;
   font-size: 1.7rem;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
   font-weight: bold;
+  font-style: normal;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
   font-family: inherit;
@@ -124,6 +131,10 @@
   background-color: #ffffff;
   color: #848484;
   font-size: 1.7rem;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
   font-family: inherit;
@@ -139,8 +150,9 @@
 }
 
 .mypage-title {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   font-size: 2em;
   margin: 20px;
@@ -149,8 +161,9 @@
 }
 
 .mypage-basic-info {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -177,8 +190,9 @@
 }
 
 .mypage-phone {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -190,8 +204,9 @@
 }
 
 .mypage-email {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -203,8 +218,9 @@
 }
 
 .mypage-password {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -216,8 +232,9 @@
 }
 
 .mypage-edit-button {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   width: 70px;
   background-color: #ffffff;
@@ -241,8 +258,9 @@
 
 input,
 select {
-  font-family: "Do Hyeon", sans-serif;
-  font-weight: 400;
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
   font-style: normal;
   font-size: 1em;
   padding: 7px;
