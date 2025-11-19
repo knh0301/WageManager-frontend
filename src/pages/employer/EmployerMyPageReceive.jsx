@@ -27,7 +27,6 @@ export default function EmployerMyPageReceive() {
 
   return (
     <div className="mypage-main">
-      <h1 className="mypage-main-heading">마이페이지 - 받은 근무 요청</h1>
       <div className="mypage-content">
         <nav className="mypage-nav">
           <div className="mypage-profile-card">
@@ -88,7 +87,10 @@ export default function EmployerMyPageReceive() {
                     <button type="button" className="mypage-edit-button">
                       승인
                     </button>
-                    <button type="button" className="mypage-edit-button decline">
+                    <button
+                      type="button"
+                      className="mypage-edit-button decline"
+                    >
                       거절
                     </button>
                   </div>
