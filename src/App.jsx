@@ -42,10 +42,6 @@ function App() {
             path="employer-mypage-receive"
             element={<EmployerMyPageReceive />}
           />
-          <Route
-            path="employer-mypage-receive"
-            element={<EmployerMyPageReceive />}
-          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
