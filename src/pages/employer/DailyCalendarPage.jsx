@@ -198,8 +198,11 @@ const buildCalendarCells = (monthDate) => {
 const workplaces = ["맥도날드", "스타벅스", "롯데리아", "버거킹", "KFC"];
 
 export default function DailyCalendarPage() {
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 9, 29));
-  const [displayMonth, setDisplayMonth] = useState(new Date(2025, 9, 1));
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [displayMonth, setDisplayMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
   const [selectedWorkplace, setSelectedWorkplace] = useState("맥도날드");
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -214,6 +217,7 @@ export default function DailyCalendarPage() {
   const dateKey = getDateKey(selectedDate);
   const workplaceSchedules =
     scheduleDataByWorkplaceAndDate[selectedWorkplace] || {};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentScheduleData = workplaceSchedules[dateKey] || [];
 
   const scheduleWithLanes = useMemo(() => {
