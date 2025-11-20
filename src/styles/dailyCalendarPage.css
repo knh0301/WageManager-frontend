@@ -103,12 +103,27 @@
   border: 1px solid #e5ecff;
   border-radius: 20px;
   padding: 24px 0;
-  background-image: linear-gradient(
-    to right,
-    rgba(79, 124, 255, 0.08) 1px,
-    transparent 1px
-  );
-  background-size: calc(100% / 24) 100%;
+  background-image:
+    /* 시간 단위 선 (24개) */
+    linear-gradient(
+      to right,
+      rgba(25, 61, 177, 0.2) 0,
+      rgba(25, 61, 177, 0.2) 1px,
+      transparent 1px,
+      transparent 100%
+    ),
+    /* 30분 단위 얇은 선 (각 시간의 중앙) */
+    linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc(50% - 0.5px),
+        rgba(129, 161, 255, 0.08) calc(50% - 0.5px),
+        rgba(129, 161, 255, 0.08) calc(50% + 0.5px),
+        transparent calc(50% + 0.5px),
+        transparent 100%
+    );
+  background-size: calc(100% / 24) 100%, calc(100% / 24) 100%;
+  background-repeat: repeat;
 }
 
 .daily-shift-block {
