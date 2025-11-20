@@ -56,7 +56,27 @@ export default function MyPage() {
 
   // 임시 정정 요청 데이터
   const [editRequests] = useState([
-    // 나중에 API로 대체
+    {
+      place: "맥도날드",
+      date: "27 월",
+      startTime: "15:00",
+      endTime: "21:00",
+      status: "approved",
+    },
+    {
+      place: "맥도날드",
+      date: "27 월",
+      startTime: "15:00",
+      endTime: "21:00",
+      status: "rejected",
+    },
+    {
+      place: "맥도날드",
+      date: "27 월",
+      startTime: "15:00",
+      endTime: "21:00",
+      status: "pending",
+    },
   ]);
 
   const handleUserUpdate = (updatedUser) => {
@@ -93,13 +113,7 @@ export default function MyPage() {
       case "editRequest":
         return <WorkEditRequestList requests={editRequests} />;
       default:
-        return (
-          <ProfileEdit
-            user={user}
-            profileImage={profileImage}
-            onUserUpdate={handleUserUpdate}
-          />
-        );
+        return null;
     }
   };
 

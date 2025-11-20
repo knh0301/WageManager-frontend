@@ -16,19 +16,6 @@ export default function ProfileBox({
     onProfileImageUpdate(imageUrl);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}.${month}.${day}`;
-  };
-
-  const getGenderText = (gender) => {
-    return gender === "man" ? "남성" : "여성";
-  };
-
   return (
     <nav className="worker-mypage-nav">
       <div className="worker-mypage-profile-card">
@@ -54,15 +41,7 @@ export default function ProfileBox({
               />
             </label>
           </div>
-          <div className="worker-mypage-profile-info">
-            <div className="worker-mypage-profile-name">{user.name}</div>
-            <div className="worker-mypage-profile-birth">
-              {formatDate(user.birthDate)}
-            </div>
-            <div className="worker-mypage-profile-gender">
-              {getGenderText(user.gender)}
-            </div>
-          </div>
+          <div className="worker-mypage-profile-name">{user.name}</div>
         </div>
         <hr />
       </div>

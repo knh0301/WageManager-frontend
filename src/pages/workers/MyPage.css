@@ -35,7 +35,8 @@
 
 .worker-mypage-profile-info-wrapper {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   gap: 16px;
 }
 
@@ -95,30 +96,14 @@
   display: none;
 }
 
-.worker-mypage-profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
 .worker-mypage-profile-name {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-family: "Noto Sans KR", sans-serif;
   font-optical-sizing: auto;
   font-weight: bold;
   font-style: normal;
   color: #000000;
-}
-
-.worker-mypage-profile-birth,
-.worker-mypage-profile-gender {
-  font-size: 0.9rem;
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: normal;
-  font-style: normal;
-  color: #848484;
+  text-align: center;
 }
 
 .worker-mypage-profile-card hr {
