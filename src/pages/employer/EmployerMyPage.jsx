@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
 import "../../styles/employerMyPage.css";
-
 export default function EmployerMyPage() {
   const initialUser = {
     name: "김나현",
@@ -12,7 +11,6 @@ export default function EmployerMyPage() {
     email: "abc@gmail.com",
     password: "password123",
   };
-
   const [user, setUser] = useState(initialUser);
   const [editableSections, setEditableSections] = useState({
     basic: false,
@@ -23,35 +21,29 @@ export default function EmployerMyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const navigate = useNavigate();
-
   const toggleEdit = (section) => {
     setEditableSections((prev) => ({
       ...prev,
       [section]: !prev[section],
     }));
   };
-
   const handleChange = (field, value) => {
     setUser((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-
   const handleProfileImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const imageUrl = URL.createObjectURL(file);
     setProfileImage(imageUrl);
   };
-
   const handleNavClick = (path) => {
     navigate(path);
   };
-
   return (
     <div className="mypage-main">
-      <h1 className="mypage-main-heading">마이페이지 - 내 프로필 수정</h1>
       <div className="mypage-content">
         <nav className="mypage-nav">
           <div className="mypage-profile-card">
@@ -91,8 +83,9 @@ export default function EmployerMyPage() {
               <button
                 type="button"
                 className="mypage-nav-li"
-                //페이지 추가 후 경로 변경 필요
-                onClick={() => handleNavClick("/employer/worker-manage")}
+                onClick={() =>
+                  handleNavClick("/employer/employer-mypage-receive")
+                }
               >
                 받은 근무 요청
               </button>

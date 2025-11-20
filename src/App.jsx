@@ -10,6 +10,7 @@ import DailyCalendarPage from "./pages/employer/DailyCalendarPage.jsx";
 import RemittanceManagePage from "./pages/employer/RemittanceManagePage.jsx";
 import WorkerManagePage from "./pages/employer/WorkerManagePage.jsx";
 import EmployerMyPage from "./pages/employer/EmployerMyPage.jsx";
+import EmployerMyPageReceive from "./pages/employer/EmployerMyPageReceive.jsx";
 
 function App() {
   return (
@@ -37,6 +38,10 @@ function App() {
           <Route path="remittance-manage" element={<RemittanceManagePage />} />
           <Route path="worker-manage" element={<WorkerManagePage />} />
           <Route path="employer-mypage" element={<EmployerMyPage />} />
+          <Route
+            path="employer-mypage-receive"
+            element={<EmployerMyPageReceive />}
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
