@@ -433,6 +433,31 @@ export default function DailyCalendarPage() {
 
   // 타임라인 블록 선택 토글
   const handleShiftClick = (shiftId) => {
+    // 클릭한 근무 찾기
+    const clickedShift = currentScheduleData.find((shift) => shift.id === shiftId);
+    
+    // 익일 근무인지 확인 (00:00에 시작하는 경우)
+    if (clickedShift && clickedShift.startHour === 0 && clickedShift.start === "00:00") {
+      // 전날 날짜 계산
+      const prevDate = new Date(selectedDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevDateKey = getDateKey(prevDate);
+      const prevScheduleData = workplaceSchedules[prevDateKey] || [];
+      
+      // 전날 같은 직원의 익일로 넘어가는 근무 찾기
+      const prevDayShift = prevScheduleData.find(
+        (shift) => shift.name === clickedShift.name && shift.crossesMidnight
+      );
+      
+      if (prevDayShift) {
+        // 전날 날짜로 이동하고 전날 근무 선택
+        setSelectedDate(prevDate);
+        setActiveShiftId(prevDayShift.id);
+        return;
+      }
+    }
+    
+    // 일반적인 경우
     setActiveShiftId((prev) => (prev === shiftId ? null : shiftId));
   };
 
