@@ -45,7 +45,7 @@ export default function WorkEditRequestList({ requests }) {
           ))
         ) : (
           <p className="worker-mypage-empty">
-            보낸 근무 기록 정정 요청이 없습니다.
+            보낸 근무 요청이 없습니다.
           </p>
         )}
       </div>
