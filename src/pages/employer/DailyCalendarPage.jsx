@@ -171,7 +171,7 @@ export default function DailyCalendarPage() {
   );
 
   // 근무지 리스트 (백엔드에서 받아올 예정)
-  const [workplaces, setWorkplaces] = useState(initialWorkplaces);
+  const [workplaces] = useState(initialWorkplaces);
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1); // 기본값: 맥도날드 잠실점 ID
 
   // 선택된 근무지 정보
@@ -217,7 +217,10 @@ export default function DailyCalendarPage() {
   // TODO: 백엔드 연동 시 scheduleData 구조 변경 필요
   // 현재: scheduleData[근무지이름][날짜] = [근무리스트]
   // 변경 예정: scheduleData[근무지ID][날짜] = [근무리스트] 또는 API 호출
-  const workplaceSchedules = scheduleData[selectedWorkplace] || {};
+  const workplaceSchedules = useMemo(
+    () => scheduleData[selectedWorkplace] || {},
+    [scheduleData, selectedWorkplace]
+  );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentScheduleData = workplaceSchedules[dateKey] || [];
 
@@ -294,7 +297,13 @@ export default function DailyCalendarPage() {
       setEditedShift(null);
     }
     setIsEditing(false);
-  }, [activeShiftId, activeShift, selectedDate, workplaceSchedules]);
+  }, [
+    activeShiftId,
+    activeShift,
+    selectedDate,
+    workplaceSchedules,
+    displayShift,
+  ]);
 
   // 월 달력 셀 캐싱
   const calendarCells = useMemo(
@@ -690,15 +699,6 @@ export default function DailyCalendarPage() {
     if (!timeString) return 0;
     const [hour = "0", minute = "0"] = timeString.split(":");
     return Number(hour) + Number(minute) / 60;
-  };
-
-  const decimalToTimeString = (decimal) => {
-    const hour = Math.floor(decimal);
-    const minute = Math.round((decimal - hour) * 60);
-    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(
-      2,
-      "0"
-    )}`;
   };
 
   const handleTimeChange = (field, value) => {
