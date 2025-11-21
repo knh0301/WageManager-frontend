@@ -194,25 +194,6 @@ export default function ProfileEdit({ user, onUserUpdate }) {
                 </span>
               )}
             </div>
-            <div className="worker-mypage-birth">
-              <span className="worker-mypage-label">생년월일</span>
-              <input
-                type="date"
-                value={localUser.birthDate}
-                onChange={(e) => handleChange("birthDate", e.target.value)}
-              />
-            </div>
-            <div className="worker-mypage-gender">
-              <span className="worker-mypage-label">성별</span>
-              <select
-                name="gender"
-                value={localUser.gender}
-                onChange={(e) => handleChange("gender", e.target.value)}
-              >
-                <option value="man">남성</option>
-                <option value="woman">여성</option>
-              </select>
-            </div>
           </div>
         )}
       </div>
