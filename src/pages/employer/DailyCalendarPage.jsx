@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import "../../styles/dailyCalendarPage.css";
+import { initialScheduleData, initialWorkplaces } from "./dummyData";
 
 // 날짜를 키(YYYY-MM-DD) 문자열로 변환
 const getDateKey = (date) => {
@@ -8,147 +9,6 @@ const getDateKey = (date) => {
     2,
     "0"
   )}-${String(date.getDate()).padStart(2, "0")}`;
-};
-
-// TODO: 백엔드 연동 시 제거할 임시 더미 데이터
-const initialScheduleData = {
-  맥도날드: {
-    "2025-11-21": [
-      {
-        id: 1,
-        name: "오지환",
-        start: "07:00",
-        end: "16:00",
-        startHour: 7,
-        durationHours: 9,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 60,
-        hourlyWage: 11000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 2,
-        name: "문보경",
-        start: "04:30",
-        end: "14:30",
-        startHour: 4.5,
-        durationHours: 10,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 45,
-        hourlyWage: 10500,
-        allowances: {
-          overtime: { enabled: true, rate: 125 },
-          night: { enabled: true, rate: 150 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 3,
-        name: "홍창기",
-        start: "10:00",
-        end: "15:00",
-        startHour: 10,
-        durationHours: 5,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 30,
-        hourlyWage: 10000,
-        allowances: {
-          overtime: { enabled: false, rate: 0 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: false,
-        withholdingTax: false,
-      },
-      {
-        id: 4,
-        name: "신민재",
-        start: "12:00",
-        end: "17:00",
-        startHour: 12,
-        durationHours: 5,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 30,
-        hourlyWage: 11500,
-        allowances: {
-          overtime: { enabled: false, rate: 0 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: true, rate: 150 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 5,
-        name: "오스틴",
-        start: "12:00",
-        end: "19:00",
-        startHour: 12,
-        durationHours: 7,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 45,
-        hourlyWage: 13000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: true, rate: 150 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: false,
-      },
-    ],
-  },
-  스타벅스: {
-    "2025-11-21": [
-      {
-        id: 6,
-        name: "김민수",
-        start: "08:00",
-        end: "16:00",
-        startHour: 8,
-        durationHours: 8,
-        workplaceDetail: "스타벅스 강남역점",
-        breakMinutes: 30,
-        hourlyWage: 12000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: true, rate: 150 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 7,
-        name: "이지은",
-        start: "09:00",
-        end: "17:00",
-        startHour: 9,
-        durationHours: 8,
-        workplaceDetail: "스타벅스 강남역점",
-        breakMinutes: 30,
-        hourlyWage: 12500,
-        allowances: {
-          overtime: { enabled: true, rate: 125 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-    ],
-  },
-  롯데리아: {},
-  버거킹: {},
-  KFC: {},
 };
 
 // 수당 유형 정의
@@ -298,9 +158,6 @@ const buildCalendarCells = (monthDate) => {
   return cells;
 };
 
-// 더미 지점 목록
-const workplaces = ["맥도날드", "스타벅스", "롯데리아", "버거킹", "KFC"];
-
 export default function DailyCalendarPage() {
   const today = new Date();
   // 화면 전반에서 사용하는 상태들
@@ -308,7 +165,15 @@ export default function DailyCalendarPage() {
   const [displayMonth, setDisplayMonth] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
-  const [selectedWorkplace, setSelectedWorkplace] = useState("맥도날드");
+
+  // 근무지 리스트 (백엔드에서 받아올 예정)
+  const [workplaces, setWorkplaces] = useState(initialWorkplaces);
+  const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1); // 기본값: 맥도날드 잠실점 ID
+
+  // 선택된 근무지 정보
+  const selectedWorkplace =
+    workplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [scheduleData, setScheduleData] = useState(() =>
@@ -316,6 +181,24 @@ export default function DailyCalendarPage() {
   );
   const [editedShift, setEditedShift] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showWorkerListModal, setShowWorkerListModal] = useState(false);
+
+  // TODO: 백엔드 연동 시 근무지 리스트와 스케줄 데이터를 API에서 받아오기
+  // useEffect(() => {
+  //   const fetchWorkplaces = async () => {
+  //     try {
+  //       const response = await fetch('/api/workplaces');
+  //       const data = await response.json();
+  //       setWorkplaces(data.workplaces);
+  //       if (data.workplaces.length > 0) {
+  //         setSelectedWorkplaceId(data.workplaces[0].id);
+  //       }
+  //     } catch (error) {
+  //       console.error('근무지 리스트 로딩 실패:', error);
+  //     }
+  //   };
+  //   fetchWorkplaces();
+  // }, []);
 
   // 현재 시간 실시간 업데이트 (우측 카드 표시용)
   useEffect(() => {
@@ -327,6 +210,9 @@ export default function DailyCalendarPage() {
   }, []);
 
   const dateKey = getDateKey(selectedDate);
+  // TODO: 백엔드 연동 시 scheduleData 구조 변경 필요
+  // 현재: scheduleData[근무지이름][날짜] = [근무리스트]
+  // 변경 예정: scheduleData[근무지ID][날짜] = [근무리스트] 또는 API 호출
   const workplaceSchedules = scheduleData[selectedWorkplace] || {};
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const currentScheduleData = workplaceSchedules[dateKey] || [];
@@ -434,21 +320,27 @@ export default function DailyCalendarPage() {
   // 타임라인 블록 선택 토글
   const handleShiftClick = (shiftId) => {
     // 클릭한 근무 찾기
-    const clickedShift = currentScheduleData.find((shift) => shift.id === shiftId);
-    
+    const clickedShift = currentScheduleData.find(
+      (shift) => shift.id === shiftId
+    );
+
     // 익일 근무인지 확인 (00:00에 시작하는 경우)
-    if (clickedShift && clickedShift.startHour === 0 && clickedShift.start === "00:00") {
+    if (
+      clickedShift &&
+      clickedShift.startHour === 0 &&
+      clickedShift.start === "00:00"
+    ) {
       // 전날 날짜 계산
       const prevDate = new Date(selectedDate);
       prevDate.setDate(prevDate.getDate() - 1);
       const prevDateKey = getDateKey(prevDate);
       const prevScheduleData = workplaceSchedules[prevDateKey] || [];
-      
+
       // 전날 같은 직원의 익일로 넘어가는 근무 찾기
       const prevDayShift = prevScheduleData.find(
         (shift) => shift.name === clickedShift.name && shift.crossesMidnight
       );
-      
+
       if (prevDayShift) {
         // 전날 날짜로 이동하고 전날 근무 선택
         setSelectedDate(prevDate);
@@ -456,9 +348,79 @@ export default function DailyCalendarPage() {
         return;
       }
     }
-    
+
     // 일반적인 경우
     setActiveShiftId((prev) => (prev === shiftId ? null : shiftId));
+  };
+
+  // 해당 근무지의 모든 직원 리스트 가져오기
+  const getWorkersInWorkplace = () => {
+    const workplace = scheduleData[selectedWorkplace] || {};
+    const workerSet = new Set();
+
+    // 모든 날짜의 근무 데이터를 순회하며 직원 이름 수집
+    Object.values(workplace).forEach((dateShifts) => {
+      if (Array.isArray(dateShifts)) {
+        dateShifts.forEach((shift) => {
+          if (shift.name) {
+            workerSet.add(shift.name);
+          }
+        });
+      }
+    });
+
+    return Array.from(workerSet).sort();
+  };
+
+  // 근무자 추가 핸들러 - 모달 열기
+  const handleAddShift = () => {
+    setShowWorkerListModal(true);
+  };
+
+  // 직원 선택 후 근무 추가
+  const handleSelectWorker = (workerName) => {
+    const newShiftId = generateShiftId(scheduleData);
+    const dateKeyToAdd = getDateKey(selectedDate);
+
+    // TODO: 백엔드 연동 시 근무지 상세 정보(workplaceDetail)를 API에서 받아와야 할 수 있음
+    const newShift = {
+      id: newShiftId,
+      name: workerName,
+      start: "09:00",
+      end: "18:00",
+      startHour: 9,
+      durationHours: 9,
+      workplaceDetail: selectedWorkplace, // 현재는 근무지 이름 사용, 백엔드 연동 시 상세 정보 필요
+      breakMinutes: 60,
+      hourlyWage: 10000,
+      allowances: {
+        overtime: { enabled: false, rate: 150 },
+        night: { enabled: false, rate: 0 },
+        holiday: { enabled: false, rate: 0 },
+      },
+      socialInsurance: false,
+      withholdingTax: false,
+      crossesMidnight: false,
+    };
+
+    setScheduleData((prev) => {
+      const workplace = prev[selectedWorkplace] || {};
+      const currentList = workplace[dateKeyToAdd] || [];
+
+      return {
+        ...prev,
+        [selectedWorkplace]: {
+          ...workplace,
+          [dateKeyToAdd]: [...currentList, newShift],
+        },
+      };
+    });
+
+    // 새로 추가한 근무를 선택하고 편집 모드로 진입
+    setActiveShiftId(newShiftId);
+    setEditedShift(cloneShiftWithDefaults(newShift));
+    setIsEditing(true);
+    setShowWorkerListModal(false);
   };
 
   // 편집 모드 진입/취소/저장 로직
@@ -472,6 +434,66 @@ export default function DailyCalendarPage() {
   const handleCancelEdit = () => {
     setEditedShift(cloneShiftWithDefaults(activeShift));
     setIsEditing(false);
+  };
+
+  // 근무자 삭제 핸들러
+  const handleDeleteShift = () => {
+    if (!activeShiftId || !activeShift) return;
+
+    // 삭제 확인
+    if (!window.confirm(`${activeShift.name} 근무자를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    const dateKeyToDelete = getDateKey(selectedDate);
+
+    setScheduleData((prev) => {
+      const workplace = prev[selectedWorkplace] || {};
+      const currentList = workplace[dateKeyToDelete] || [];
+
+      // 당일 근무 삭제
+      let updatedList = currentList.filter(
+        (shift) => shift.id !== activeShiftId
+      );
+
+      // 익일로 넘어가는 근무인 경우 익일 근무도 삭제
+      if (activeShift.crossesMidnight) {
+        const nextDate = new Date(selectedDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextKey = getDateKey(nextDate);
+        const nextList = workplace[nextKey] || [];
+
+        // 익일 근무 찾아서 삭제
+        const nextDayShift = nextList.find(
+          (shift) => shift.name === activeShift.name && shift.start === "00:00"
+        );
+
+        if (nextDayShift) {
+          const updatedNextList = nextList.filter(
+            (shift) => shift.id !== nextDayShift.id
+          );
+          return {
+            ...prev,
+            [selectedWorkplace]: {
+              ...workplace,
+              [dateKeyToDelete]: updatedList,
+              [nextKey]: updatedNextList,
+            },
+          };
+        }
+      }
+
+      return {
+        ...prev,
+        [selectedWorkplace]: {
+          ...workplace,
+          [dateKeyToDelete]: updatedList,
+        },
+      };
+    });
+
+    // 삭제 후 패널 닫기
+    setActiveShiftId(null);
   };
 
   const updateEditedShift = (field, value) => {
@@ -615,7 +637,7 @@ export default function DailyCalendarPage() {
     });
 
     setIsEditing(false);
-    
+
     // 저장 후 상태 업데이트
     if (crossesMidnight) {
       // 익일 근무가 생성/업데이트되었으므로 전날 근무의 ID로 변경
@@ -713,12 +735,12 @@ export default function DailyCalendarPage() {
           <div className="daily-header-left">
             <select
               className="daily-workplace-select"
-              value={selectedWorkplace}
-              onChange={(e) => setSelectedWorkplace(e.target.value)}
+              value={selectedWorkplaceId}
+              onChange={(e) => setSelectedWorkplaceId(Number(e.target.value))}
             >
               {workplaces.map((workplace) => (
-                <option key={workplace} value={workplace}>
-                  {workplace}
+                <option key={workplace.id} value={workplace.id}>
+                  {workplace.name}
                 </option>
               ))}
             </select>
@@ -731,7 +753,11 @@ export default function DailyCalendarPage() {
               스케줄표
             </h2>
           </div>
-          <button type="button" className="daily-add-button">
+          <button
+            type="button"
+            className="daily-add-button"
+            onClick={handleAddShift}
+          >
             + 근무자 추가하기
           </button>
         </div>
@@ -783,7 +809,9 @@ export default function DailyCalendarPage() {
                   <div className="detail-header-left">
                     <div>
                       <p className="detail-label">근무자</p>
-                      <h3 className="detail-name">{activeShift.name}</h3>
+                      <h3 className="detail-name">
+                        {shiftForDisplay?.name || activeShift.name}
+                      </h3>
                     </div>
                     <div>
                       <p className="detail-label">근무지</p>
@@ -811,13 +839,22 @@ export default function DailyCalendarPage() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        type="button"
-                        className="detail-edit-button"
-                        onClick={handleStartEdit}
-                      >
-                        정보 수정
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          className="detail-edit-button"
+                          onClick={handleStartEdit}
+                        >
+                          정보 수정
+                        </button>
+                        <button
+                          type="button"
+                          className="detail-delete-button"
+                          onClick={handleDeleteShift}
+                        >
+                          삭제
+                        </button>
+                      </>
                     )}
                     <button
                       type="button"
@@ -1161,6 +1198,46 @@ export default function DailyCalendarPage() {
           </ul>
         </div>
       </aside>
+      {/* 직원 선택 모달 */}
+      {showWorkerListModal && (
+        <div
+          className="worker-list-modal-overlay"
+          onClick={() => setShowWorkerListModal(false)}
+        >
+          <div
+            className="worker-list-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="worker-list-modal-header">
+              <h3>근무자 선택</h3>
+              <button
+                type="button"
+                className="worker-list-modal-close"
+                onClick={() => setShowWorkerListModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="worker-list-modal-body">
+              {getWorkersInWorkplace().length > 0 ? (
+                <ul className="worker-list">
+                  {getWorkersInWorkplace().map((workerName) => (
+                    <li
+                      key={workerName}
+                      className="worker-list-item"
+                      onClick={() => handleSelectWorker(workerName)}
+                    >
+                      {workerName}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="worker-list-empty">등록된 근무자가 없습니다.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
