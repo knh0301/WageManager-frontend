@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { FaCamera, FaUser } from "react-icons/fa";
 import "../../../pages/workers/MyPage.css";
@@ -9,10 +10,26 @@ export default function ProfileBox({
   activeTab,
   onTabChange,
 }) {
+  const previousImageUrlRef = useRef(null);
+
+  // 컴포넌트 언마운트 시 blob URL 정리
+  useEffect(() => {
+    return () => {
+      if (previousImageUrlRef.current) {
+        URL.revokeObjectURL(previousImageUrlRef.current);
+      }
+    };
+  }, []);
+
   const handleProfileImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    // 이전 blob URL 해제
+    if (previousImageUrlRef.current) {
+      URL.revokeObjectURL(previousImageUrlRef.current);
+    }
     const imageUrl = URL.createObjectURL(file);
+    previousImageUrlRef.current = imageUrl;
     onProfileImageUpdate(imageUrl);
   };
 
