@@ -704,6 +704,19 @@ export default function DailyCalendarPage() {
   const formatBreakTime = (minutes) =>
     typeof minutes === "number" ? `${minutes}분` : "-";
 
+  const formatDuration = (hours) => {
+    if (typeof hours !== "number") return "-";
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+    if (minutes === 0) {
+      return `${wholeHours}시간`;
+    }
+    if (minutes === 60) {
+      return `${wholeHours + 1}시간`;
+    }
+    return `${wholeHours}시간 ${minutes}분`;
+  };
+
   const timeStringToDecimal = (timeString) => {
     if (!timeString) return 0;
     const [hour = "0", minute = "0"] = timeString.split(":");
@@ -817,7 +830,7 @@ export default function DailyCalendarPage() {
                 >
                   <div className="shift-name">{item.name}</div>
                   <div className="shift-time">{`${item.start} - ${item.end}`}</div>
-                  <div className="shift-duration">{item.durationHours}시간</div>
+                  <div className="shift-duration">{formatDuration(item.durationHours)}</div>
                 </div>
               );
             })}
@@ -905,7 +918,7 @@ export default function DailyCalendarPage() {
                   <div>
                     <p className="detail-label">총 근무</p>
                     <p className="detail-value">
-                      {shiftForDisplay?.durationHours}시간
+                      {formatDuration(shiftForDisplay?.durationHours)}
                     </p>
                   </div>
                   <div>
