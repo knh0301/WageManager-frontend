@@ -101,6 +101,7 @@ TimeInput.propTypes = {
   allowMidnight: PropTypes.bool,
 };
 
+//근무자 추가 시 새로운 ID 생성
 const generateShiftId = (data) => {
   let maxId = 0;
   Object.values(data).forEach((workplace) => {
@@ -186,7 +187,7 @@ export default function DailyCalendarPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showWorkerListModal, setShowWorkerListModal] = useState(false);
 
-  // 현재 시간 실시간 업데이트 (우측 카드 표시용)
+  // 현재 시간 실시간 업데이트 (현재 근무 중 박스)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -197,8 +198,6 @@ export default function DailyCalendarPage() {
 
   const dateKey = getDateKey(selectedDate);
   // TODO: 백엔드 연동 시 scheduleData 구조 변경 필요
-  // 현재: scheduleData[근무지이름][날짜] = [근무리스트]
-  // 변경 예정: scheduleData[근무지ID][날짜] = [근무리스트] 또는 API 호출
   const workplaceSchedules = useMemo(
     () => scheduleData[selectedWorkplace] || {},
     [scheduleData, selectedWorkplace]
@@ -262,13 +261,12 @@ export default function DailyCalendarPage() {
   const previousScheduleData = workplaceSchedules[previousDateKey] || [];
 
   // 익일 근무이고 시작 시간이 0시인 경우 전날 근무 찾기
-  const isOvernightShift =
-    activeShift && activeShift.startHour === 0 && activeShift.start === "00:00";
-  const previousDayShift = isOvernightShift
-    ? previousScheduleData.find(
-        (shift) => shift.name === activeShift.name && shift.crossesMidnight
-      )
-    : null;
+  const previousDayShift =
+    activeShift && activeShift.startHour === 0 && activeShift.start === "00:00"
+      ? previousScheduleData.find(
+          (shift) => shift.name === activeShift.name && shift.crossesMidnight
+        )
+      : null;
 
   // 표시할 근무 정보 (익일 근무면 전날 근무 정보 사용)
   const displayShift = previousDayShift || activeShift;
@@ -346,28 +344,10 @@ export default function DailyCalendarPage() {
   };
 
   // 해당 근무지의 모든 직원 리스트 가져오기
-  const getWorkersInWorkplace = () => {
-    const predefinedList = workplaceWorkers[selectedWorkplaceId] || [];
-    if (predefinedList.length > 0) {
-      return predefinedList;
-    }
-
-    const workplace = scheduleData[selectedWorkplace] || {};
-    const workerSet = new Set();
-
-    // 모든 날짜의 근무 데이터를 순회하며 직원 이름 수집 (백업)
-    Object.values(workplace).forEach((dateShifts) => {
-      if (Array.isArray(dateShifts)) {
-        dateShifts.forEach((shift) => {
-          if (shift.name) {
-            workerSet.add(shift.name);
-          }
-        });
-      }
-    });
-
-    return Array.from(workerSet).sort();
-  };
+  const workersInWorkplace = useMemo(
+    () => workplaceWorkers[selectedWorkplaceId] || [],
+    [selectedWorkplaceId]
+  );
 
   // 근무자 추가 핸들러 - 모달 열기
   const handleAddShift = () => {
@@ -431,8 +411,6 @@ export default function DailyCalendarPage() {
   const handleCancelEdit = () => {
     if (displayShift) {
       setEditedShift(cloneShiftWithDefaults(displayShift));
-    } else {
-      setEditedShift(null);
     }
     setIsEditing(false);
   };
@@ -523,7 +501,7 @@ export default function DailyCalendarPage() {
     if (!editedShift || !activeShiftId) return;
 
     // 익일 근무를 클릭한 경우 전날 근무의 ID와 날짜 사용
-    const shiftToUpdate = previousDayShift || displayShift || activeShift;
+    const shiftToUpdate = displayShift;
     const actualShiftId = shiftToUpdate?.id || activeShiftId;
     const actualDate = previousDayShift ? previousDate : selectedDate;
     const dateKeyToUpdate = getDateKey(actualDate);
@@ -710,7 +688,6 @@ export default function DailyCalendarPage() {
         : endDecimal - startDecimal;
 
       next.startHour = startDecimal;
-      // 계산된 시간을 그대로 사용 (최소 시간 제한 제거)
       next.durationHours = Math.max(totalDuration, 0);
       next.crossesMidnight = crossesMidnight;
       next.nextDayEndHour = endDecimal === 24 ? 0 : endDecimal;
@@ -806,129 +783,92 @@ export default function DailyCalendarPage() {
             })}
           </div>
           {/* 근무 블록을 선택하면 토글되는 상세/편집 패널 */}
-          <div className={`shift-detail-panel ${activeShift ? "open" : ""}`}>
-            {activeShift ? (
-              <>
-                <div className="detail-header">
-                  <div className="detail-header-left">
-                    <div>
-                      <p className="detail-label">근무자</p>
-                      <h3 className="detail-name">
-                        {shiftForDisplay?.name || activeShift.name}
-                      </h3>
-                    </div>
-                    <div>
-                      <p className="detail-label">근무지</p>
-                      <p className="detail-value">
-                        {activeShift.workplaceDetail || selectedWorkplace}
-                      </p>
-                    </div>
+          {activeShift && (
+            <div className="shift-detail-panel open">
+              <div className="detail-header">
+                <div className="detail-header-left">
+                  <div>
+                    <p className="detail-label">근무자</p>
+                    <h3 className="detail-name">{shiftForDisplay?.name}</h3>
                   </div>
-                  <div className="detail-header-actions">
-                    {isEditing ? (
-                      <>
-                        <button
-                          type="button"
-                          className="detail-cancel-button"
-                          onClick={handleCancelEdit}
-                        >
-                          취소
-                        </button>
-                        <button
-                          type="button"
-                          className="detail-save-button"
-                          onClick={handleSaveShift}
-                        >
-                          저장
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          className="detail-edit-button"
-                          onClick={handleStartEdit}
-                        >
-                          정보 수정
-                        </button>
-                        <button
-                          type="button"
-                          className="detail-delete-button"
-                          onClick={handleDeleteShift}
-                        >
-                          삭제
-                        </button>
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      className="detail-close-button"
-                      onClick={() => {
-                        setActiveShiftId(null);
-                        setIsEditing(false);
-                        setEditedShift(null);
-                      }}
-                    >
-                      닫기
-                    </button>
+                  <div>
+                    <p className="detail-label">근무지</p>
+                    <p className="detail-value">
+                      {activeShift.workplaceDetail || selectedWorkplace}
+                    </p>
                   </div>
                 </div>
-                <div className="detail-grid">
-                  <div>
-                    <p className="detail-label">근무 날짜</p>
-                    <p className="detail-value">{formattedSelectedDate}</p>
-                  </div>
-                  <div>
-                    <p className="detail-label">근무 시간</p>
-                    {isEditing ? (
-                      <div className="time-wheel-wrapper">
-                        <TimeInput
-                          label="시작"
-                          value={editedShift?.start || "00:00"}
-                          onChange={(val) => handleTimeChange("start", val)}
-                        />
-                        <TimeInput
-                          label="종료"
-                          value={editedShift?.end || "00:00"}
-                          onChange={(val) => handleTimeChange("end", val)}
-                          allowMidnight
-                        />
-                      </div>
-                    ) : (
-                      <p className="detail-value">
-                        {(() => {
-                          // 익일 근무를 클릭한 경우 (전날 근무가 displayShift인 경우)
-                          if (
-                            previousDayShift &&
-                            activeShift &&
-                            activeShift.start === "00:00"
-                          ) {
-                            return `${previousDayShift.start}~${activeShift.end}(익일)`;
-                          }
-                          // 전날 근무를 클릭한 경우 (crossesMidnight가 true인 경우)
-                          if (shiftForDisplay?.crossesMidnight) {
-                            const nextDate = new Date(selectedDate);
-                            nextDate.setDate(nextDate.getDate() + 1);
-                            const nextDateKey = getDateKey(nextDate);
-                            const nextScheduleData =
-                              workplaceSchedules[nextDateKey] || [];
-                            const nextDayShift = nextScheduleData.find(
-                              (shift) =>
-                                shift.name === shiftForDisplay?.name &&
-                                shift.start === "00:00"
-                            );
-                            if (nextDayShift) {
-                              return `${shiftForDisplay?.start}~${nextDayShift.end}(익일)`;
-                            }
-                            return `${shiftForDisplay?.start}~${shiftForDisplay?.end}(익일)`;
-                          }
-                          return `${shiftForDisplay?.start}~${shiftForDisplay?.end}`;
-                        })()}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="detail-label">총 근무</p>
+                <div className="detail-header-actions">
+                  {isEditing ? (
+                    <>
+                      <button
+                        type="button"
+                        className="detail-cancel-button"
+                        onClick={handleCancelEdit}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="detail-save-button"
+                        onClick={handleSaveShift}
+                      >
+                        저장
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="detail-edit-button"
+                        onClick={handleStartEdit}
+                      >
+                        정보 수정
+                      </button>
+                      <button
+                        type="button"
+                        className="detail-delete-button"
+                        onClick={handleDeleteShift}
+                      >
+                        삭제
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="detail-close-button"
+                    onClick={() => {
+                      setActiveShiftId(null);
+                      setIsEditing(false);
+                      setEditedShift(null);
+                    }}
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+              <div className="detail-grid">
+                <div>
+                  <p className="detail-label">근무 날짜</p>
+                  <p className="detail-value">{formattedSelectedDate}</p>
+                </div>
+                <div>
+                  <p className="detail-label">근무 시간</p>
+                  {isEditing ? (
+                    <div className="time-wheel-wrapper">
+                      <TimeInput
+                        label="시작"
+                        value={editedShift?.start || "00:00"}
+                        onChange={(val) => handleTimeChange("start", val)}
+                      />
+                      <TimeInput
+                        label="종료"
+                        value={editedShift?.end || "00:00"}
+                        onChange={(val) => handleTimeChange("end", val)}
+                        allowMidnight
+                      />
+                    </div>
+                  ) : (
                     <p className="detail-value">
                       {(() => {
                         // 익일 근무를 클릭한 경우 (전날 근무가 displayShift인 경우)
@@ -937,10 +877,7 @@ export default function DailyCalendarPage() {
                           activeShift &&
                           activeShift.start === "00:00"
                         ) {
-                          const totalHours =
-                            previousDayShift.durationHours +
-                            activeShift.durationHours;
-                          return formatDuration(totalHours);
+                          return `${previousDayShift.start}~${activeShift.end}(익일)`;
                         }
                         // 전날 근무를 클릭한 경우 (crossesMidnight가 true인 경우)
                         if (shiftForDisplay?.crossesMidnight) {
@@ -955,176 +892,197 @@ export default function DailyCalendarPage() {
                               shift.start === "00:00"
                           );
                           if (nextDayShift) {
-                            const totalHours =
-                              shiftForDisplay?.durationHours +
-                              nextDayShift.durationHours;
-                            return formatDuration(totalHours);
+                            return `${shiftForDisplay?.start}~${nextDayShift.end}(익일)`;
                           }
+                          return `${shiftForDisplay?.start}~${shiftForDisplay?.end}(익일)`;
                         }
-                        return formatDuration(shiftForDisplay?.durationHours);
+                        return `${shiftForDisplay?.start}~${shiftForDisplay?.end}`;
                       })()}
                     </p>
-                  </div>
-                  <div>
-                    <p className="detail-label">휴게 시간</p>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        className="detail-input"
-                        value={editedShift?.breakMinutes ?? ""}
-                        onChange={(e) =>
-                          updateEditedShift(
-                            "breakMinutes",
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    ) : (
-                      <p className="detail-value">
-                        {formatBreakTime(shiftForDisplay?.breakMinutes)}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="detail-label">시급</p>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        className="detail-input"
-                        value={editedShift?.hourlyWage ?? ""}
-                        onChange={(e) =>
-                          updateEditedShift(
-                            "hourlyWage",
-                            Number(e.target.value)
-                          )
-                        }
-                      />
-                    ) : (
-                      <p className="detail-value">
-                        {formatCurrency(shiftForDisplay?.hourlyWage)}
-                      </p>
-                    )}
-                  </div>
+                  )}
                 </div>
-                <div className="detail-section">
-                  <p className="detail-label">수당 정보</p>
-                  <ul className="allowance-list">
-                    {allowanceDefinitions.map(({ key, label }) => {
-                      const allowance = (isEditing ? editedShift : activeShift)
-                        ?.allowances?.[key] || {
-                        enabled: false,
-                        rate: 0,
-                      };
-                      return (
-                        <li
-                          key={key}
-                          className={`allowance-item ${
-                            allowance.enabled ? "on" : "off"
-                          }`}
-                        >
-                          {isEditing ? (
-                            <label className="allowance-toggle">
-                              <input
-                                type="checkbox"
-                                checked={allowance.enabled}
-                                onChange={(e) =>
-                                  updateAllowance(key, {
-                                    enabled: e.target.checked,
-                                  })
-                                }
-                              />
-                              <span>{label}</span>
-                            </label>
-                          ) : (
-                            <span>{label}</span>
-                          )}
-                          {isEditing ? (
+                <div>
+                  <p className="detail-label">총 근무</p>
+                  <p className="detail-value">
+                    {(() => {
+                      // 익일 근무를 클릭한 경우 (전날 근무가 displayShift인 경우)
+                      if (
+                        previousDayShift &&
+                        activeShift &&
+                        activeShift.start === "00:00"
+                      ) {
+                        const totalHours =
+                          previousDayShift.durationHours +
+                          activeShift.durationHours;
+                        return formatDuration(totalHours);
+                      }
+                      // 전날 근무를 클릭한 경우 (crossesMidnight가 true인 경우)
+                      if (shiftForDisplay?.crossesMidnight) {
+                        const nextDate = new Date(selectedDate);
+                        nextDate.setDate(nextDate.getDate() + 1);
+                        const nextDateKey = getDateKey(nextDate);
+                        const nextScheduleData =
+                          workplaceSchedules[nextDateKey] || [];
+                        const nextDayShift = nextScheduleData.find(
+                          (shift) =>
+                            shift.name === shiftForDisplay?.name &&
+                            shift.start === "00:00"
+                        );
+                        if (nextDayShift) {
+                          const totalHours =
+                            shiftForDisplay?.durationHours +
+                            nextDayShift.durationHours;
+                          return formatDuration(totalHours);
+                        }
+                      }
+                      return formatDuration(shiftForDisplay?.durationHours);
+                    })()}
+                  </p>
+                </div>
+                <div>
+                  <p className="detail-label">휴게 시간</p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      className="detail-input"
+                      value={editedShift?.breakMinutes ?? ""}
+                      onChange={(e) =>
+                        updateEditedShift(
+                          "breakMinutes",
+                          Number(e.target.value)
+                        )
+                      }
+                    />
+                  ) : (
+                    <p className="detail-value">
+                      {formatBreakTime(shiftForDisplay?.breakMinutes)}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="detail-label">시급</p>
+                  {isEditing ? (
+                    <input
+                      type="number"
+                      min="0"
+                      className="detail-input"
+                      value={editedShift?.hourlyWage ?? ""}
+                      onChange={(e) =>
+                        updateEditedShift("hourlyWage", Number(e.target.value))
+                      }
+                    />
+                  ) : (
+                    <p className="detail-value">
+                      {formatCurrency(shiftForDisplay?.hourlyWage)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="detail-section">
+                <p className="detail-label">수당 정보</p>
+                <ul className="allowance-list">
+                  {allowanceDefinitions.map(({ key, label }) => {
+                    const allowance = (isEditing ? editedShift : activeShift)
+                      ?.allowances?.[key] || {
+                      enabled: false,
+                      rate: 0,
+                    };
+                    return (
+                      <li
+                        key={key}
+                        className={`allowance-item ${
+                          allowance.enabled ? "on" : "off"
+                        }`}
+                      >
+                        {isEditing ? (
+                          <label className="allowance-toggle">
                             <input
-                              type="number"
-                              min="100"
-                              max="300"
-                              step="5"
-                              className="allowance-rate-input"
-                              value={allowance.rate}
-                              disabled={!allowance.enabled}
+                              type="checkbox"
+                              checked={allowance.enabled}
                               onChange={(e) =>
                                 updateAllowance(key, {
-                                  rate: Number(e.target.value),
+                                  enabled: e.target.checked,
                                 })
                               }
                             />
-                          ) : (
-                            <strong>
-                              {allowance.enabled
-                                ? `${allowance.rate}%`
-                                : "없음"}
-                            </strong>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-                <div className="detail-status-row">
-                  {isEditing ? (
-                    <>
-                      <label className="status-toggle">
-                        <input
-                          type="checkbox"
-                          checked={editedShift?.socialInsurance ?? false}
-                          onChange={(e) =>
-                            updateEditedShift(
-                              "socialInsurance",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span>4대보험 적용</span>
-                      </label>
-                      <label className="status-toggle">
-                        <input
-                          type="checkbox"
-                          checked={editedShift?.withholdingTax ?? false}
-                          onChange={(e) =>
-                            updateEditedShift(
-                              "withholdingTax",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span>소득세 공제</span>
-                      </label>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        className={`status-pill ${
-                          shiftForDisplay?.socialInsurance ? "on" : "off"
-                        }`}
-                      >
-                        4대보험{" "}
-                        {shiftForDisplay?.socialInsurance ? "적용" : "미적용"}
-                      </div>
-                      <div
-                        className={`status-pill ${
-                          shiftForDisplay?.withholdingTax ? "on" : "off"
-                        }`}
-                      >
-                        소득세{" "}
-                        {shiftForDisplay?.withholdingTax ? "공제" : "미공제"}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p className="detail-placeholder">
-                근무 박스를 선택하면 상세정보가 나타납니다.
-              </p>
-            )}
-          </div>
+                            <span>{label}</span>
+                          </label>
+                        ) : (
+                          <span>{label}</span>
+                        )}
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="100"
+                            max="300"
+                            step="5"
+                            className="allowance-rate-input"
+                            value={allowance.rate}
+                            disabled={!allowance.enabled}
+                            onChange={(e) =>
+                              updateAllowance(key, {
+                                rate: Number(e.target.value),
+                              })
+                            }
+                          />
+                        ) : (
+                          <strong>
+                            {allowance.enabled ? `${allowance.rate}%` : "없음"}
+                          </strong>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div className="detail-status-row">
+                {isEditing ? (
+                  <>
+                    <label className="status-toggle">
+                      <input
+                        type="checkbox"
+                        checked={editedShift?.socialInsurance ?? false}
+                        onChange={(e) =>
+                          updateEditedShift("socialInsurance", e.target.checked)
+                        }
+                      />
+                      <span>4대보험 적용</span>
+                    </label>
+                    <label className="status-toggle">
+                      <input
+                        type="checkbox"
+                        checked={editedShift?.withholdingTax ?? false}
+                        onChange={(e) =>
+                          updateEditedShift("withholdingTax", e.target.checked)
+                        }
+                      />
+                      <span>소득세 공제</span>
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={`status-pill ${
+                        shiftForDisplay?.socialInsurance ? "on" : "off"
+                      }`}
+                    >
+                      4대보험{" "}
+                      {shiftForDisplay?.socialInsurance ? "적용" : "미적용"}
+                    </div>
+                    <div
+                      className={`status-pill ${
+                        shiftForDisplay?.withholdingTax ? "on" : "off"
+                      }`}
+                    >
+                      소득세{" "}
+                      {shiftForDisplay?.withholdingTax ? "공제" : "미공제"}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <aside className="daily-side-panel">
@@ -1227,9 +1185,9 @@ export default function DailyCalendarPage() {
               </button>
             </div>
             <div className="worker-list-modal-body">
-              {getWorkersInWorkplace().length > 0 ? (
+              {workersInWorkplace.length > 0 ? (
                 <ul className="worker-list">
-                  {getWorkersInWorkplace().map((workerName) => (
+                  {workersInWorkplace.map((workerName) => (
                     <li
                       key={workerName}
                       className="worker-list-item"
