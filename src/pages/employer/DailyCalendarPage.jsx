@@ -12,7 +12,7 @@ const getDateKey = (date) => {
 // TODO: 백엔드 연동 시 제거할 임시 더미 데이터
 const initialScheduleData = {
   맥도날드: {
-    "2025-11-29": [
+    "2025-11-21": [
       {
         id: 1,
         name: "오지환",
@@ -827,64 +827,55 @@ export default function DailyCalendarPage() {
             {activeShift ? (
               <>
                 <div className="detail-header">
-                  <div>
-                    <p className="detail-label">근무자</p>
-                    <h3 className="detail-name">{activeShift.name}</h3>
-                  </div>
-                  <button
-                    type="button"
-                    className="detail-close-button"
-                    onClick={() => setActiveShiftId(null)}
-                  >
-                    닫기
-                  </button>
-                </div>
-                <div className="detail-actions">
-                  {isEditing ? (
-                    <>
-                      <button
-                        type="button"
-                        className="detail-cancel-button"
-                        onClick={handleCancelEdit}
-                      >
-                        취소
-                      </button>
-                      <button
-                        type="button"
-                        className="detail-save-button"
-                        onClick={handleSaveShift}
-                      >
-                        저장
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className="detail-edit-button"
-                      onClick={handleStartEdit}
-                    >
-                      정보 수정
-                    </button>
-                  )}
-                </div>
-                <div className="detail-grid">
-                  <div>
-                    <p className="detail-label">근무지</p>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="detail-input"
-                        value={editedShift?.workplaceDetail || ""}
-                        onChange={(e) =>
-                          updateEditedShift("workplaceDetail", e.target.value)
-                        }
-                      />
-                    ) : (
+                  <div className="detail-header-left">
+                    <div>
+                      <p className="detail-label">근무자</p>
+                      <h3 className="detail-name">{activeShift.name}</h3>
+                    </div>
+                    <div>
+                      <p className="detail-label">근무지</p>
                       <p className="detail-value">
                         {activeShift.workplaceDetail || selectedWorkplace}
                       </p>
-                    )}
+                    </div>
                   </div>
+                  <div className="detail-header-actions">
+                    {isEditing ? (
+                      <>
+                        <button
+                          type="button"
+                          className="detail-cancel-button"
+                          onClick={handleCancelEdit}
+                        >
+                          취소
+                        </button>
+                        <button
+                          type="button"
+                          className="detail-save-button"
+                          onClick={handleSaveShift}
+                        >
+                          저장
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="detail-edit-button"
+                        onClick={handleStartEdit}
+                      >
+                        정보 수정
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="detail-close-button"
+                      onClick={() => setActiveShiftId(null)}
+                    >
+                      닫기
+                    </button>
+                  </div>
+                </div>
+                <div className="detail-grid">
                   <div>
                     <p className="detail-label">근무 날짜</p>
                     <p className="detail-value">{formattedSelectedDate}</p>

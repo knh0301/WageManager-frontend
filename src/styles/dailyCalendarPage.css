@@ -388,6 +388,16 @@
   margin-bottom: 16px;
 }
 
+.detail-header-left {
+  display: flex;
+  gap: 20px;
+}
+
+.detail-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .detail-label {
   font-size: 0.75rem;
   color: #8a97bb;
