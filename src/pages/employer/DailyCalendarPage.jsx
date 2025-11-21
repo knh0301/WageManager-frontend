@@ -78,7 +78,6 @@ function TimeInput({ label, value, onChange, allowMidnight = false } = {}) {
           onChange={handleHourChange}
           min="0"
           max={allowMidnight ? 24 : 23}
-          disabled={false}
         />
         <span className="time-wheel-separator">:</span>
         <input
@@ -187,23 +186,6 @@ export default function DailyCalendarPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [showWorkerListModal, setShowWorkerListModal] = useState(false);
 
-  // TODO: 백엔드 연동 시 근무지 리스트와 스케줄 데이터를 API에서 받아오기
-  // useEffect(() => {
-  //   const fetchWorkplaces = async () => {
-  //     try {
-  //       const response = await fetch('/api/workplaces');
-  //       const data = await response.json();
-  //       setWorkplaces(data.workplaces);
-  //       if (data.workplaces.length > 0) {
-  //         setSelectedWorkplaceId(data.workplaces[0].id);
-  //       }
-  //     } catch (error) {
-  //       console.error('근무지 리스트 로딩 실패:', error);
-  //     }
-  //   };
-  //   fetchWorkplaces();
-  // }, []);
-
   // 현재 시간 실시간 업데이트 (우측 카드 표시용)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -221,8 +203,10 @@ export default function DailyCalendarPage() {
     () => scheduleData[selectedWorkplace] || {},
     [scheduleData, selectedWorkplace]
   );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const currentScheduleData = workplaceSchedules[dateKey] || [];
+  const currentScheduleData = useMemo(
+    () => workplaceSchedules[dateKey] || [],
+    [workplaceSchedules, dateKey]
+  );
 
   // 겹치는 근무를 서로 다른 레인으로 배치
   const scheduleWithLanes = useMemo(() => {
@@ -289,22 +273,6 @@ export default function DailyCalendarPage() {
   // 표시할 근무 정보 (익일 근무면 전날 근무 정보 사용)
   const displayShift = previousDayShift || activeShift;
 
-  // 근무 블록 선택 시 편집용 상태 초기화
-  useEffect(() => {
-    if (displayShift) {
-      setEditedShift(cloneShiftWithDefaults(displayShift));
-    } else {
-      setEditedShift(null);
-    }
-    setIsEditing(false);
-  }, [
-    activeShiftId,
-    activeShift,
-    selectedDate,
-    workplaceSchedules,
-    displayShift,
-  ]);
-
   // 월 달력 셀 캐싱
   const calendarCells = useMemo(
     () => buildCalendarCells(displayMonth),
@@ -328,6 +296,8 @@ export default function DailyCalendarPage() {
     setSelectedDate(date);
     setDisplayMonth(new Date(date.getFullYear(), date.getMonth(), 1));
     setActiveShiftId(null);
+    setIsEditing(false);
+    setEditedShift(null);
   };
 
   // 타임라인 블록 선택 토글
@@ -358,12 +328,21 @@ export default function DailyCalendarPage() {
         // 전날 날짜로 이동하고 전날 근무 선택
         setSelectedDate(prevDate);
         setActiveShiftId(prevDayShift.id);
+        setIsEditing(false);
+        setEditedShift(null);
         return;
       }
     }
 
     // 일반적인 경우
-    setActiveShiftId((prev) => (prev === shiftId ? null : shiftId));
+    setActiveShiftId((prev) => {
+      const newId = prev === shiftId ? null : shiftId;
+      if (newId !== prev) {
+        setIsEditing(false);
+        setEditedShift(null);
+      }
+      return newId;
+    });
   };
 
   // 해당 근무지의 모든 직원 리스트 가져오기
@@ -443,14 +422,18 @@ export default function DailyCalendarPage() {
 
   // 편집 모드 진입/취소/저장 로직
   const handleStartEdit = () => {
-    if (activeShift) {
-      setEditedShift(cloneShiftWithDefaults(activeShift));
+    if (displayShift) {
+      setEditedShift(cloneShiftWithDefaults(displayShift));
       setIsEditing(true);
     }
   };
 
   const handleCancelEdit = () => {
-    setEditedShift(cloneShiftWithDefaults(activeShift));
+    if (displayShift) {
+      setEditedShift(cloneShiftWithDefaults(displayShift));
+    } else {
+      setEditedShift(null);
+    }
     setIsEditing(false);
   };
 
@@ -512,6 +495,8 @@ export default function DailyCalendarPage() {
 
     // 삭제 후 패널 닫기
     setActiveShiftId(null);
+    setIsEditing(false);
+    setEditedShift(null);
   };
 
   const updateEditedShift = (field, value) => {
@@ -706,7 +691,6 @@ export default function DailyCalendarPage() {
     setEditedShift((prev) => {
       if (!prev) return prev;
       const next = { ...prev };
-      const clampMinDuration = 0.5;
 
       if (field === "start") {
         next.start = sanitized;
@@ -726,7 +710,8 @@ export default function DailyCalendarPage() {
         : endDecimal - startDecimal;
 
       next.startHour = startDecimal;
-      next.durationHours = Math.max(totalDuration, clampMinDuration);
+      // 계산된 시간을 그대로 사용 (최소 시간 제한 제거)
+      next.durationHours = Math.max(totalDuration, 0);
       next.crossesMidnight = crossesMidnight;
       next.nextDayEndHour = endDecimal === 24 ? 0 : endDecimal;
 
@@ -788,12 +773,16 @@ export default function DailyCalendarPage() {
               const left = (item.startHour / 24) * 100;
               const width = (item.durationHours / 24) * 100;
               const top = 20 + item.laneIndex * 100;
+              // 근무 시간이 1시간 40분 이하일 때는 이름만 표시
+              const isSmallBlock = item.durationHours <= 100 / 60; // 1시간 40분 = 100분
+              // 근무 시간이 2시간 30분 이하일 때는 총 시간 숨김
+              const hideDuration = item.durationHours <= 150 / 60; // 2시간 30분 = 150분
               return (
                 <div
                   key={item.id}
                   className={`daily-shift-block ${
                     activeShiftId === item.id ? "active" : ""
-                  }`}
+                  } ${isSmallBlock ? "small" : ""}`}
                   style={{
                     left: `${left}%`,
                     width: `${width}%`,
@@ -802,10 +791,16 @@ export default function DailyCalendarPage() {
                   onClick={() => handleShiftClick(item.id)}
                 >
                   <div className="shift-name">{item.name}</div>
-                  <div className="shift-time">{`${item.start} - ${item.end}`}</div>
-                  <div className="shift-duration">
-                    {formatDuration(item.durationHours)}
-                  </div>
+                  {!isSmallBlock && (
+                    <>
+                      <div className="shift-time">{`${item.start} - ${item.end}`}</div>
+                      {!hideDuration && (
+                        <div className="shift-duration">
+                          {formatDuration(item.durationHours)}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -868,7 +863,11 @@ export default function DailyCalendarPage() {
                     <button
                       type="button"
                       className="detail-close-button"
-                      onClick={() => setActiveShiftId(null)}
+                      onClick={() => {
+                        setActiveShiftId(null);
+                        setIsEditing(false);
+                        setEditedShift(null);
+                      }}
                     >
                       닫기
                     </button>
