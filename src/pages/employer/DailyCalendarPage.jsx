@@ -1,7 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import "../../styles/dailyCalendarPage.css";
-import { initialScheduleData, initialWorkplaces } from "./dummyData";
+import {
+  initialScheduleData,
+  initialWorkplaces,
+  workplaceWorkers,
+} from "./dummyData";
 
 // 날짜를 키(YYYY-MM-DD) 문자열로 변환
 const getDateKey = (date) => {
@@ -355,10 +359,15 @@ export default function DailyCalendarPage() {
 
   // 해당 근무지의 모든 직원 리스트 가져오기
   const getWorkersInWorkplace = () => {
+    const predefinedList = workplaceWorkers[selectedWorkplaceId] || [];
+    if (predefinedList.length > 0) {
+      return predefinedList;
+    }
+
     const workplace = scheduleData[selectedWorkplace] || {};
     const workerSet = new Set();
 
-    // 모든 날짜의 근무 데이터를 순회하며 직원 이름 수집
+    // 모든 날짜의 근무 데이터를 순회하며 직원 이름 수집 (백업)
     Object.values(workplace).forEach((dateShifts) => {
       if (Array.isArray(dateShifts)) {
         dateShifts.forEach((shift) => {
