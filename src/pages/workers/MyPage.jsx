@@ -21,6 +21,9 @@ export default function MyPage() {
     profileImageUrl: null,
   });
 
+  // 프로필 이미지 상태 관리
+  const [profileImage, setProfileImage] = useState(user.profileImageUrl);
+
 
   // 임시 근무지 데이터
   const [workplaces] = useState([
@@ -82,6 +85,16 @@ export default function MyPage() {
     // 나중에 API 호출 추가
   };
 
+  const handleProfileImageUpdate = (imageUrl) => {
+    setProfileImage(imageUrl);
+    // user 상태의 profileImageUrl도 업데이트
+    setUser((prev) => ({
+      ...prev,
+      profileImageUrl: imageUrl,
+    }));
+    // 나중에 프로필 이미지 업데이트 API 호출 추가
+  };
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -111,6 +124,8 @@ export default function MyPage() {
       <div className="worker-mypage-content">
         <ProfileBox
           user={user}
+          profileImage={profileImage}
+          onProfileImageUpdate={handleProfileImageUpdate}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
