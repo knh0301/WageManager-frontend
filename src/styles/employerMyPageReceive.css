@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Gothic+A1&family=Noto+Sans+KR:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap");
 
 .mypage-main {
   width: 100%;
@@ -8,10 +8,8 @@
 }
 
 .mypage-main-heading {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
-  font-style: normal;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-size: 2rem;
   color: #2a2a2a;
   margin: 0;
@@ -89,10 +87,7 @@
 
 .mypage-profile-name {
   font-size: 1.8rem;
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
-  font-style: normal;
+  font-weight: 400;
 }
 
 .mypage-profile-card hr {
@@ -117,12 +112,10 @@
   background-color: #ffffff;
   color: #000000;
   font-size: 1.7rem;
+  font-weight: bold;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
-  font-style: normal;
+  font-family: inherit;
 }
 
 .mypage-nav-li {
@@ -133,10 +126,7 @@
   font-size: 1.7rem;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
-  font-style: normal;
+  font-family: inherit;
 }
 
 .mypage-container {
@@ -149,9 +139,8 @@
 }
 
 .mypage-title {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   font-size: 2em;
   margin: 20px;
@@ -160,9 +149,8 @@
 }
 
 .mypage-basic-info {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -189,9 +177,8 @@
 }
 
 .mypage-phone {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -203,9 +190,8 @@
 }
 
 .mypage-email {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -217,9 +203,8 @@
 }
 
 .mypage-password {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   color: #848484;
   font-size: 1.5em;
@@ -231,9 +216,8 @@
 }
 
 .mypage-edit-button {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   width: 70px;
   background-color: #ffffff;
@@ -241,7 +225,7 @@
   border-radius: 8px;
   border-color: #d9d9d9;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: #848484;
   margin-left: auto;
   margin-right: 40px;
@@ -257,9 +241,8 @@
 
 input,
 select {
-  font-family: "Noto Sans KR", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: bold;
+  font-family: "Do Hyeon", sans-serif;
+  font-weight: 400;
   font-style: normal;
   font-size: 1em;
   padding: 7px;
@@ -289,52 +272,8 @@ select {
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #848484;
   cursor: pointer;
   padding: 0;
-}
-
-.mypage-receive-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 20px;
-}
-
-.mypage-receive-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 16px 24px;
-  border: 1px solid #e0e0e0;
-  border-radius: 16px;
-  background-color: #fafafa;
-}
-
-.mypage-receive-card strong {
-  display: block;
-  color: #333333;
-  margin-bottom: 4px;
-}
-
-.mypage-receive-card p {
-  margin: 0;
-  color: #555555;
-}
-
-.mypage-receive-card > div {
-  min-width: 120px;
-}
-
-.mypage-receive-actions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-}
-
-.mypage-edit-button.decline {
-  border-color: #ffb3b3;
-  color: #d9534f;
 }
