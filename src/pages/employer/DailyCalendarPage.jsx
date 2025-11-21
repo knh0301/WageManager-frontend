@@ -1,166 +1,24 @@
 import { useMemo, useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import "../../styles/dailyCalendarPage.css";
 import {
   initialScheduleData,
   initialWorkplaces,
   workplaceWorkers,
 } from "./dummyData";
-
-// 날짜를 키(YYYY-MM-DD) 문자열로 변환
-const getDateKey = (date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(date.getDate()).padStart(2, "0")}`;
-};
-
-// 수당 유형 정의
-const allowanceDefinitions = [
-  { key: "overtime", label: "연장수당" },
-  { key: "night", label: "야간수당" },
-  { key: "holiday", label: "휴일수당" },
-];
-
-// 수당 정보를 편집하기 쉬운 형태로 정규화
-const normalizeAllowances = (allowances = {}) => {
-  return allowanceDefinitions.reduce((acc, { key }) => {
-    const base = allowances[key] || {};
-    acc[key] = {
-      enabled: base.enabled ?? false,
-      rate: typeof base.rate === "number" && base.rate > 0 ? base.rate : 150,
-    };
-    return acc;
-  }, {});
-};
-
-// 선택한 근무 정보를 복제하면서 누락된 필드를 기본값으로 채움
-const cloneShiftWithDefaults = (shift) =>
-  shift
-    ? {
-        ...shift,
-        allowances: normalizeAllowances(shift.allowances),
-        start: shift.start || "09:00",
-        end: shift.end || "18:00",
-        crossesMidnight: Boolean(shift.crossesMidnight),
-      }
-    : null;
-
-// 정보수정 - 시간 입력
-function TimeInput({ label, value, onChange, allowMidnight = false } = {}) {
-  const [hour = "00", minute = "00"] = (value || "00:00").split(":");
-
-  const handleHourChange = (e) => {
-    const nextHour = String(
-      Math.max(
-        0,
-        Math.min(allowMidnight ? 24 : 23, Number(e.target.value) || 0)
-      )
-    ).padStart(2, "0");
-    onChange(`${nextHour}:${nextHour === "24" ? "00" : minute}`);
-  };
-
-  const handleMinuteChange = (e) => {
-    const nextMinute = String(
-      Math.max(0, Math.min(59, Number(e.target.value) || 0))
-    ).padStart(2, "0");
-    onChange(`${hour}:${nextMinute}`);
-  };
-
-  return (
-    <div className="time-wheel">
-      <span className="time-wheel-label">{label}</span>
-      <div className="time-wheel-columns">
-        <input
-          type="number"
-          className="time-wheel-input"
-          value={hour}
-          onChange={handleHourChange}
-          min="0"
-          max={allowMidnight ? 24 : 23}
-        />
-        <span className="time-wheel-separator">:</span>
-        <input
-          type="number"
-          className="time-wheel-input"
-          value={minute}
-          onChange={handleMinuteChange}
-          min="0"
-          max="59"
-          disabled={hour === "24"}
-        />
-      </div>
-    </div>
-  );
-}
-
-TimeInput.propTypes = {
-  label: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  allowMidnight: PropTypes.bool,
-};
-
-//근무자 추가 시 새로운 ID 생성
-const generateShiftId = (data) => {
-  let maxId = 0;
-  Object.values(data).forEach((workplace) => {
-    Object.values(workplace || {}).forEach((shifts) => {
-      shifts.forEach((shift) => {
-        if (typeof shift.id === "number") {
-          maxId = Math.max(maxId, shift.id);
-        }
-      });
-    });
-  });
-  return maxId + 1 || Date.now();
-};
-
-// 타임라인 상단 시간 라벨
-const hours = Array.from({ length: 24 }, (_, idx) => idx);
-
-// 달력 셀 비교 헬퍼
-const isSameDate = (a, b) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
-
-// 월 달력을 구성하는 6x7 셀 배열 생성
-const buildCalendarCells = (monthDate) => {
-  const year = monthDate.getFullYear();
-  const month = monthDate.getMonth();
-  const firstOfMonth = new Date(year, month, 1);
-  const startDay = firstOfMonth.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-  const cells = [];
-
-  for (let i = startDay - 1; i >= 0; i--) {
-    cells.push({
-      date: new Date(year, month - 1, daysInPrevMonth - i),
-      currentMonth: false,
-    });
-  }
-
-  for (let i = 1; i <= daysInMonth; i++) {
-    cells.push({
-      date: new Date(year, month, i),
-      currentMonth: true,
-    });
-  }
-
-  let nextDay = 1;
-  while (cells.length < 42) {
-    cells.push({
-      date: new Date(year, month + 1, nextDay),
-      currentMonth: false,
-    });
-    nextDay += 1;
-  }
-
-  return cells;
-};
+import { getDateKey, isSameDate, buildCalendarCells } from "./utils/dateUtils";
+import {
+  allowanceDefinitions,
+  cloneShiftWithDefaults,
+  generateShiftId,
+} from "./utils/shiftUtils";
+import {
+  formatCurrency,
+  formatBreakTime,
+  formatDuration,
+  timeStringToDecimal,
+} from "./utils/formatUtils";
+import { hours } from "./constants";
+import TimeInput from "./components/TimeInput";
 
 export default function DailyCalendarPage() {
   const today = new Date();
@@ -637,32 +495,6 @@ export default function DailyCalendarPage() {
     const day = String(selectedDate.getDate()).padStart(2, "0");
     return `${selectedDate.getFullYear()}.${month}.${day}`;
   }, [selectedDate]);
-
-  // 통화/시간 포맷 helper
-  const formatCurrency = (value) =>
-    typeof value === "number" ? `${value.toLocaleString("ko-KR")}원` : "-";
-
-  const formatBreakTime = (minutes) =>
-    typeof minutes === "number" ? `${minutes}분` : "-";
-
-  const formatDuration = (hours) => {
-    if (typeof hours !== "number") return "-";
-    const wholeHours = Math.floor(hours);
-    const minutes = Math.round((hours - wholeHours) * 60);
-    if (minutes === 0) {
-      return `${wholeHours}시간`;
-    }
-    if (minutes === 60) {
-      return `${wholeHours + 1}시간`;
-    }
-    return `${wholeHours}시간 ${minutes}분`;
-  };
-
-  const timeStringToDecimal = (timeString) => {
-    if (!timeString) return 0;
-    const [hour = "0", minute = "0"] = timeString.split(":");
-    return Number(hour) + Number(minute) / 60;
-  };
 
   const handleTimeChange = (field, value) => {
     const sanitized = value || "00:00";
