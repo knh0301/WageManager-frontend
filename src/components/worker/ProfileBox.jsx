@@ -82,7 +82,7 @@ export default function ProfileBox({
             }
             onClick={() => onTabChange("editRequest")}
           >
-            보낸 근무 기록 정정 요청
+            보낸 근무 요청
           </button>
         </li>
       </ul>

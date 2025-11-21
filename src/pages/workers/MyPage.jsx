@@ -21,8 +21,6 @@ export default function MyPage() {
     profileImageUrl: null,
   });
 
-  // 프로필 이미지 상태 (ProfileBox와 ProfileEdit에서 공유)
-  const [profileImage, setProfileImage] = useState(user.profileImageUrl || null);
 
   // 임시 근무지 데이터
   const [workplaces] = useState([
@@ -58,21 +56,21 @@ export default function MyPage() {
   const [editRequests] = useState([
     {
       place: "맥도날드",
-      date: "27 월",
+      date: "2월 3일",
       startTime: "15:00",
       endTime: "21:00",
       status: "approved",
     },
     {
       place: "맥도날드",
-      date: "27 월",
+      date: "5월 27일",
       startTime: "15:00",
       endTime: "21:00",
       status: "rejected",
     },
     {
       place: "맥도날드",
-      date: "27 월",
+      date: "7월 14일",
       startTime: "15:00",
       endTime: "21:00",
       status: "pending",
@@ -84,14 +82,6 @@ export default function MyPage() {
     // 나중에 API 호출 추가
   };
 
-  const handleProfileImageUpdate = (imageUrl) => {
-    setProfileImage(imageUrl);
-    setUser((prev) => ({
-      ...prev,
-      profileImageUrl: imageUrl,
-    }));
-    // 나중에 API 호출 추가
-  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -99,7 +89,6 @@ export default function MyPage() {
         return (
           <ProfileEdit
             user={user}
-            profileImage={profileImage}
             onUserUpdate={handleUserUpdate}
           />
         );
@@ -122,8 +111,6 @@ export default function MyPage() {
       <div className="worker-mypage-content">
         <ProfileBox
           user={user}
-          profileImage={profileImage}
-          onProfileImageUpdate={handleProfileImageUpdate}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />

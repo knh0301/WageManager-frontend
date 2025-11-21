@@ -1,9 +1,9 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../../pages/workers/MyPage.css";
 
-export default function ProfileEdit({ user, profileImage, onUserUpdate }) {
+export default function ProfileEdit({ user, onUserUpdate }) {
   const [editableSections, setEditableSections] = useState({
     basic: false,
     phone: false,
@@ -52,19 +52,6 @@ export default function ProfileEdit({ user, profileImage, onUserUpdate }) {
       {/* 이름, 생년월일, 성별 */}
       <div className="worker-mypage-basic-info">
         <div className="worker-mypage-name-row">
-          <div className="worker-mypage-avatar-wrapper-edit">
-            {profileImage ? (
-              <img
-                src={profileImage}
-                alt="프로필"
-                className="worker-mypage-avatar-image-edit"
-              />
-            ) : (
-              <div className="worker-mypage-avatar-placeholder-edit">
-                <FaUser className="worker-mypage-avatar-icon-edit" />
-              </div>
-            )}
-          </div>
           <div className="worker-mypage-name-text-wrapper">
             <div className="worker-mypage-name-text">{localUser.name}</div>
             <div className="worker-mypage-birth-text">
@@ -240,8 +227,6 @@ ProfileEdit.propTypes = {
     password: PropTypes.string,
     kakaoPayLink: PropTypes.string,
     employeeCode: PropTypes.string,
-    profileImageUrl: PropTypes.string,
   }).isRequired,
-  profileImage: PropTypes.string,
   onUserUpdate: PropTypes.func.isRequired,
 };
