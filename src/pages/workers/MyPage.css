@@ -287,7 +287,7 @@
   display: flex;
   gap: 15px;
   margin: 20px 0;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .worker-mypage-field > input {
@@ -295,7 +295,53 @@
 }
 
 .worker-mypage-field .worker-mypage-password-input-wrapper {
+  margin-left: 0;
+}
+
+.worker-mypage-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-left: 20px;
+  flex: 1;
+  max-width: 500px;
+}
+
+/* 이메일 input은 카카오페이 송금 링크와 동일한 길이로 */
+.worker-mypage-email-field {
+  align-items: flex-start;
+}
+
+.worker-mypage-email-input-container {
+  position: relative;
+  flex: 1;
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.worker-mypage-email-input-container > input {
+  max-width: none;
+  flex: 1;
+}
+
+.worker-mypage-email-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+}
+
+.worker-mypage-input-error {
+  border-color: #ff4444 !important;
+}
+
+.worker-mypage-error-message {
+  font-size: 0.85em;
+  color: #ff4444;
+  font-weight: normal;
+  margin-top: 4px;
 }
 
 .worker-mypage-label {
@@ -338,7 +384,7 @@ select {
   border: 1px solid #d9d9d9;
   border-radius: 8px;
   flex: 1;
-  max-width: 400px;
+  max-width: 500px;
   height: 40px;
   box-sizing: border-box;
   line-height: 1.5;

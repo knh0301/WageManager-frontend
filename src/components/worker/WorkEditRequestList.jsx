@@ -4,7 +4,7 @@ import "../../pages/workers/MyPage.css";
 export default function WorkEditRequestList({ requests }) {
   return (
     <div className="worker-mypage-container">
-      <h1 className="worker-mypage-title">보낸 근무 기록 정정 요청</h1>
+      <h1 className="worker-mypage-title">보낸 근무 요청</h1>
       <div className="worker-mypage-request-list">
         {requests && requests.length > 0 ? (
           requests.map((request, index) => (

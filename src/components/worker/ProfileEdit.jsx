@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../../pages/workers/MyPage.css";
@@ -13,15 +13,106 @@ export default function ProfileEdit({ user, onUserUpdate }) {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [localUser, setLocalUser] = useState(user);
+  const [errors, setErrors] = useState({});
+
+  // user prop이 변경될 때 localUser 동기화
+  // 단, 사용자가 수정 중이 아닐 때만 동기화하여 입력 중인 데이터를 보호
+  useEffect(() => {
+    const isEditing = Object.values(editableSections).some((value) => value);
+    if (!isEditing) {
+      setLocalUser(user);
+      setErrors({});
+    }
+  }, [user, editableSections]);
+
+  const validateField = (section, value) => {
+    if (!value || value.trim() === "") {
+      return { isValid: false, message: "필수 입력 항목입니다." };
+    }
+
+    switch (section) {
+      case "email": {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          return { isValid: false, message: "올바른 이메일 형식이 아닙니다." };
+        }
+        break;
+      }
+      case "phone": {
+        const phoneRegex = /^010-\d{4}-\d{4}$/;
+        if (!phoneRegex.test(value)) {
+          return {
+            isValid: false,
+            message: "전화번호는 010-XXXX-XXXX 형식이어야 합니다.",
+          };
+        }
+        break;
+      }
+      case "password": {
+        if (value.length < 8) {
+          return { isValid: false, message: "비밀번호는 8자 이상이어야 합니다." };
+        }
+        break;
+      }
+      case "name": {
+        if (value.trim().length < 2) {
+          return { isValid: false, message: "이름은 2자 이상이어야 합니다." };
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    return { isValid: true, message: "" };
+  };
 
   const toggleEdit = (section) => {
+    const wasEditing = editableSections[section];
+
+    if (wasEditing) {
+      // 완료 버튼을 눌렀을 때 유효성 검사
+      const fieldName =
+        section === "kakaoPay"
+          ? "kakaoPayLink"
+          : section === "basic"
+            ? "name"
+            : section;
+      const fieldValue = localUser[fieldName];
+
+      // basic 섹션의 경우 이름만 검증
+      if (section === "basic") {
+        const validation = validateField("name", localUser.name);
+        if (!validation.isValid) {
+          setErrors({ basic: validation.message });
+          return;
+        }
+      } else {
+        const validation = validateField(section, fieldValue);
+        if (!validation.isValid) {
+          setErrors({ [section]: validation.message });
+          return;
+        }
+      }
+
+      // 유효성 검사 통과 시 에러 초기화 및 저장
+      setErrors({});
+      onUserUpdate(localUser);
+    }
+
     setEditableSections((prev) => ({
       ...prev,
       [section]: !prev[section],
     }));
-    if (editableSections[section]) {
-      // 완료 버튼을 눌렀을 때
-      onUserUpdate(localUser);
+
+    // 수정 모드로 전환 시 해당 필드의 에러 초기화
+    if (!wasEditing) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[section];
+        delete newErrors.basic;
+        return newErrors;
+      });
     }
   };
 
@@ -76,7 +167,13 @@ export default function ProfileEdit({ user, onUserUpdate }) {
                 type="text"
                 value={localUser.name}
                 onChange={(e) => handleChange("name", e.target.value)}
+                className={errors.basic ? "worker-mypage-input-error" : ""}
               />
+              {errors.basic && (
+                <span className="worker-mypage-error-message">
+                  {errors.basic}
+                </span>
+              )}
             </div>
             <div className="worker-mypage-birth">
               <span className="worker-mypage-label">생년월일</span>
@@ -105,12 +202,18 @@ export default function ProfileEdit({ user, onUserUpdate }) {
       {/* 전화번호 */}
       <div className="worker-mypage-field">
         <span className="worker-mypage-label">전화 번호</span>
-        <input
-          type="tel"
-          value={localUser.phone}
-          disabled={!editableSections.phone}
-          onChange={(e) => handleChange("phone", e.target.value)}
-        />
+        <div className="worker-mypage-input-wrapper">
+          <input
+            type="tel"
+            value={localUser.phone}
+            disabled={!editableSections.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
+            className={errors.phone ? "worker-mypage-input-error" : ""}
+          />
+          {errors.phone && (
+            <span className="worker-mypage-error-message">{errors.phone}</span>
+          )}
+        </div>
         <button
           className="worker-mypage-edit-button"
           onClick={() => toggleEdit("phone")}
@@ -121,14 +224,22 @@ export default function ProfileEdit({ user, onUserUpdate }) {
       <hr />
 
       {/* 이메일 */}
-      <div className="worker-mypage-field">
+      <div className="worker-mypage-field worker-mypage-email-field">
         <span className="worker-mypage-label">이메일</span>
-        <input
-          type="email"
-          value={localUser.email}
-          disabled={!editableSections.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-        />
+        <div className="worker-mypage-email-input-container">
+          <input
+            type="email"
+            value={localUser.email}
+            disabled={!editableSections.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            className={errors.email ? "worker-mypage-input-error" : ""}
+          />
+          {errors.email && (
+            <span className="worker-mypage-error-message worker-mypage-email-error">
+              {errors.email}
+            </span>
+          )}
+        </div>
         <button
           className="worker-mypage-edit-button"
           onClick={() => toggleEdit("email")}
@@ -141,23 +252,31 @@ export default function ProfileEdit({ user, onUserUpdate }) {
       {/* 비밀번호 */}
       <div className="worker-mypage-field">
         <span className="worker-mypage-label">비밀번호</span>
-        <div className="worker-mypage-password-input-wrapper">
-          <input
-            type={showPassword ? "text" : "password"}
-            value={localUser.password}
-            disabled={!editableSections.password}
-            onChange={(e) => handleChange("password", e.target.value)}
-          />
-          <button
-            type="button"
-            className="worker-mypage-view-button"
-            onMouseEnter={() => setShowPassword(true)}
-            onMouseLeave={() => setShowPassword(false)}
-            onFocus={() => setShowPassword(true)}
-            onBlur={() => setShowPassword(false)}
-          >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
-          </button>
+        <div className="worker-mypage-input-wrapper">
+          <div className="worker-mypage-password-input-wrapper">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={localUser.password}
+              disabled={!editableSections.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              className={errors.password ? "worker-mypage-input-error" : ""}
+            />
+            <button
+              type="button"
+              className="worker-mypage-view-button"
+              onMouseEnter={() => setShowPassword(true)}
+              onMouseLeave={() => setShowPassword(false)}
+              onFocus={() => setShowPassword(true)}
+              onBlur={() => setShowPassword(false)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
+          {errors.password && (
+            <span className="worker-mypage-error-message">
+              {errors.password}
+            </span>
+          )}
         </div>
         <button
           className="worker-mypage-edit-button"
