@@ -249,36 +249,31 @@
 
 .time-wheel-columns {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
-.time-wheel-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.time-wheel-select {
-  width: 80px;
-  height: 140px;
+.time-wheel-input {
+  width: 60px;
   border: 1px solid #dfe4f4;
-  border-radius: 16px;
-  padding: 6px;
+  border-radius: 12px;
+  padding: 8px;
   font-size: 1rem;
-  background: #fbfcff;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-}
-
-.time-wheel-select option {
   text-align: center;
-  padding: 6px 0;
+  background: #fbfcff;
+  box-sizing: border-box;
 }
 
-.time-wheel-unit {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: #7b83a5;
+.time-wheel-input:focus {
+  outline: none;
+  border-color: #4f7cff;
+  box-shadow: 0 0 0 2px rgba(79, 124, 255, 0.1);
+}
+
+.time-wheel-separator {
+  font-size: 1.2rem;
+  color: #4a4f67;
+  font-weight: 600;
 }
 
 /* 수당/상태 영역 스타일 */

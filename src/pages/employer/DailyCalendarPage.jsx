@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import "../../styles/dailyCalendarPage.css";
 
 // 날짜를 키(YYYY-MM-DD) 문자열로 변환
@@ -104,121 +105,9 @@ const initialScheduleData = {
         withholdingTax: false,
       },
     ],
-    "2025-11-30": [
-      {
-        id: 1,
-        name: "오지환",
-        start: "08:00",
-        end: "17:00",
-        startHour: 8,
-        durationHours: 9,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 60,
-        hourlyWage: 11000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 2,
-        name: "문보경",
-        start: "05:00",
-        end: "15:00",
-        startHour: 5,
-        durationHours: 10,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 45,
-        hourlyWage: 10800,
-        allowances: {
-          overtime: { enabled: true, rate: 125 },
-          night: { enabled: true, rate: 150 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 3,
-        name: "홍창기",
-        start: "11:00",
-        end: "16:00",
-        startHour: 11,
-        durationHours: 5,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 30,
-        hourlyWage: 10200,
-        allowances: {
-          overtime: { enabled: false, rate: 0 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: true, rate: 150 },
-        },
-        socialInsurance: false,
-        withholdingTax: true,
-      },
-    ],
-    "2025-11-20": [
-      {
-        id: 1,
-        name: "오지환",
-        start: "09:00",
-        end: "18:00",
-        startHour: 9,
-        durationHours: 9,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 60,
-        hourlyWage: 11000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 4,
-        name: "신민재",
-        start: "13:00",
-        end: "18:00",
-        startHour: 13,
-        durationHours: 5,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 30,
-        hourlyWage: 11500,
-        allowances: {
-          overtime: { enabled: false, rate: 0 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: true, rate: 150 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-      {
-        id: 5,
-        name: "오스틴",
-        start: "13:00",
-        end: "20:00",
-        startHour: 13,
-        durationHours: 7,
-        workplaceDetail: "맥도날드 잠실점",
-        breakMinutes: 45,
-        hourlyWage: 13000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: true, rate: 150 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: false,
-      },
-    ],
   },
   스타벅스: {
-    "2025-11-29": [
+    "2025-11-21": [
       {
         id: 6,
         name: "김민수",
@@ -256,54 +145,13 @@ const initialScheduleData = {
         withholdingTax: true,
       },
     ],
-    "2025-11-30": [
-      {
-        id: 6,
-        name: "김민수",
-        start: "07:00",
-        end: "15:00",
-        startHour: 7,
-        durationHours: 8,
-        workplaceDetail: "스타벅스 강남역점",
-        breakMinutes: 30,
-        hourlyWage: 12000,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: true, rate: 150 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: true,
-        withholdingTax: true,
-      },
-    ],
   },
-  롯데리아: {
-    "2025-11-29": [
-      {
-        id: 8,
-        name: "박준호",
-        start: "10:00",
-        end: "18:00",
-        startHour: 10,
-        durationHours: 8,
-        workplaceDetail: "롯데리아 시청점",
-        breakMinutes: 40,
-        hourlyWage: 9800,
-        allowances: {
-          overtime: { enabled: true, rate: 150 },
-          night: { enabled: false, rate: 0 },
-          holiday: { enabled: false, rate: 0 },
-        },
-        socialInsurance: false,
-        withholdingTax: true,
-      },
-    ],
-  },
+  롯데리아: {},
   버거킹: {},
   KFC: {},
 };
 
-// 표시/수정을 위한 수당 유형 정의
+// 수당 유형 정의
 const allowanceDefinitions = [
   { key: "overtime", label: "연장수당" },
   { key: "night", label: "야간수당" },
@@ -334,66 +182,61 @@ const cloneShiftWithDefaults = (shift) =>
       }
     : null;
 
-const baseHourOptions = Array.from({ length: 24 }, (_, idx) =>
-  String(idx).padStart(2, "0")
-);
-const hourOptionsWithMidnight = [...baseHourOptions, "24"];
-const minuteOptions = Array.from({ length: 60 }, (_, idx) =>
-  String(idx).padStart(2, "0")
-);
-
-function TimeWheelPicker({ label, value, onChange, allowMidnight = false }) {
+// 정보수정 - 시간 입력
+function TimeInput({ label, value, onChange, allowMidnight = false } = {}) {
   const [hour = "00", minute = "00"] = (value || "00:00").split(":");
-  const hours = allowMidnight ? hourOptionsWithMidnight : baseHourOptions;
 
   const handleHourChange = (e) => {
-    const nextHour = e.target.value;
+    const nextHour = String(
+      Math.max(
+        0,
+        Math.min(allowMidnight ? 24 : 23, Number(e.target.value) || 0)
+      )
+    ).padStart(2, "0");
     onChange(`${nextHour}:${nextHour === "24" ? "00" : minute}`);
   };
 
   const handleMinuteChange = (e) => {
-    onChange(`${hour}:${e.target.value}`);
+    const nextMinute = String(
+      Math.max(0, Math.min(59, Number(e.target.value) || 0))
+    ).padStart(2, "0");
+    onChange(`${hour}:${nextMinute}`);
   };
 
   return (
     <div className="time-wheel">
       <span className="time-wheel-label">{label}</span>
       <div className="time-wheel-columns">
-        <div className="time-wheel-column">
-          <select
-            className="time-wheel-select"
-            value={hour}
-            onChange={handleHourChange}
-            size={5}
-          >
-            {hours.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <span className="time-wheel-unit">시</span>
-        </div>
-        <div className="time-wheel-column">
-          <select
-            className="time-wheel-select"
-            value={minute}
-            onChange={handleMinuteChange}
-            size={5}
-            disabled={hour === "24"}
-          >
-            {minuteOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-          <span className="time-wheel-unit">분</span>
-        </div>
+        <input
+          type="number"
+          className="time-wheel-input"
+          value={hour}
+          onChange={handleHourChange}
+          min="0"
+          max={allowMidnight ? 24 : 23}
+          disabled={false}
+        />
+        <span className="time-wheel-separator">:</span>
+        <input
+          type="number"
+          className="time-wheel-input"
+          value={minute}
+          onChange={handleMinuteChange}
+          min="0"
+          max="59"
+          disabled={hour === "24"}
+        />
       </div>
     </div>
   );
 }
+
+TimeInput.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  allowMidnight: PropTypes.bool,
+};
 
 const generateShiftId = (data) => {
   let maxId = 0;
@@ -535,15 +378,33 @@ export default function DailyCalendarPage() {
     (shift) => shift.id === activeShiftId
   );
 
+  // 익일 근무인 경우 전날 근무 찾기
+  const previousDate = new Date(selectedDate);
+  previousDate.setDate(previousDate.getDate() - 1);
+  const previousDateKey = getDateKey(previousDate);
+  const previousScheduleData = workplaceSchedules[previousDateKey] || [];
+
+  // 익일 근무이고 시작 시간이 0시인 경우 전날 근무 찾기
+  const isOvernightShift =
+    activeShift && activeShift.startHour === 0 && activeShift.start === "00:00";
+  const previousDayShift = isOvernightShift
+    ? previousScheduleData.find(
+        (shift) => shift.name === activeShift.name && shift.crossesMidnight
+      )
+    : null;
+
+  // 표시할 근무 정보 (익일 근무면 전날 근무 정보 사용)
+  const displayShift = previousDayShift || activeShift;
+
   // 근무 블록 선택 시 편집용 상태 초기화
   useEffect(() => {
-    if (activeShift) {
-      setEditedShift(cloneShiftWithDefaults(activeShift));
+    if (displayShift) {
+      setEditedShift(cloneShiftWithDefaults(displayShift));
     } else {
       setEditedShift(null);
     }
     setIsEditing(false);
-  }, [activeShiftId, activeShift]);
+  }, [activeShiftId, activeShift, selectedDate, workplaceSchedules]);
 
   // 월 달력 셀 캐싱
   const calendarCells = useMemo(
@@ -610,7 +471,13 @@ export default function DailyCalendarPage() {
 
   const handleSaveShift = () => {
     if (!editedShift || !activeShiftId) return;
-    const dateKeyToUpdate = getDateKey(selectedDate);
+
+    // 익일 근무를 클릭한 경우 전날 근무의 ID와 날짜 사용
+    const shiftToUpdate = previousDayShift || displayShift || activeShift;
+    const actualShiftId = shiftToUpdate?.id || activeShiftId;
+    const actualDate = previousDayShift ? previousDate : selectedDate;
+    const dateKeyToUpdate = getDateKey(actualDate);
+
     const { laneIndex: _unusedLaneIndex, ...shiftToSave } = editedShift;
     const startDecimal = timeStringToDecimal(shiftToSave.start);
     const endDecimalRaw =
@@ -622,7 +489,7 @@ export default function DailyCalendarPage() {
       const workplace = prev[selectedWorkplace] || {};
       const currentList = workplace[dateKeyToUpdate] || [];
       let updatedList = currentList.map((shift) =>
-        shift.id === activeShiftId ? { ...shift, ...shiftToSave } : shift
+        shift.id === actualShiftId ? { ...shift, ...shiftToSave } : shift
       );
 
       if (crossesMidnight) {
@@ -630,33 +497,67 @@ export default function DailyCalendarPage() {
         const secondPartDuration = endDecimalRaw === 24 ? 0 : endDecimalRaw;
 
         updatedList = updatedList.map((shift) => {
-          if (shift.id !== activeShiftId) return shift;
+          if (shift.id !== actualShiftId) return shift;
           return {
             ...shift,
             ...shiftToSave,
             end: "24:00",
             durationHours: firstPartDuration,
-            crossesMidnight: false,
+            crossesMidnight: true,
             nextDayEndHour: undefined,
           };
         });
 
-        const nextDate = new Date(selectedDate);
+        const nextDate = new Date(actualDate);
         nextDate.setDate(nextDate.getDate() + 1);
         const nextKey = getDateKey(nextDate);
-        const newShiftId = generateShiftId(prev);
         const nextList = workplace[nextKey] ? [...workplace[nextKey]] : [];
+
+        // 익일 근무가 이미 존재하는 경우 (익일 근무를 클릭한 경우)
+        const existingNextDayShift =
+          activeShift && activeShift.start === "00:00"
+            ? nextList.find((shift) => shift.id === activeShift.id)
+            : null;
+
         if (secondPartDuration > 0) {
-          nextList.push({
-            ...shiftToSave,
-            id: newShiftId,
-            start: "00:00",
-            end: shiftToSave.end,
-            startHour: 0,
-            durationHours: secondPartDuration,
-            crossesMidnight: false,
-            nextDayEndHour: undefined,
-          });
+          if (existingNextDayShift) {
+            // 기존 익일 근무 업데이트
+            const updatedNextList = nextList.map((shift) =>
+              shift.id === activeShift.id
+                ? {
+                    ...shiftToSave,
+                    id: shift.id,
+                    start: "00:00",
+                    end: shiftToSave.end,
+                    startHour: 0,
+                    durationHours: secondPartDuration,
+                    crossesMidnight: false,
+                    nextDayEndHour: undefined,
+                  }
+                : shift
+            );
+            return {
+              ...prev,
+              [selectedWorkplace]: {
+                ...workplace,
+                [dateKeyToUpdate]: updatedList,
+                [nextKey]: updatedNextList,
+              },
+            };
+          } else {
+            // 새 익일 근무 생성
+            const newShiftId = generateShiftId(prev);
+            nextList.push({
+              ...shiftToSave,
+              id: newShiftId,
+              start: "00:00",
+              end: shiftToSave.end,
+              startHour: 0,
+              durationHours: secondPartDuration,
+              crossesMidnight: false,
+              nextDayEndHour: undefined,
+            });
+          }
         }
 
         return {
@@ -670,7 +571,7 @@ export default function DailyCalendarPage() {
       }
 
       const normalizedList = updatedList.map((shift) =>
-        shift.id === activeShiftId
+        shift.id === actualShiftId
           ? {
               ...shift,
               crossesMidnight: false,
@@ -687,7 +588,19 @@ export default function DailyCalendarPage() {
         },
       };
     });
+
     setIsEditing(false);
+    
+    // 저장 후 상태 업데이트
+    if (crossesMidnight) {
+      // 익일 근무가 생성/업데이트되었으므로 전날 근무의 ID로 변경
+      setSelectedDate(actualDate);
+      setActiveShiftId(actualShiftId);
+    } else if (previousDayShift) {
+      // 익일 근무를 클릭한 경우 전날 근무의 ID로 변경
+      setSelectedDate(previousDate);
+      setActiveShiftId(previousDayShift.id);
+    }
   };
 
   // YYYY.MM.DD 포맷 helper
@@ -766,7 +679,7 @@ export default function DailyCalendarPage() {
   };
 
   // 읽기/편집 모드에 따라 표시할 근무 정보 선택
-  const shiftForDisplay = isEditing && editedShift ? editedShift : activeShift;
+  const shiftForDisplay = isEditing && editedShift ? editedShift : displayShift;
 
   return (
     <div className="daily-page">
@@ -830,7 +743,9 @@ export default function DailyCalendarPage() {
                 >
                   <div className="shift-name">{item.name}</div>
                   <div className="shift-time">{`${item.start} - ${item.end}`}</div>
-                  <div className="shift-duration">{formatDuration(item.durationHours)}</div>
+                  <div className="shift-duration">
+                    {formatDuration(item.durationHours)}
+                  </div>
                 </div>
               );
             })}
@@ -897,12 +812,12 @@ export default function DailyCalendarPage() {
                     <p className="detail-label">근무 시간</p>
                     {isEditing ? (
                       <div className="time-wheel-wrapper">
-                        <TimeWheelPicker
+                        <TimeInput
                           label="시작"
                           value={editedShift?.start || "00:00"}
                           onChange={(val) => handleTimeChange("start", val)}
                         />
-                        <TimeWheelPicker
+                        <TimeInput
                           label="종료"
                           value={editedShift?.end || "00:00"}
                           onChange={(val) => handleTimeChange("end", val)}
@@ -911,14 +826,73 @@ export default function DailyCalendarPage() {
                       </div>
                     ) : (
                       <p className="detail-value">
-                        {shiftForDisplay?.start} ~ {shiftForDisplay?.end}
+                        {(() => {
+                          // 익일 근무를 클릭한 경우 (전날 근무가 displayShift인 경우)
+                          if (
+                            previousDayShift &&
+                            activeShift &&
+                            activeShift.start === "00:00"
+                          ) {
+                            return `${previousDayShift.start}~${activeShift.end}(익일)`;
+                          }
+                          // 전날 근무를 클릭한 경우 (crossesMidnight가 true인 경우)
+                          if (shiftForDisplay?.crossesMidnight) {
+                            const nextDate = new Date(selectedDate);
+                            nextDate.setDate(nextDate.getDate() + 1);
+                            const nextDateKey = getDateKey(nextDate);
+                            const nextScheduleData =
+                              workplaceSchedules[nextDateKey] || [];
+                            const nextDayShift = nextScheduleData.find(
+                              (shift) =>
+                                shift.name === shiftForDisplay?.name &&
+                                shift.start === "00:00"
+                            );
+                            if (nextDayShift) {
+                              return `${shiftForDisplay?.start}~${nextDayShift.end}(익일)`;
+                            }
+                            return `${shiftForDisplay?.start}~${shiftForDisplay?.end}(익일)`;
+                          }
+                          return `${shiftForDisplay?.start}~${shiftForDisplay?.end}`;
+                        })()}
                       </p>
                     )}
                   </div>
                   <div>
                     <p className="detail-label">총 근무</p>
                     <p className="detail-value">
-                      {formatDuration(shiftForDisplay?.durationHours)}
+                      {(() => {
+                        // 익일 근무를 클릭한 경우 (전날 근무가 displayShift인 경우)
+                        if (
+                          previousDayShift &&
+                          activeShift &&
+                          activeShift.start === "00:00"
+                        ) {
+                          const totalHours =
+                            previousDayShift.durationHours +
+                            activeShift.durationHours;
+                          return formatDuration(totalHours);
+                        }
+                        // 전날 근무를 클릭한 경우 (crossesMidnight가 true인 경우)
+                        if (shiftForDisplay?.crossesMidnight) {
+                          const nextDate = new Date(selectedDate);
+                          nextDate.setDate(nextDate.getDate() + 1);
+                          const nextDateKey = getDateKey(nextDate);
+                          const nextScheduleData =
+                            workplaceSchedules[nextDateKey] || [];
+                          const nextDayShift = nextScheduleData.find(
+                            (shift) =>
+                              shift.name === shiftForDisplay?.name &&
+                              shift.start === "00:00"
+                          );
+                          if (nextDayShift) {
+                            const totalHours =
+                              shiftForDisplay?.durationHours +
+                              nextDayShift.durationHours;
+                            return formatDuration(totalHours);
+                          }
+                        }
+                        return formatDuration(shiftForDisplay?.durationHours);
+                      })()}
                     </p>
                   </div>
                   <div>
