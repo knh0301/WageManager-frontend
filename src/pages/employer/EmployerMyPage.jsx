@@ -109,21 +109,18 @@ export default function EmployerMyPage() {
               <input
                 type="date"
                 value={user.birthDate}
-                disabled={!editableSections.basic}
+                disabled={true}
                 onChange={(e) => handleChange("birthDate", e.target.value)}
               />
             </div>
             <div className="mypage-gender">
               <span className="mypage-label">성별</span>
-              <select
-                name="gender"
-                value={user.gender}
-                disabled={!editableSections.basic}
-                onChange={(e) => handleChange("gender", e.target.value)}
-              >
-                <option value="man">남성</option>
-                <option value="woman">여성</option>
-              </select>
+              <input
+                type="text"
+                value={user.gender === "man" ? "남성" : "여성"}
+                disabled={true}
+                readOnly
+              />
             </div>
             <button
               className="mypage-edit-button"
@@ -190,6 +187,19 @@ export default function EmployerMyPage() {
               onClick={() => toggleEdit("password")}
             >
               {editableSections.password ? "완료" : "수정"}
+            </button>
+          </div>
+          <div className="mypage-withdraw-section">
+            <button
+              className="mypage-withdraw-button"
+              onClick={() => {
+                if (window.confirm("정말 회원 탈퇴하시겠습니까?")) {
+                  // 회원 탈퇴 로직 추가
+                  console.log("회원 탈퇴");
+                }
+              }}
+            >
+              회원 탈퇴 &gt;
             </button>
           </div>
         </div>
