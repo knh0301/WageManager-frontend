@@ -22,15 +22,16 @@
   display: flex;
   gap: 32px;
   align-items: stretch;
+  height: 800px;
 }
 .mypage-nav {
-  width: 300px;
+  width: 400px;
+  height: 800px;
   background-color: #ffffff;
   border-radius: 24px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 24px;
   box-sizing: border-box;
-  font-family: "Do Hyeon", sans-serif;
   color: #4d4d4d;
 }
 
@@ -61,10 +62,18 @@
 }
 
 .mypage-avatar-placeholder {
-  width: 140px;
-  height: 140px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background-color: #d3d3d3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.mypage-avatar-placeholder svg {
+  width: 60%;
+  height: 60%;
 }
 
 .mypage-avatar-camera {
@@ -81,6 +90,11 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   color: #666666;
+}
+
+.mypage-avatar-camera svg {
+  width: 40%;
+  height: 40%;
 }
 
 .mypage-avatar-camera input {
@@ -141,11 +155,21 @@
 
 .mypage-container {
   width: 100%;
+  height: 100%;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 32px;
   background-color: #ffffff;
   border-radius: 24px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.mypage-container hr {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 20px 0;
 }
 
 .mypage-title {
@@ -179,7 +203,7 @@
 .mypage-gender {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 30px;
 }
 
 .mypage-label {
@@ -197,7 +221,7 @@
   font-size: 1.5em;
   width: 100%;
   display: flex;
-  gap: 15px;
+  gap: 30px;
   margin: 20px;
   align-items: center;
 }
@@ -211,7 +235,7 @@
   font-size: 1.5em;
   width: 100%;
   display: flex;
-  gap: 15px;
+  gap: 30px;
   margin: 20px;
   align-items: center;
 }
@@ -225,7 +249,7 @@
   font-size: 1.5em;
   width: 100%;
   display: flex;
-  gap: 15px;
+  gap: 30px;
   margin: 20px;
   align-items: center;
 }
@@ -270,16 +294,19 @@ select {
   box-sizing: border-box;
   line-height: 1.5;
   vertical-align: middle;
+  margin-left: 40px;
 }
 
 .mypage-password-input-wrapper {
   position: relative;
   width: 40%;
+  margin-left: 40px;
 }
 
 .mypage-password-input-wrapper input {
   width: 100%;
   padding-right: 70px;
+  margin-left: 0;
 }
 
 .mypage-view-button {
@@ -305,27 +332,46 @@ select {
 .mypage-receive-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 24px;
   padding: 16px 24px;
   border: 1px solid #e0e0e0;
   border-radius: 16px;
   background-color: #fafafa;
 }
 
-.mypage-receive-card strong {
-  display: block;
+.mypage-receive-date {
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
   color: #333333;
-  margin-bottom: 4px;
+  min-width: 100px;
 }
 
-.mypage-receive-card p {
-  margin: 0;
-  color: #555555;
+.mypage-receive-divider {
+  width: 1px;
+  height: 40px;
+  background-color: #e0e0e0;
+  flex-shrink: 0;
 }
 
-.mypage-receive-card > div {
-  min-width: 120px;
+.mypage-receive-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mypage-receive-worker {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 1em;
+  color: #333333;
+  font-weight: 500;
+}
+
+.mypage-receive-time {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 0.9em;
+  color: #666666;
 }
 
 .mypage-receive-actions {
@@ -334,7 +380,60 @@ select {
   gap: 8px;
 }
 
+.mypage-receive-status {
+  margin-left: auto;
+}
+
+.mypage-status-button {
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  cursor: default;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+}
+
+.mypage-status-button:disabled {
+  cursor: default;
+}
+
+.mypage-status-approved {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.mypage-status-rejected {
+  color: #d9534f;
+  border-color: #ffb3b3;
+}
+
 .mypage-edit-button.decline {
   border-color: #ffb3b3;
   color: #d9534f;
+}
+
+.mypage-withdraw-section {
+  margin-top: auto;
+  padding-top: 32px;
+  display: flex;
+  justify-content: flex-start;
+  border-top: 1px solid #e0e0e0;
+}
+
+.mypage-withdraw-button {
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  background-color: #ffffff;
+  padding: 12px 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #ff6b6b;
 }

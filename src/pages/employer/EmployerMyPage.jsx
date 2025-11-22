@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaCamera, FaUser } from "react-icons/fa";
 import "../../styles/employerMyPage.css";
+import Swal from "sweetalert2";
+
 export default function EmployerMyPage() {
   const initialUser = {
     name: "김나현",
@@ -55,7 +57,9 @@ export default function EmployerMyPage() {
                   className="mypage-avatar-image"
                 />
               ) : (
-                <div className="mypage-avatar-placeholder" />
+                <div className="mypage-avatar-placeholder">
+                  <FaUser />
+                </div>
               )}
               <label className="mypage-avatar-camera">
                 <FaCamera />
@@ -109,21 +113,18 @@ export default function EmployerMyPage() {
               <input
                 type="date"
                 value={user.birthDate}
-                disabled={!editableSections.basic}
+                disabled={true}
                 onChange={(e) => handleChange("birthDate", e.target.value)}
               />
             </div>
             <div className="mypage-gender">
               <span className="mypage-label">성별</span>
-              <select
-                name="gender"
-                value={user.gender}
-                disabled={!editableSections.basic}
-                onChange={(e) => handleChange("gender", e.target.value)}
-              >
-                <option value="man">남성</option>
-                <option value="woman">여성</option>
-              </select>
+              <input
+                type="text"
+                value={user.gender === "man" ? "남성" : "여성"}
+                disabled={true}
+                readOnly
+              />
             </div>
             <button
               className="mypage-edit-button"
@@ -190,6 +191,32 @@ export default function EmployerMyPage() {
               onClick={() => toggleEdit("password")}
             >
               {editableSections.password ? "완료" : "수정"}
+            </button>
+          </div>
+          <div className="mypage-withdraw-section">
+            <button
+              className="mypage-withdraw-button"
+              onClick={() => {
+                Swal.fire({
+                  icon: "warning",
+                  title: "회원 탈퇴 하시겠습니까?",
+                  text: "탈퇴 시 모든 정보가 삭제되며 복구할 수 없습니다.",
+                  showCancelButton: true,
+                  confirmButtonText: "탈퇴",
+                  cancelButtonText: "취소",
+                  confirmButtonColor: "var(--color-red)",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    Swal.fire(
+                      "탈퇴 완료",
+                      "회원 탈퇴가 완료되었습니다.",
+                      "success"
+                    );
+                  }
+                });
+              }}
+            >
+              회원 탈퇴 &gt;
             </button>
           </div>
         </div>
