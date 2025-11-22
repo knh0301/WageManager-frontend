@@ -343,7 +343,11 @@ export default function DailyCalendarPage() {
         setEditedShift(null);
 
         // 삭제 완료 알림
-        Swal.fire("삭제 완료", "근무자가 삭제되었습니다.", "success");
+        Swal.fire(
+          "삭제 완료",
+          `${activeShift.name} 근무자가 삭제되었습니다.`,
+          "success"
+        );
       }
     });
   };
