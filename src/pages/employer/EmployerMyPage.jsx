@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
 import "../../styles/employerMyPage.css";
+import Swal from "sweetalert2";
+
 export default function EmployerMyPage() {
   const initialUser = {
     name: "김나현",
@@ -193,10 +195,22 @@ export default function EmployerMyPage() {
             <button
               className="mypage-withdraw-button"
               onClick={() => {
-                if (window.confirm("정말 회원 탈퇴하시겠습니까?")) {
-                  // 회원 탈퇴 로직 추가
-                  console.log("회원 탈퇴");
-                }
+                Swal.fire({
+                  icon: "warning",
+                  title: "정말로 회원 탈퇴를 하시겠습니까?",
+                  showCancelButton: true,
+                  confirmButtonText: "탈퇴",
+                  cancelButtonText: "취소",
+                  confirmButtonColor: "var(--color-red)",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    Swal.fire(
+                      "탈퇴 완료",
+                      "회원 탈퇴가 완료되었습니다.",
+                      "success"
+                    );
+                  }
+                });
               }}
             >
               회원 탈퇴 &gt;
