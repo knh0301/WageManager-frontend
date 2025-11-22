@@ -19,6 +19,7 @@ import {
 } from "./utils/formatUtils";
 import { hours } from "./constants";
 import TimeInput from "./components/TimeInput";
+import Swal from "sweetalert2";
 
 export default function DailyCalendarPage() {
   const today = new Date();
@@ -278,61 +279,73 @@ export default function DailyCalendarPage() {
     if (!activeShiftId || !activeShift) return;
 
     // 삭제 확인
-    if (!window.confirm(`${activeShift.name} 근무자를 삭제하시겠습니까?`)) {
-      return;
-    }
+    Swal.fire({
+      icon: "question",
+      title: `${activeShift.name} 근무자를 삭제하시겠습니까?`,
+      showCancelButton: true,
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+      confirmButtonColor: "var(--color-red)",
+    }).then((result) => {
+      // 확인 버튼을 눌렀을 때만 삭제 진행
+      if (result.isConfirmed) {
+        const dateKeyToDelete = getDateKey(selectedDate);
 
-    const dateKeyToDelete = getDateKey(selectedDate);
+        setScheduleData((prev) => {
+          const workplace = prev[selectedWorkplace] || {};
+          const currentList = workplace[dateKeyToDelete] || [];
 
-    setScheduleData((prev) => {
-      const workplace = prev[selectedWorkplace] || {};
-      const currentList = workplace[dateKeyToDelete] || [];
-
-      // 당일 근무 삭제
-      let updatedList = currentList.filter(
-        (shift) => shift.id !== activeShiftId
-      );
-
-      // 익일로 넘어가는 근무인 경우 익일 근무도 삭제
-      if (activeShift.crossesMidnight) {
-        const nextDate = new Date(selectedDate);
-        nextDate.setDate(nextDate.getDate() + 1);
-        const nextKey = getDateKey(nextDate);
-        const nextList = workplace[nextKey] || [];
-
-        // 익일 근무 찾아서 삭제
-        const nextDayShift = nextList.find(
-          (shift) => shift.name === activeShift.name && shift.start === "00:00"
-        );
-
-        if (nextDayShift) {
-          const updatedNextList = nextList.filter(
-            (shift) => shift.id !== nextDayShift.id
+          // 당일 근무 삭제
+          let updatedList = currentList.filter(
+            (shift) => shift.id !== activeShiftId
           );
+
+          // 익일로 넘어가는 근무인 경우 익일 근무도 삭제
+          if (activeShift.crossesMidnight) {
+            const nextDate = new Date(selectedDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+            const nextKey = getDateKey(nextDate);
+            const nextList = workplace[nextKey] || [];
+
+            // 익일 근무 찾아서 삭제
+            const nextDayShift = nextList.find(
+              (shift) =>
+                shift.name === activeShift.name && shift.start === "00:00"
+            );
+
+            if (nextDayShift) {
+              const updatedNextList = nextList.filter(
+                (shift) => shift.id !== nextDayShift.id
+              );
+              return {
+                ...prev,
+                [selectedWorkplace]: {
+                  ...workplace,
+                  [dateKeyToDelete]: updatedList,
+                  [nextKey]: updatedNextList,
+                },
+              };
+            }
+          }
+
           return {
             ...prev,
             [selectedWorkplace]: {
               ...workplace,
               [dateKeyToDelete]: updatedList,
-              [nextKey]: updatedNextList,
             },
           };
-        }
+        });
+
+        // 삭제 후 패널 닫기
+        setActiveShiftId(null);
+        setIsEditing(false);
+        setEditedShift(null);
+
+        // 삭제 완료 알림
+        Swal.fire("삭제 완료", "근무자가 삭제되었습니다.", "success");
       }
-
-      return {
-        ...prev,
-        [selectedWorkplace]: {
-          ...workplace,
-          [dateKeyToDelete]: updatedList,
-        },
-      };
     });
-
-    // 삭제 후 패널 닫기
-    setActiveShiftId(null);
-    setIsEditing(false);
-    setEditedShift(null);
   };
 
   const updateEditedShift = (field, value) => {
