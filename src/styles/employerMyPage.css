@@ -26,12 +26,12 @@
 }
 .mypage-nav {
   width: 400px;
+  height: 800px;
   background-color: #ffffff;
   border-radius: 24px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   padding: 24px;
   box-sizing: border-box;
-  font-family: "Do Hyeon", sans-serif;
   color: #4d4d4d;
 }
 
@@ -319,33 +319,83 @@ select {
 .mypage-receive-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 24px;
   padding: 16px 24px;
   border: 1px solid #e0e0e0;
   border-radius: 16px;
   background-color: #fafafa;
 }
 
-.mypage-receive-card strong {
-  display: block;
+.mypage-receive-date {
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
   color: #333333;
-  margin-bottom: 4px;
+  min-width: 100px;
 }
 
-.mypage-receive-card p {
-  margin: 0;
-  color: #555555;
+.mypage-receive-divider {
+  width: 1px;
+  height: 40px;
+  background-color: #e0e0e0;
+  flex-shrink: 0;
 }
 
-.mypage-receive-card > div {
-  min-width: 120px;
+.mypage-receive-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mypage-receive-worker {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 1em;
+  color: #333333;
+  font-weight: 500;
+}
+
+.mypage-receive-time {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 0.9em;
+  color: #666666;
 }
 
 .mypage-receive-actions {
   margin-left: auto;
   display: flex;
   gap: 8px;
+}
+
+.mypage-receive-status {
+  margin-left: auto;
+}
+
+.mypage-status-button {
+  font-family: "Noto Sans KR", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: bold;
+  font-style: normal;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  cursor: default;
+  font-size: 0.9rem;
+  background-color: #ffffff;
+}
+
+.mypage-status-button:disabled {
+  cursor: default;
+}
+
+.mypage-status-approved {
+  color: #4caf50;
+  border-color: #4caf50;
+}
+
+.mypage-status-rejected {
+  color: #d9534f;
+  border-color: #ffb3b3;
 }
 
 .mypage-edit-button.decline {
