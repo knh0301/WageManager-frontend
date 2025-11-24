@@ -316,3 +316,259 @@ export const mockRequests = [
     status: null, // 대기중
   },
 ];
+
+// 송금 관리 페이지 더미 데이터 (직원별 근무 내역 및 급여)
+export const remittanceData = {
+  "맥도날드 잠실점": {
+    오지환: {
+      "2025-10": [
+        {
+          date: 15,
+          day: "수",
+          startTime: "15:00",
+          endTime: "21:00",
+          wage: 60180,
+        },
+        {
+          date: 13,
+          day: "월",
+          startTime: "15:00",
+          endTime: "21:00",
+          wage: 60180,
+        },
+        {
+          date: 6,
+          day: "일",
+          startTime: "15:00",
+          endTime: "21:00",
+          wage: 60180,
+        },
+        {
+          date: 5,
+          day: "토",
+          startTime: "15:00",
+          endTime: "21:00",
+          wage: 60180,
+        },
+        {
+          date: 4,
+          day: "금",
+          startTime: "15:00",
+          endTime: "21:00",
+          wage: 60180,
+        },
+      ],
+      totalWage: 300900,
+    },
+    문보경: {
+      "2025-10": [
+        {
+          date: 20,
+          day: "월",
+          startTime: "09:00",
+          endTime: "18:00",
+          wage: 89100,
+        },
+        {
+          date: 18,
+          day: "토",
+          startTime: "09:00",
+          endTime: "18:00",
+          wage: 89100,
+        },
+        {
+          date: 12,
+          day: "일",
+          startTime: "09:00",
+          endTime: "18:00",
+          wage: 89100,
+        },
+      ],
+      totalWage: 267300,
+    },
+    홍창기: {
+      "2025-10": [
+        {
+          date: 22,
+          day: "수",
+          startTime: "10:00",
+          endTime: "19:00",
+          wage: 90000,
+        },
+        {
+          date: 19,
+          day: "일",
+          startTime: "10:00",
+          endTime: "19:00",
+          wage: 90000,
+        },
+        {
+          date: 11,
+          day: "토",
+          startTime: "10:00",
+          endTime: "19:00",
+          wage: 90000,
+        },
+        {
+          date: 8,
+          day: "수",
+          startTime: "10:00",
+          endTime: "19:00",
+          wage: 90000,
+        },
+      ],
+      totalWage: 360000,
+    },
+    오스틴: {
+      "2025-10": [
+        {
+          date: 25,
+          day: "토",
+          startTime: "14:00",
+          endTime: "22:00",
+          wage: 80000,
+        },
+        {
+          date: 17,
+          day: "금",
+          startTime: "14:00",
+          endTime: "22:00",
+          wage: 80000,
+        },
+        {
+          date: 10,
+          day: "금",
+          startTime: "14:00",
+          endTime: "22:00",
+          wage: 80000,
+        },
+      ],
+      totalWage: 240000,
+    },
+    박해민: {
+      "2025-10": [
+        {
+          date: 16,
+          day: "목",
+          startTime: "11:00",
+          endTime: "20:00",
+          wage: 99000,
+        },
+        {
+          date: 9,
+          day: "목",
+          startTime: "11:00",
+          endTime: "20:00",
+          wage: 99000,
+        },
+        {
+          date: 2,
+          day: "목",
+          startTime: "11:00",
+          endTime: "20:00",
+          wage: 99000,
+        },
+      ],
+      totalWage: 297000,
+    },
+    임찬규: {
+      "2025-10": [
+        {
+          date: 24,
+          day: "금",
+          startTime: "08:00",
+          endTime: "17:00",
+          wage: 99000,
+        },
+        {
+          date: 14,
+          day: "화",
+          startTime: "08:00",
+          endTime: "17:00",
+          wage: 99000,
+        },
+        {
+          date: 7,
+          day: "화",
+          startTime: "08:00",
+          endTime: "17:00",
+          wage: 99000,
+        },
+      ],
+      totalWage: 297000,
+    },
+    송승기: {
+      "2025-10": [
+        {
+          date: 21,
+          day: "화",
+          startTime: "12:00",
+          endTime: "21:00",
+          wage: 99000,
+        },
+        {
+          date: 3,
+          day: "금",
+          startTime: "12:00",
+          endTime: "21:00",
+          wage: 99000,
+        },
+      ],
+      totalWage: 198000,
+    },
+  },
+  "스타벅스 강남역점": {
+    김민수: {
+      "2025-10": [
+        {
+          date: 21,
+          day: "화",
+          startTime: "08:00",
+          endTime: "16:00",
+          wage: 96000,
+        },
+        {
+          date: 14,
+          day: "화",
+          startTime: "08:00",
+          endTime: "16:00",
+          wage: 96000,
+        },
+        {
+          date: 7,
+          day: "월",
+          startTime: "08:00",
+          endTime: "16:00",
+          wage: 96000,
+        },
+      ],
+      totalWage: 288000,
+    },
+    이지은: {
+      "2025-10": [
+        {
+          date: 23,
+          day: "목",
+          startTime: "12:00",
+          endTime: "20:00",
+          wage: 96000,
+        },
+        {
+          date: 16,
+          day: "목",
+          startTime: "12:00",
+          endTime: "20:00",
+          wage: 96000,
+        },
+        {
+          date: 9,
+          day: "목",
+          startTime: "12:00",
+          endTime: "20:00",
+          wage: 96000,
+        },
+      ],
+      totalWage: 288000,
+    },
+  },
+};

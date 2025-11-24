@@ -1,19 +1,21 @@
 .remittance-manage-page {
   display: flex;
   gap: 24px;
-  padding: 32px;
+  padding: 24px 40px;
+  width: 100%;
+  box-sizing: border-box;
   min-height: calc(100vh - 70px);
   background: #f7fbfc;
 }
 
 /* 왼쪽 패널: 근무지 선택 + 직원 리스트 */
 .remittance-left-panel {
-  width: 280px;
+  flex: 0 0 22%;
   background: #ffffff;
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  height: fit-content;
+  align-self: stretch;
 }
 
 .remittance-workplace-select {
@@ -60,7 +62,7 @@
 
 /* 중앙 패널: 날짜 네비게이션 + 근무 상세 내역 */
 .remittance-center-panel {
-  flex: 1;
+  flex: 1 1 56%;
   background: #ffffff;
   border-radius: 16px;
   padding: 32px;
@@ -173,10 +175,11 @@
 
 /* 오른쪽 패널: 누적 급여 + 송금하기 */
 .remittance-right-panel {
-  width: 320px;
+  flex: 0 0 22%;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  align-self: stretch;
 }
 
 .remittance-summary-box {
