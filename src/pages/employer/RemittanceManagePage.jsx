@@ -51,10 +51,12 @@ export default function RemittanceManagePage() {
     const monthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
     const workerMonthData =
       remittanceData[selectedWorkplace]?.[currentSelectedWorker]?.[monthKey];
-    return workerMonthData
-      ? remittanceData[selectedWorkplace]?.[currentSelectedWorker]?.totalWage ||
-          0
-      : 0;
+    if (!workerMonthData || workerMonthData.length === 0) {
+      return 0;
+    }
+
+    // 선택된 연/월의 레코드만 합산
+    return workerMonthData.reduce((sum, record) => sum + (record.wage ?? 0), 0);
   }, [currentSelectedWorker, selectedWorkplace, currentYear, currentMonth]);
 
   const handlePrevMonth = () => {
