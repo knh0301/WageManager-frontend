@@ -321,7 +321,7 @@ export const mockRequests = [
 export const remittanceData = {
   "맥도날드 잠실점": {
     오지환: {
-      "2025-10": [
+      "2025-11": [
         {
           date: 15,
           day: "수",
@@ -387,7 +387,7 @@ export const remittanceData = {
       totalWage: 267300,
     },
     홍창기: {
-      "2025-10": [
+      "2025-11": [
         {
           date: 22,
           day: "수",
@@ -446,7 +446,7 @@ export const remittanceData = {
       totalWage: 240000,
     },
     박해민: {
-      "2025-10": [
+      "2025-11": [
         {
           date: 16,
           day: "목",
@@ -472,7 +472,7 @@ export const remittanceData = {
       totalWage: 297000,
     },
     임찬규: {
-      "2025-10": [
+      "2025-11": [
         {
           date: 24,
           day: "금",
@@ -498,7 +498,7 @@ export const remittanceData = {
       totalWage: 297000,
     },
     송승기: {
-      "2025-10": [
+      "2025-11": [
         {
           date: 21,
           day: "화",
