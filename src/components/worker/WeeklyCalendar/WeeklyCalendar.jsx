@@ -198,7 +198,7 @@ function WeeklyCalendar({ workRecords = {} }) {
   };
 
   return (
-    <div className="weekly-calendar">
+    <>
       {/* 주 선택 네비게이션 */}
       <div className="weekly-nav">
         <button className="weekly-nav-arrow" onClick={handlePrevWeek}>
@@ -289,7 +289,7 @@ function WeeklyCalendar({ workRecords = {} }) {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }
 

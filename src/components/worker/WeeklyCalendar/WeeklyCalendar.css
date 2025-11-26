@@ -1,8 +1,9 @@
-.weekly-calendar {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px;
+/* WeeklyCalendar 전용 wrapper 스타일 (박스 없이 padding만) */
+.weekly-calendar-wrapper {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  max-width: 800px !important;
 }
 
 /* 주 선택 네비게이션 */
@@ -164,10 +165,6 @@
 }
 
 @media (max-width: 768px) {
-  .weekly-calendar {
-    padding: 16px;
-  }
-
   .weekly-summary-row {
     grid-template-columns: 1fr;
     gap: 12px;

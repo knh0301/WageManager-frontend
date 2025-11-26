@@ -20,7 +20,7 @@ export default function WeeklyCalendarPage() {
   const [workRecords] = useState(initialWorkRecords);
 
   return (
-    <div className="worker-content-frame">
+    <div className="worker-content-frame weekly-calendar-wrapper">
       <WeeklyCalendar workRecords={workRecords} />
     </div>
   );
