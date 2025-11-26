@@ -159,7 +159,7 @@ function MonthlyCalendarPage() {
     const [sh, sm] = record.start.split(":");
     const [eh, em] = record.end.split(":");
 
-    setEditForm({
+    const formData = {
       recordId: record.id,
       originalDateKey: dateKey,
       place: record.place,
@@ -170,7 +170,21 @@ function MonthlyCalendarPage() {
       endHour: eh,
       endMinute: em,
       breakMinutes: record.breakMinutes ?? 60,
-    });
+    };
+
+    // 원본 데이터 저장 (변경사항 비교용) - 비교에 필요한 필드만 저장
+    formData.originalData = {
+      place: formData.place,
+      wage: formData.wage,
+      date: formData.date,
+      startHour: formData.startHour,
+      startMinute: formData.startMinute,
+      endHour: formData.endHour,
+      endMinute: formData.endMinute,
+      breakMinutes: formData.breakMinutes,
+    };
+
+    setEditForm(formData);
   };
 
   const handleCloseEdit = () => { // 수정 요청 폼 닫기

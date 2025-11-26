@@ -10,12 +10,37 @@ const hourOptions = Array.from({ length: 24 }, (_, i) => pad2(i));
 const minuteOptions = ["00", "10", "20", "30", "40", "50"];
 const breakOptions = [0, 30, 60, 90, 120];
 
-function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel }) {
-  if (!form) return null;
-
+function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel, variant }) {
   const updateField = createUpdateField(setForm);
 
+  // 원본 데이터와 현재 폼 데이터 비교
+  const hasChanges = React.useMemo(() => {
+    if (!form || !form.originalData) return false;
+    
+    const original = form.originalData;
+    const current = form;
+    
+    // 타입 변환을 고려한 비교
+    const originalWage = Number(original.wage);
+    const currentWage = Number(current.wage);
+    
+    return (
+      original.place !== current.place ||
+      originalWage !== currentWage ||
+      original.date !== current.date ||
+      original.startHour !== current.startHour ||
+      original.startMinute !== current.startMinute ||
+      original.endHour !== current.endHour ||
+      original.endMinute !== current.endMinute ||
+      (original.breakMinutes ?? 60) !== (current.breakMinutes ?? 60)
+    );
+  }, [form]);
+
+  if (!form) return null;
+
   const handleConfirmClick = async () => {
+    if (!hasChanges) return;
+    
     const result = await Swal.fire({
       title: "근무 기록 정정 요청",
       text: "입력한 내용으로 근무 정정 요청을 보내시겠어요?",
@@ -32,7 +57,7 @@ function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel }) {
   };
 
   return (
-    <div className="work-edit-box">
+    <div className={`work-edit-box ${variant === "weekly" ? "weekly-style" : ""}`}>
       {/* 근무지 / 시급 */}
       <div className="work-edit-row">
         <div className="work-edit-field">
@@ -153,6 +178,7 @@ function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel }) {
           type="button"
           className="work-edit-btn work-edit-btn-confirm"
           onClick={handleConfirmClick}
+          disabled={!hasChanges}
         >
           확인
         </button>
@@ -189,10 +215,21 @@ WorkEditRequestBox.propTypes = {
     endHour: PropTypes.string,
     endMinute: PropTypes.string,
     breakMinutes: PropTypes.number,
+    originalData: PropTypes.shape({
+      place: PropTypes.string,
+      wage: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      date: PropTypes.string,
+      startHour: PropTypes.string,
+      startMinute: PropTypes.string,
+      endHour: PropTypes.string,
+      endMinute: PropTypes.string,
+      breakMinutes: PropTypes.number,
+    }),
   }),
   setForm: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  variant: PropTypes.oneOf(["weekly", "monthly"]),
 };
 

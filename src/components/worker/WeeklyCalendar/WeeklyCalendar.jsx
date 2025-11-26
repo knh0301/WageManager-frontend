@@ -15,7 +15,7 @@ const getKoreanDayLabel = (dayIndex) => {
 // 주의 시작일(일요일)을 구하는 함수
 const getWeekStart = (date) => {
   const d = new Date(date);
-  const day = d.getDay();
+  const day = d.getDay(); //0(일요일) ~ 6(토요일)
   d.setDate(d.getDate() - day); // 일요일로 이동
   return d;
 };
@@ -143,7 +143,7 @@ function WeeklyCalendar({ workRecords = {} }) {
       const [sh, sm] = record.start.split(":");
       const [eh, em] = record.end.split(":");
 
-      setEditForm({
+      const formData = {
         recordId: record.id,
         originalDateKey: dateKey,
         place: record.place,
@@ -154,7 +154,21 @@ function WeeklyCalendar({ workRecords = {} }) {
         endHour: eh,
         endMinute: em,
         breakMinutes: record.breakMinutes ?? 60,
-      });
+      };
+
+      // 원본 데이터 저장 (변경사항 비교용) - 비교에 필요한 필드만 저장
+      formData.originalData = {
+        place: formData.place,
+        wage: formData.wage,
+        date: formData.date,
+        startHour: formData.startHour,
+        startMinute: formData.startMinute,
+        endHour: formData.endHour,
+        endMinute: formData.endMinute,
+        breakMinutes: formData.breakMinutes,
+      };
+
+      setEditForm(formData);
     }
   };
 
@@ -256,15 +270,14 @@ function WeeklyCalendar({ workRecords = {} }) {
                           </div>
 
                           {isSelected && editForm && (
-                            <div className="weekly-edit-box-wrapper">
-                              <WorkEditRequestBox
-                                form={editForm}
-                                setForm={setEditForm}
-                                onConfirm={handleConfirmEdit}
-                                onDelete={handleDeleteRequest}
-                                onCancel={handleCancelEdit}
-                              />
-                            </div>
+                            <WorkEditRequestBox
+                              form={editForm}
+                              setForm={setEditForm}
+                              onConfirm={handleConfirmEdit}
+                              onDelete={handleDeleteRequest}
+                              onCancel={handleCancelEdit}
+                              variant="weekly"
+                            />
                           )}
                         </React.Fragment>
                       );
