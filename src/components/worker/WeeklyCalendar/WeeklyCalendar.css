@@ -84,22 +84,46 @@
   border: 1px solid #e1e5ef;
   padding: 16px 20px;
   box-shadow: 0 3px 8px rgba(15, 35, 95, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.weekly-day-header {
-  margin-bottom: 12px;
+.weekly-day-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
 }
 
-.weekly-day-date {
-  font-size: 16px;
-  font-weight: 600;
+.weekly-day-number {
+  font-size: 24px;
+  font-weight: 700;
   color: #222;
+  line-height: 1;
+}
+
+.weekly-day-label {
+  font-size: 14px;
+  color: #9a9ea8;
+  margin-top: 4px;
+}
+
+.weekly-day-divider {
+  width: 1px;
+  height: 40px;
+  background-color: #e1e5ef;
+  flex-shrink: 0;
+}
+
+.weekly-day-right {
+  flex: 1;
+  min-width: 0;
 }
 
 .weekly-day-off {
   font-size: 14px;
   color: #9a9ea8;
-  padding: 8px 0;
 }
 
 .weekly-day-records {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { MdArrowForwardIos } from "react-icons/md";
 import WorkEditRequestBox from "../MonthlyCalendarPage/WorkEditRequestBox";
 import "./WeeklyCalendar.css";
@@ -19,42 +20,11 @@ const getWeekStart = (date) => {
   return d;
 };
 
-// 주의 마지막일(토요일)을 구하는 함수
-const getWeekEnd = (date) => {
-  const start = getWeekStart(date);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6); // 토요일
-  return end;
-};
-
-// 주차 계산 함수
-const getWeekNumber = (date) => {
-  const d = new Date(date);
-  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
-  const firstDayOfWeek = firstDay.getDay();
-  const daysSinceFirst = Math.floor((d.getDate() + firstDayOfWeek - 1) / 7) + 1;
-  return daysSinceFirst;
-};
-
-// 예시 근무 데이터
-const initialWorkRecords = {
-  "2025-10-26": [], // 일요일 - 휴무
-  "2025-10-27": [
-    { id: 1, start: "15:00", end: "21:00", wage: 60180, place: "버거킹", breakMinutes: 60 },
-    { id: 2, start: "22:00", end: "24:00", wage: 20060, place: "맥도날드", breakMinutes: 0 },
-  ], // 월요일
-  "2025-10-28": [], // 화요일 - 휴무
-  "2025-10-29": [], // 수요일 - 휴무
-  "2025-10-30": [], // 목요일 - 휴무
-  "2025-10-31": [], // 금요일 - 휴무
-};
-
-function WeeklyCalendar() {
+function WeeklyCalendar({ workRecords = {} }) {
   const today = new Date();
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     getWeekStart(today)
   );
-  const [workRecords] = useState(initialWorkRecords);
   const [selectedDateKey, setSelectedDateKey] = useState(null);
   const [selectedRecordId, setSelectedRecordId] = useState(null);
   const [editForm, setEditForm] = useState(null);
@@ -71,13 +41,41 @@ function WeeklyCalendar() {
     return days;
   }, [currentWeekStart]);
 
-  // 주 표시 텍스트 (예: "2025년 10월 5주차")
+  // 주 표시 텍스트 (예: "2025년 11월 5주차")
+  // 규칙: 주에 포함된 날짜 중 해당 월의 1일이 포함된 경우 그 월을 기준으로 표시
   const weekTitle = useMemo(() => {
-    const year = currentWeekStart.getFullYear();
-    const month = currentWeekStart.getMonth() + 1;
-    const weekNumber = getWeekNumber(currentWeekStart);
-    return `${year}년 ${month}월 ${weekNumber}주차`;
-  }, [currentWeekStart]);
+    // 주에 포함된 날짜 중에서 1일인 날짜를 찾음
+    let targetYear = currentWeekStart.getFullYear();
+    let targetMonth = currentWeekStart.getMonth();
+    let foundFirstDay = false;
+
+    // 주에 포함된 모든 날짜를 확인하여 1일이 있는지 찾음
+    for (const date of weekDays) {
+      if (date.getDate() === 1) {
+        // 1일을 찾았으면 그 날짜의 월을 기준으로 사용
+        targetYear = date.getFullYear();
+        targetMonth = date.getMonth();
+        foundFirstDay = true;
+        break;
+      }
+    }
+
+    // 1일이 주에 포함되어 있지 않은 경우, 주의 시작일이 속한 월을 기준으로 사용
+    // (이 경우는 해당 월의 1일이 포함된 주가 아닌 경우)
+    if (!foundFirstDay) {
+      targetYear = currentWeekStart.getFullYear();
+      targetMonth = currentWeekStart.getMonth();
+    }
+
+    // 해당 월의 1일이 포함된 주의 일요일을 기준으로 주차 계산
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const firstDayWeekStart = getWeekStart(firstDay);
+    const diffTime = currentWeekStart - firstDayWeekStart;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const weekNumber = Math.floor(diffDays / 7) + 1;
+
+    return `${targetYear}년 ${targetMonth + 1}월 ${weekNumber}주차`;
+  }, [currentWeekStart, weekDays]);
 
   // 주간 근무시간 및 급여 계산
   const { totalHours, totalWage } = useMemo(() => {
@@ -226,53 +224,54 @@ function WeeklyCalendar() {
 
           return (
             <div key={dateKey} className="weekly-day-item">
-              <div className="weekly-day-header">
-                <div className="weekly-day-date">
-                  {dayNumber} {dayLabel}
-                </div>
+              <div className="weekly-day-left">
+                <div className="weekly-day-number">{dayNumber}</div>
+                <div className="weekly-day-label">{dayLabel}</div>
               </div>
+              <div className="weekly-day-divider"></div>
+              <div className="weekly-day-right">
+                {records.length === 0 ? (
+                  <div className="weekly-day-off">휴무</div>
+                ) : (
+                  <div className="weekly-day-records">
+                    {records.map((record) => {
+                      const isSelected =
+                        selectedDateKey === dateKey &&
+                        selectedRecordId === record.id;
 
-              {records.length === 0 ? (
-                <div className="weekly-day-off">휴무</div>
-              ) : (
-                <div className="weekly-day-records">
-                  {records.map((record) => {
-                    const isSelected =
-                      selectedDateKey === dateKey &&
-                      selectedRecordId === record.id;
+                      return (
+                        <React.Fragment key={record.id}>
+                          <div
+                            className={`weekly-record-item ${
+                              isSelected ? "selected" : ""
+                            }`}
+                            onClick={() => handleDateClick(dateKey, record.id)}
+                          >
+                            <div className="weekly-record-time">
+                              {record.start} ~ {record.end}
+                            </div>
+                            <div className="weekly-record-place">
+                              {record.place}
+                            </div>
+                          </div>
 
-                    return (
-                      <React.Fragment key={record.id}>
-                        <div
-                          className={`weekly-record-item ${
-                            isSelected ? "selected" : ""
-                          }`}
-                          onClick={() => handleDateClick(dateKey, record.id)}
-                        >
-                          <div className="weekly-record-time">
-                            {record.start} ~ {record.end}
-                          </div>
-                          <div className="weekly-record-place">
-                            {record.place}
-                          </div>
-                        </div>
-
-                        {isSelected && editForm && (
-                          <div className="weekly-edit-box-wrapper">
-                            <WorkEditRequestBox
-                              form={editForm}
-                              setForm={setEditForm}
-                              onConfirm={handleConfirmEdit}
-                              onDelete={handleDeleteRequest}
-                              onCancel={handleCancelEdit}
-                            />
-                          </div>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              )}
+                          {isSelected && editForm && (
+                            <div className="weekly-edit-box-wrapper">
+                              <WorkEditRequestBox
+                                form={editForm}
+                                setForm={setEditForm}
+                                onConfirm={handleConfirmEdit}
+                                onDelete={handleDeleteRequest}
+                                onCancel={handleCancelEdit}
+                              />
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
@@ -282,4 +281,19 @@ function WeeklyCalendar() {
 }
 
 export default WeeklyCalendar;
+
+WeeklyCalendar.propTypes = {
+  workRecords: PropTypes.objectOf(
+    PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        start: PropTypes.string.isRequired,
+        end: PropTypes.string.isRequired,
+        wage: PropTypes.number.isRequired,
+        place: PropTypes.string.isRequired,
+        breakMinutes: PropTypes.number,
+      })
+    )
+  ),
+};
 
