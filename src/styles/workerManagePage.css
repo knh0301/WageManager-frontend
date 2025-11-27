@@ -241,13 +241,13 @@
 .weekly-schedule-inputs {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
 .day-schedule-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .day-label {
@@ -255,6 +255,12 @@
   font-size: 0.95rem;
   color: #333333;
   font-weight: 500;
+}
+
+.day-label-small {
+  font-size: 0.85rem;
+  color: #666666;
+  min-width: 50px;
 }
 
 .time-inputs {
@@ -294,12 +300,70 @@
 }
 
 .break-time-input-field {
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 1rem;
-  width: 100px;
+  font-size: 0.95rem;
+  width: 80px;
   box-sizing: border-box;
+}
+
+.break-time-by-day {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.break-time-day-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.break-time-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.break-time-unit {
+  font-size: 0.9rem;
+  color: #666666;
+}
+
+.break-time-off {
+  font-size: 0.9rem;
+  color: #999999;
+}
+
+.break-time-display {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.break-time-by-day-display {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.break-time-day-display-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-label-small {
+  font-size: 0.85rem;
+  color: #666666;
+  min-width: 50px;
+}
+
+.break-time-value {
+  font-size: 0.95rem;
+  color: #333333;
+  font-weight: 500;
 }
 
 .toggle-row {

@@ -59,8 +59,20 @@ export default function WorkerManagePage() {
   // 수정 모드 시작
   const handleStartEdit = () => {
     if (workerData?.workInfo) {
+      // breakTime이 숫자면 요일별 객체로 변환
+      const breakTime = typeof workerData.workInfo.breakTime === 'number'
+        ? daysOfWeek.reduce((acc, day) => {
+            acc[day] = workerData.workInfo.breakTime;
+            return acc;
+          }, {})
+        : workerData.workInfo.breakTime || daysOfWeek.reduce((acc, day) => {
+            acc[day] = 0;
+            return acc;
+          }, {});
+      
       setEditedWorkInfo({
         ...workerData.workInfo,
+        breakTime,
         workerName: currentWorker,
       });
       setIsEditingWork(true);
@@ -321,7 +333,7 @@ export default function WorkerManagePage() {
                         : (currentWorkInfo?.weeklySchedule?.[day] || workerData.workInfo.weeklySchedule[day]);
                       return (
                         <div key={day} className="day-schedule-row">
-                          <span className="day-label">{day}요일</span>
+                          <span className="day-label-small">{day}요일</span>
                           {isEditingWork && currentWorkInfo ? (
                             <div className="time-inputs">
                               <select
@@ -446,28 +458,77 @@ export default function WorkerManagePage() {
 
                 <div className="info-field">
                   <label className="info-label">휴게 시간</label>
-                  <div className="break-time-input">
-                    <select className="break-time-select" disabled={!isEditingWork}>
-                      <option>요일별</option>
-                    </select>
-                    {isEditingWork && currentWorkInfo ? (
-                      <input
-                        type="number"
-                        className="break-time-input-field"
-                        value={currentWorkInfo.breakTime || 0}
-                        onChange={(e) =>
-                          setEditedWorkInfo({
-                            ...currentWorkInfo,
-                            breakTime: parseInt(e.target.value) || 0,
-                          })
+                  {isEditingWork && currentWorkInfo ? (
+                    <div className="break-time-by-day">
+                      {daysOfWeek.map((day) => {
+                        const breakTime = typeof currentWorkInfo.breakTime === 'object'
+                          ? currentWorkInfo.breakTime[day] || 0
+                          : currentWorkInfo.breakTime || 0;
+                        const hasSchedule = currentWorkInfo.weeklySchedule?.[day];
+                        
+                        return (
+                          <div key={day} className="break-time-day-row">
+                            <span className="day-label">{day}요일</span>
+                            {hasSchedule ? (
+                              <div className="break-time-input-group">
+                                <input
+                                  type="number"
+                                  className="break-time-input-field"
+                                  value={breakTime}
+                                  min="0"
+                                  onChange={(e) => {
+                                    const newBreakTime = typeof currentWorkInfo.breakTime === 'object'
+                                      ? { ...currentWorkInfo.breakTime }
+                                      : daysOfWeek.reduce((acc, d) => {
+                                          acc[d] = currentWorkInfo.breakTime || 0;
+                                          return acc;
+                                        }, {});
+                                    newBreakTime[day] = parseInt(e.target.value) || 0;
+                                    setEditedWorkInfo({
+                                      ...currentWorkInfo,
+                                      breakTime: newBreakTime,
+                                    });
+                                  }}
+                                />
+                                <span className="break-time-unit">분</span>
+                              </div>
+                            ) : (
+                              <span className="break-time-off">-</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="break-time-display">
+                      {(() => {
+                        const breakTime = currentWorkInfo?.breakTime || workerData.workInfo.breakTime;
+                        if (typeof breakTime === 'object') {
+                          // 요일별로 다른 경우
+                          const uniqueValues = [...new Set(Object.values(breakTime))];
+                          if (uniqueValues.length === 1 && uniqueValues[0] > 0) {
+                            return <div className="info-value">{uniqueValues[0]} 분 (요일별 동일)</div>;
+                          }
+                          return (
+                            <div className="break-time-by-day-display">
+                              {daysOfWeek.map((day) => {
+                                const value = breakTime[day] || 0;
+                                const hasSchedule = currentWorkInfo?.weeklySchedule?.[day] || workerData.workInfo.weeklySchedule[day];
+                                if (!hasSchedule) return null;
+                                return (
+                                  <div key={day} className="break-time-day-display-item">
+                                    <span className="day-label-small">{day}요일</span>
+                                    <span className="break-time-value">{value} 분</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
                         }
-                      />
-                    ) : (
-                      <div className="info-value">
-                        {currentWorkInfo?.breakTime || workerData.workInfo.breakTime} 분
-                      </div>
-                    )}
-                  </div>
+                        return <div className="info-value">{breakTime} 분</div>;
+                      })()}
+                    </div>
+                  )}
                 </div>
 
                 <div className="info-field">
