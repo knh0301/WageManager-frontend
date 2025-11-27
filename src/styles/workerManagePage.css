@@ -1,0 +1,438 @@
+.worker-manage-page {
+  display: flex;
+  gap: 24px;
+  padding: 24px 40px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: calc(100vh - 70px);
+  background: #f7fbfc;
+}
+
+/* 왼쪽 패널 */
+.worker-manage-left-panel {
+  flex: 0 0 16%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.worker-manage-workplace-select {
+  margin-bottom: 0;
+}
+
+.workplace-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.worker-manage-worker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.worker-item {
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  color: #333333;
+  background: #f5f5f5;
+}
+
+.worker-item:hover {
+  background: var(--color-background);
+  color: var(--color-main);
+}
+
+.worker-item.selected {
+  background: var(--color-main);
+  color: var(--color-background);
+  font-weight: 600;
+}
+
+.add-worker-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-main);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-worker-button:hover {
+  background: #1565c0;
+  transform: translateY(-1px);
+}
+
+/* 중앙 패널 */
+.worker-manage-center-panel {
+  flex: 1 1 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-self: flex-start;
+}
+
+.info-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.info-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
+}
+
+.edit-button {
+  padding: 8px 20px;
+  background: var(--color-main);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-button:hover {
+  background: #1565c0;
+}
+
+.info-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.basic-info-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.profile-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.worker-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333333;
+}
+
+.worker-birthdate {
+  font-size: 0.9rem;
+  color: #666666;
+  margin-top: 4px;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #333333;
+  padding: 10px 0;
+}
+
+.info-input {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333333;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.info-input:focus {
+  outline: none;
+  border-color: var(--color-main);
+}
+
+.weekly-schedule-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-label {
+  min-width: 60px;
+  font-size: 0.95rem;
+  color: #333333;
+  font-weight: 500;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-select {
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.time-display {
+  font-size: 0.95rem;
+  color: #333333;
+  padding: 6px 0;
+}
+
+.break-time-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.break-time-select {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.break-time-input-field {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100px;
+  box-sizing: border-box;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-label {
+  font-size: 0.95rem;
+  color: #333333;
+  font-weight: 500;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--color-main);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-worker-selected {
+  text-align: center;
+  color: #999999;
+  padding: 60px 0;
+  font-size: 1.1rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 오른쪽 패널 - 스케줄 그리드 */
+.worker-manage-right-panel {
+  flex: 0 0 36%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  align-self: flex-start;
+  overflow: hidden;
+}
+
+.schedule-grid-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.schedule-grid-header {
+  display: grid;
+  grid-template-columns: 35px repeat(7, 1fr);
+  gap: 1px;
+  margin-bottom: 6px;
+}
+
+.schedule-time-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-day-header {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333333;
+  padding: 10px 4px;
+}
+
+.schedule-grid-body {
+  display: grid;
+  grid-template-columns: 35px repeat(7, 1fr);
+  gap: 1px;
+}
+
+.schedule-hour-cell {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #666666;
+  border-right: 1px solid #e0e0e0;
+  font-weight: 500;
+}
+
+.schedule-day-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-cell {
+  height: 40px;
+  border: 1px solid #e0e0e0;
+  border-right: none;
+  position: relative;
+  background: #ffffff;
+}
+
+.schedule-cell.has-schedule {
+  background: #e3f2fd;
+  border-color: #90caf9;
+}
+
+.schedule-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  background: var(--color-main);
+  opacity: 0.8;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) {
+  .worker-manage-page {
+    flex-direction: column;
+  }
+
+  .worker-manage-left-panel,
+  .worker-manage-center-panel,
+  .worker-manage-right-panel {
+    flex: 1;
+  }
+}
+

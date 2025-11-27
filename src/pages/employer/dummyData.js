@@ -630,3 +630,111 @@ export const mockRequests = buildMockRequests(filterByContext("request"));
 export const remittanceData = buildRemittanceData(
   filterByContext("remittance")
 );
+
+// 직원 기본 정보 및 근무 정보
+export const workerInfo = {
+  "맥도날드 잠실점": {
+    "오지환": {
+      basicInfo: {
+        name: "오지환",
+        birthDate: "2003.03.01",
+        phone: "010-0000-0000",
+        email: "abc@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: { start: "10:00", end: "16:00" },
+          월: null,
+          화: null,
+          수: null,
+          목: { start: "07:30", end: "13:00" },
+          금: { start: "07:30", end: "13:00" },
+          토: { start: "10:00", end: "16:00" },
+        },
+        breakTime: 60,
+        hourlyWage: 10030,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+    "문보경": {
+      basicInfo: {
+        name: "문보경",
+        birthDate: "2002.05.15",
+        phone: "010-1111-1111",
+        email: "mbk@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: null,
+          월: { start: "10:00", end: "13:00" },
+          화: { start: "07:00", end: "13:00" },
+          수: { start: "07:00", end: "13:00" },
+          목: { start: "07:00", end: "13:00" },
+          금: { start: "07:00", end: "13:00" },
+          토: { start: "10:00", end: "13:00" },
+        },
+        breakTime: 60,
+        hourlyWage: 10500,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+    "홍창기": {
+      basicInfo: {
+        name: "홍창기",
+        birthDate: "2001.08.20",
+        phone: "010-2222-2222",
+        email: "hck@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: null,
+          월: null,
+          화: null,
+          수: null,
+          목: null,
+          금: null,
+          토: null,
+        },
+        breakTime: 30,
+        hourlyWage: 10000,
+        payday: 1,
+        socialInsurance: false,
+        withholdingTax: false,
+      },
+    },
+  },
+  "스타벅스 강남역점": {
+    "김민수": {
+      basicInfo: {
+        name: "김민수",
+        birthDate: "2000.12.10",
+        phone: "010-3333-3333",
+        email: "kms@naver.com",
+      },
+      workInfo: {
+        workplace: "스타벅스 강남역점",
+        weeklySchedule: {
+          일: null,
+          월: { start: "08:00", end: "16:00" },
+          화: { start: "08:00", end: "16:00" },
+          수: { start: "08:00", end: "16:00" },
+          목: null,
+          금: null,
+          토: null,
+        },
+        breakTime: 30,
+        hourlyWage: 12000,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+  },
+};
