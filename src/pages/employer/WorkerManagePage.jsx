@@ -13,6 +13,10 @@ export default function WorkerManagePage() {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [hoveredBlockGroup, setHoveredBlockGroup] = useState(null);
   const [workersList, setWorkersList] = useState(() => workplaceWorkers);
+  const [isEditingWork, setIsEditingWork] = useState(false);
+  const [editedWorkInfo, setEditedWorkInfo] = useState(null);
+  // 수정된 근무 정보를 저장하는 상태
+  const [updatedWorkInfo, setUpdatedWorkInfo] = useState({});
 
   const selectedWorkplace =
     initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -36,13 +40,74 @@ export default function WorkerManagePage() {
     return workerInfo[selectedWorkplace][currentWorker] || null;
   }, [currentWorker, selectedWorkplace]);
 
+  // 수정 중인 근무 정보 관리 (저장된 정보 우선, 수정 중이면 수정 중 정보)
+  const currentWorkInfo = useMemo(() => {
+    // 수정 모드일 때는 수정 중인 정보 사용
+    if (isEditingWork && editedWorkInfo && editedWorkInfo.workerName === currentWorker) {
+      return editedWorkInfo;
+    }
+    // 저장된 수정 정보가 있으면 그것을 사용
+    const savedInfo = updatedWorkInfo[`${selectedWorkplace}-${currentWorker}`];
+    if (savedInfo) {
+      return savedInfo;
+    }
+    // 기본 데이터 사용
+    return workerData?.workInfo || null;
+  }, [editedWorkInfo, currentWorker, workerData, isEditingWork, updatedWorkInfo, selectedWorkplace]);
+
+
+  // 수정 모드 시작
+  const handleStartEdit = () => {
+    if (workerData?.workInfo) {
+      setEditedWorkInfo({
+        ...workerData.workInfo,
+        workerName: currentWorker,
+      });
+      setIsEditingWork(true);
+    }
+  };
+
+  // 수정 취소
+  const handleCancelEdit = () => {
+    setIsEditingWork(false);
+    setEditedWorkInfo(null);
+  };
+
+  // 수정 저장
+  const handleSaveEdit = () => {
+    if (editedWorkInfo && currentWorker) {
+      // 수정된 정보를 상태에 저장
+      const key = `${selectedWorkplace}-${currentWorker}`;
+      setUpdatedWorkInfo((prev) => ({
+        ...prev,
+        [key]: {
+          ...editedWorkInfo,
+          workerName: currentWorker,
+        },
+      }));
+      
+      // TODO: 백엔드 API 호출
+      Swal.fire("저장 완료", "근무 정보가 수정되었습니다.", "success");
+      setIsEditingWork(false);
+      setEditedWorkInfo(null);
+    }
+  };
+
   const handleWorkplaceChange = (e) => {
     const newWorkplaceId = Number(e.target.value);
     setSelectedWorkplaceId(newWorkplaceId);
     setSelectedWorker(null);
+    // 근무지 변경 시 수정 모드 해제
+    setIsEditingWork(false);
+    setEditedWorkInfo(null);
   };
 
   const handleWorkerClick = (workerName) => {
+    // 직원이 변경되면 수정 모드 해제
+    if (editedWorkInfo?.workerName !== workerName) {
+      setIsEditingWork(false);
+      setEditedWorkInfo(null);
+    }
     setSelectedWorker(workerName);
   };
 
@@ -83,13 +148,14 @@ export default function WorkerManagePage() {
     }
   };
 
-  // 주간 스케줄 그리드 데이터 생성
+  // 주간 스케줄 그리드 데이터 생성 (수정된 정보 반영)
   const weeklyScheduleGrid = useMemo(() => {
-    if (!workerData?.workInfo?.weeklySchedule) {
+    const workInfoToUse = currentWorkInfo || workerData?.workInfo;
+    if (!workInfoToUse?.weeklySchedule) {
       return {};
     }
 
-    const schedule = workerData.workInfo.weeklySchedule;
+    const schedule = workInfoToUse.weeklySchedule;
     const grid = {};
 
     daysOfWeek.forEach((day) => {
@@ -119,7 +185,7 @@ export default function WorkerManagePage() {
     });
 
     return grid;
-  }, [workerData]);
+  }, [currentWorkInfo, workerData]);
 
   return (
     <div className="worker-manage-page">
@@ -211,6 +277,32 @@ export default function WorkerManagePage() {
             <div className="info-card">
               <div className="info-card-header">
                 <h3 className="info-card-title">근무 정보</h3>
+                {!isEditingWork ? (
+                  <button
+                    type="button"
+                    className="edit-button"
+                    onClick={handleStartEdit}
+                  >
+                    수정
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="edit-button"
+                      onClick={handleSaveEdit}
+                    >
+                      저장
+                    </button>
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={handleCancelEdit}
+                    >
+                      취소
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="info-card-content">
                 <div className="info-field">
@@ -224,15 +316,128 @@ export default function WorkerManagePage() {
                   <label className="info-label">근무 시간</label>
                   <div className="weekly-schedule-inputs">
                     {daysOfWeek.map((day) => {
-                      const schedule = workerData.workInfo.weeklySchedule[day];
+                      const schedule = isEditingWork && currentWorkInfo
+                        ? currentWorkInfo.weeklySchedule?.[day]
+                        : (currentWorkInfo?.weeklySchedule?.[day] || workerData.workInfo.weeklySchedule[day]);
                       return (
                         <div key={day} className="day-schedule-row">
                           <span className="day-label">{day}요일</span>
-                          <div className="time-display">
-                            {schedule
-                              ? `${schedule.start} - ${schedule.end}`
-                              : "휴무"}
-                          </div>
+                          {isEditingWork && currentWorkInfo ? (
+                            <div className="time-inputs">
+                              <select
+                                className="time-select"
+                                value={
+                                  schedule
+                                    ? parseInt(schedule.start.split(":")[0])
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  const hour = e.target.value;
+                                  const minute = schedule
+                                    ? schedule.start.split(":")[1]
+                                    : "00";
+                                  const newSchedule = schedule
+                                    ? { ...schedule, start: `${hour}:${minute}` }
+                                    : { start: `${hour}:${minute}`, end: "00:00" };
+                                  setEditedWorkInfo({
+                                    ...currentWorkInfo,
+                                    weeklySchedule: {
+                                      ...currentWorkInfo.weeklySchedule,
+                                      [day]: newSchedule,
+                                    },
+                                  });
+                                }}
+                              >
+                                <option value="">휴무</option>
+                                {hours.map((h) => (
+                                  <option key={h} value={h}>
+                                    {String(h).padStart(2, "0")}
+                                  </option>
+                                ))}
+                              </select>
+                              {schedule && (
+                                <>
+                                  <span>:</span>
+                                  <select
+                                    className="time-select"
+                                    value={
+                                      schedule.start.split(":")[1] || "00"
+                                    }
+                                    onChange={(e) => {
+                                      const [hour] = schedule.start.split(":");
+                                      setEditedWorkInfo({
+                                        ...currentWorkInfo,
+                                        weeklySchedule: {
+                                          ...currentWorkInfo.weeklySchedule,
+                                          [day]: {
+                                            ...schedule,
+                                            start: `${hour}:${e.target.value}`,
+                                          },
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <option value="00">00</option>
+                                    <option value="30">30</option>
+                                  </select>
+                                  <span> - </span>
+                                  <select
+                                    className="time-select"
+                                    value={
+                                      parseInt(schedule.end.split(":")[0]) || ""
+                                    }
+                                    onChange={(e) => {
+                                      const hour = e.target.value;
+                                      const minute = schedule.end.split(":")[1];
+                                      setEditedWorkInfo({
+                                        ...currentWorkInfo,
+                                        weeklySchedule: {
+                                          ...currentWorkInfo.weeklySchedule,
+                                          [day]: {
+                                            ...schedule,
+                                            end: `${hour}:${minute}`,
+                                          },
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    {hours.map((h) => (
+                                      <option key={h} value={h}>
+                                        {String(h).padStart(2, "0")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <span>:</span>
+                                  <select
+                                    className="time-select"
+                                    value={schedule.end.split(":")[1] || "00"}
+                                    onChange={(e) => {
+                                      const [hour] = schedule.end.split(":");
+                                      setEditedWorkInfo({
+                                        ...currentWorkInfo,
+                                        weeklySchedule: {
+                                          ...currentWorkInfo.weeklySchedule,
+                                          [day]: {
+                                            ...schedule,
+                                            end: `${hour}:${e.target.value}`,
+                                          },
+                                        },
+                                      });
+                                    }}
+                                  >
+                                    <option value="00">00</option>
+                                    <option value="30">30</option>
+                                  </select>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="time-display">
+                              {schedule
+                                ? `${schedule.start} - ${schedule.end}`
+                                : "휴무"}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -242,27 +447,71 @@ export default function WorkerManagePage() {
                 <div className="info-field">
                   <label className="info-label">휴게 시간</label>
                   <div className="break-time-input">
-                    <select className="break-time-select" disabled>
+                    <select className="break-time-select" disabled={!isEditingWork}>
                       <option>요일별</option>
                     </select>
-                    <div className="info-value">
-                      {workerData.workInfo.breakTime} 분
-                    </div>
+                    {isEditingWork && currentWorkInfo ? (
+                      <input
+                        type="number"
+                        className="break-time-input-field"
+                        value={currentWorkInfo.breakTime || 0}
+                        onChange={(e) =>
+                          setEditedWorkInfo({
+                            ...currentWorkInfo,
+                            breakTime: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    ) : (
+                      <div className="info-value">
+                        {currentWorkInfo?.breakTime || workerData.workInfo.breakTime} 분
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="info-field">
                   <label className="info-label">시급</label>
-                  <div className="info-value">
-                    {formatCurrency(workerData.workInfo.hourlyWage)}
-                  </div>
+                  {isEditingWork && currentWorkInfo ? (
+                    <input
+                      type="number"
+                      className="info-input"
+                      value={currentWorkInfo.hourlyWage || 0}
+                      onChange={(e) =>
+                        setEditedWorkInfo({
+                          ...currentWorkInfo,
+                          hourlyWage: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  ) : (
+                    <div className="info-value">
+                      {formatCurrency(currentWorkInfo?.hourlyWage || workerData.workInfo.hourlyWage)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="info-field">
                   <label className="info-label">급여 지급일</label>
-                  <div className="info-value">
-                    매월 {workerData.workInfo.payday} 일
-                  </div>
+                  {isEditingWork && currentWorkInfo ? (
+                    <input
+                      type="number"
+                      className="info-input"
+                      value={currentWorkInfo.payday || 1}
+                      min="1"
+                      max="31"
+                      onChange={(e) =>
+                        setEditedWorkInfo({
+                          ...currentWorkInfo,
+                          payday: parseInt(e.target.value) || 1,
+                        })
+                      }
+                    />
+                  ) : (
+                    <div className="info-value">
+                      매월 {workerData.workInfo.payday} 일
+                    </div>
+                  )}
                 </div>
 
                 <div className="toggle-row">
@@ -271,8 +520,18 @@ export default function WorkerManagePage() {
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
-                        checked={workerData.workInfo.socialInsurance}
-                        disabled
+                        checked={
+                          isEditingWork && currentWorkInfo
+                            ? currentWorkInfo.socialInsurance
+                            : workerData.workInfo.socialInsurance
+                        }
+                        disabled={!isEditingWork}
+                        onChange={(e) =>
+                          setEditedWorkInfo({
+                            ...currentWorkInfo,
+                            socialInsurance: e.target.checked,
+                          })
+                        }
                       />
                       <span className="toggle-slider"></span>
                     </label>
@@ -282,8 +541,18 @@ export default function WorkerManagePage() {
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
-                        checked={workerData.workInfo.withholdingTax}
-                        disabled
+                        checked={
+                          isEditingWork && currentWorkInfo
+                            ? currentWorkInfo.withholdingTax
+                            : workerData.workInfo.withholdingTax
+                        }
+                        disabled={!isEditingWork}
+                        onChange={(e) =>
+                          setEditedWorkInfo({
+                            ...currentWorkInfo,
+                            withholdingTax: e.target.checked,
+                          })
+                        }
                       />
                       <span className="toggle-slider"></span>
                     </label>
@@ -345,7 +614,7 @@ export default function WorkerManagePage() {
                         </div>
                         <div className="tooltip-label">휴게 시간</div>
                         <div className="tooltip-break">
-                          {workerData?.workInfo?.breakTime || 0} 분
+                          {currentWorkInfo?.breakTime || workerData?.workInfo?.breakTime || 0} 분
                         </div>
                       </div>
                     </div>

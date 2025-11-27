@@ -147,6 +147,22 @@
   background: #c82333;
 }
 
+.cancel-button {
+  padding: 8px 20px;
+  background: #6c757d;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background: #5a6268;
+}
+
 .info-card-content {
   display: flex;
   flex-direction: column;
@@ -192,19 +208,19 @@
 .info-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .info-label {
   font-size: 0.9rem;
-  color: #666666;
-  font-weight: 500;
+  color: #104478;
+  font-weight: 700;
 }
 
 .info-value {
   font-size: 1rem;
   color: #333333;
-  padding: 10px 0;
+  padding: 4px 0;
 }
 
 .info-input {
