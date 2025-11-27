@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { FaUser } from "react-icons/fa";
+import Swal from "sweetalert2";
 import "../../styles/workerManagePage.css";
 import { initialWorkplaces, workplaceWorkers, workerInfo } from "./dummyData";
 import { formatCurrency } from "./utils/formatUtils";
@@ -9,16 +11,15 @@ const hours = Array.from({ length: 24 }, (_, i) => i);
 export default function WorkerManagePage() {
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
   const [selectedWorker, setSelectedWorker] = useState(null);
-  const [isEditingBasic, setIsEditingBasic] = useState(false);
-  const [isEditingWork, setIsEditingWork] = useState(false);
   const [hoveredBlockGroup, setHoveredBlockGroup] = useState(null);
+  const [workersList, setWorkersList] = useState(() => workplaceWorkers);
 
   const selectedWorkplace =
     initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
 
   const workers = useMemo(() => {
-    return workplaceWorkers[selectedWorkplaceId] || [];
-  }, [selectedWorkplaceId]);
+    return workersList[selectedWorkplaceId] || [];
+  }, [selectedWorkplaceId, workersList]);
 
   // 선택된 직원이 없으면 첫 번째 직원을 기본 선택
   const currentWorker = useMemo(() => {
@@ -47,6 +48,39 @@ export default function WorkerManagePage() {
 
   const handleAddWorker = () => {
     alert("근무자 추가 기능 (구현 예정)");
+  };
+
+  const handleDismissWorker = async () => {
+    if (!currentWorker) return;
+
+    const result = await Swal.fire({
+      icon: "warning",
+      title: `${currentWorker}님을 퇴사 처리하시겠습니까?`,
+      text: "퇴사 처리된 직원은 목록에서 제거됩니다.",
+      showCancelButton: true,
+      confirmButtonText: "퇴사 처리",
+      cancelButtonText: "취소",
+      confirmButtonColor: "var(--color-red)",
+    });
+
+    if (result.isConfirmed) {
+      setWorkersList((prev) => {
+        const updated = { ...prev };
+        const workplaceWorkersList = [...(updated[selectedWorkplaceId] || [])];
+        const filtered = workplaceWorkersList.filter(
+          (worker) => worker !== currentWorker
+        );
+        updated[selectedWorkplaceId] = filtered;
+        return updated;
+      });
+
+      // 퇴사 처리된 직원이 선택되어 있으면 선택 해제
+      if (selectedWorker === currentWorker) {
+        setSelectedWorker(null);
+      }
+
+      Swal.fire("퇴사 처리 완료", `${currentWorker}님이 퇴사 처리되었습니다.`, "success");
+    }
   };
 
   // 주간 스케줄 그리드 데이터 생성
@@ -138,15 +172,17 @@ export default function WorkerManagePage() {
                 <h3 className="info-card-title">기본 정보</h3>
                 <button
                   type="button"
-                  className="edit-button"
-                  onClick={() => setIsEditingBasic(!isEditingBasic)}
+                  className="dismiss-button"
+                  onClick={handleDismissWorker}
                 >
-                  수정
+                  퇴사
                 </button>
               </div>
               <div className="info-card-content">
                 <div className="basic-info-header">
-                  <div className="profile-icon">👤</div>
+                  <div className="profile-icon">
+                    <FaUser />
+                  </div>
                   <div>
                     <div className="worker-name">
                       {workerData.basicInfo.name}
@@ -158,31 +194,15 @@ export default function WorkerManagePage() {
                 </div>
                 <div className="info-field">
                   <label className="info-label">전화 번호</label>
-                  {isEditingBasic ? (
-                    <input
-                      type="text"
-                      className="info-input"
-                      defaultValue={workerData.basicInfo.phone}
-                    />
-                  ) : (
-                    <div className="info-value">
-                      {workerData.basicInfo.phone}
-                    </div>
-                  )}
+                  <div className="info-value">
+                    {workerData.basicInfo.phone}
+                  </div>
                 </div>
                 <div className="info-field">
                   <label className="info-label">이메일</label>
-                  {isEditingBasic ? (
-                    <input
-                      type="email"
-                      className="info-input"
-                      defaultValue={workerData.basicInfo.email}
-                    />
-                  ) : (
-                    <div className="info-value">
-                      {workerData.basicInfo.email}
-                    </div>
-                  )}
+                  <div className="info-value">
+                    {workerData.basicInfo.email}
+                  </div>
                 </div>
               </div>
             </div>
@@ -191,28 +211,13 @@ export default function WorkerManagePage() {
             <div className="info-card">
               <div className="info-card-header">
                 <h3 className="info-card-title">근무 정보</h3>
-                <button
-                  type="button"
-                  className="edit-button"
-                  onClick={() => setIsEditingWork(!isEditingWork)}
-                >
-                  수정
-                </button>
               </div>
               <div className="info-card-content">
                 <div className="info-field">
                   <label className="info-label">근무지</label>
-                  {isEditingWork ? (
-                    <input
-                      type="text"
-                      className="info-input"
-                      defaultValue={workerData.workInfo.workplace}
-                    />
-                  ) : (
-                    <div className="info-value">
-                      {workerData.workInfo.workplace}
-                    </div>
-                  )}
+                  <div className="info-value">
+                    {workerData.workInfo.workplace}
+                  </div>
                 </div>
 
                 <div className="info-field">
@@ -223,41 +228,11 @@ export default function WorkerManagePage() {
                       return (
                         <div key={day} className="day-schedule-row">
                           <span className="day-label">{day}요일</span>
-                          {isEditingWork ? (
-                            <div className="time-inputs">
-                              <select className="time-select">
-                                {hours.map((h) => (
-                                  <option key={h} value={h}>
-                                    {String(h).padStart(2, "0")}
-                                  </option>
-                                ))}
-                              </select>
-                              <span>:</span>
-                              <select className="time-select">
-                                <option value="0">00</option>
-                                <option value="30">30</option>
-                              </select>
-                              <span> - </span>
-                              <select className="time-select">
-                                {hours.map((h) => (
-                                  <option key={h} value={h}>
-                                    {String(h).padStart(2, "0")}
-                                  </option>
-                                ))}
-                              </select>
-                              <span>:</span>
-                              <select className="time-select">
-                                <option value="0">00</option>
-                                <option value="30">30</option>
-                              </select>
-                            </div>
-                          ) : (
-                            <div className="time-display">
-                              {schedule
-                                ? `${schedule.start} - ${schedule.end}`
-                                : "휴무"}
-                            </div>
-                          )}
+                          <div className="time-display">
+                            {schedule
+                              ? `${schedule.start} - ${schedule.end}`
+                              : "휴무"}
+                          </div>
                         </div>
                       );
                     })}
@@ -267,54 +242,27 @@ export default function WorkerManagePage() {
                 <div className="info-field">
                   <label className="info-label">휴게 시간</label>
                   <div className="break-time-input">
-                    <select
-                      className="break-time-select"
-                      disabled={!isEditingWork}
-                    >
+                    <select className="break-time-select" disabled>
                       <option>요일별</option>
                     </select>
-                    {isEditingWork ? (
-                      <input
-                        type="number"
-                        className="break-time-input-field"
-                        defaultValue={workerData.workInfo.breakTime}
-                      />
-                    ) : (
-                      <div className="info-value">
-                        {workerData.workInfo.breakTime} 분
-                      </div>
-                    )}
+                    <div className="info-value">
+                      {workerData.workInfo.breakTime} 분
+                    </div>
                   </div>
                 </div>
 
                 <div className="info-field">
                   <label className="info-label">시급</label>
-                  {isEditingWork ? (
-                    <input
-                      type="number"
-                      className="info-input"
-                      defaultValue={workerData.workInfo.hourlyWage}
-                    />
-                  ) : (
-                    <div className="info-value">
-                      {formatCurrency(workerData.workInfo.hourlyWage)}
-                    </div>
-                  )}
+                  <div className="info-value">
+                    {formatCurrency(workerData.workInfo.hourlyWage)}
+                  </div>
                 </div>
 
                 <div className="info-field">
                   <label className="info-label">급여 지급일</label>
-                  {isEditingWork ? (
-                    <input
-                      type="text"
-                      className="info-input"
-                      defaultValue={`매월 ${workerData.workInfo.payday} 일`}
-                    />
-                  ) : (
-                    <div className="info-value">
-                      매월 {workerData.workInfo.payday} 일
-                    </div>
-                  )}
+                  <div className="info-value">
+                    매월 {workerData.workInfo.payday} 일
+                  </div>
                 </div>
 
                 <div className="toggle-row">
@@ -324,7 +272,7 @@ export default function WorkerManagePage() {
                       <input
                         type="checkbox"
                         checked={workerData.workInfo.socialInsurance}
-                        disabled={!isEditingWork}
+                        disabled
                       />
                       <span className="toggle-slider"></span>
                     </label>
@@ -335,7 +283,7 @@ export default function WorkerManagePage() {
                       <input
                         type="checkbox"
                         checked={workerData.workInfo.withholdingTax}
-                        disabled={!isEditingWork}
+                        disabled
                       />
                       <span className="toggle-slider"></span>
                     </label>
