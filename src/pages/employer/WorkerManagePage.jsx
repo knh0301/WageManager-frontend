@@ -11,6 +11,7 @@ export default function WorkerManagePage() {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [isEditingBasic, setIsEditingBasic] = useState(false);
   const [isEditingWork, setIsEditingWork] = useState(false);
+  const [hoveredBlockGroup, setHoveredBlockGroup] = useState(null);
 
   const selectedWorkplace =
     initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -66,6 +67,9 @@ export default function WorkerManagePage() {
         const startDecimal = startHour + startMin / 60;
         const endDecimal = endHour + endMin / 60;
 
+        // 각 블록에 고유한 그룹 ID 부여 (요일 + 인덱스)
+        const groupId = `${day}-0`;
+
         grid[day].push({
           start: startDecimal,
           end: endDecimal,
@@ -75,6 +79,7 @@ export default function WorkerManagePage() {
           startMin,
           endHour,
           endMin,
+          groupId,
         });
       }
     });
@@ -365,8 +370,39 @@ export default function WorkerManagePage() {
             </div>
             {daysOfWeek.map((day) => {
               const blocks = weeklyScheduleGrid[day] || [];
+              // 해당 요일의 블록 정보 (툴팁 표시용)
+              const dayBlock = blocks.length > 0 ? blocks[0] : null;
+              const dayBlockGroupId = dayBlock?.groupId;
+              const isDayHovered = dayBlockGroupId && hoveredBlockGroup === dayBlockGroupId;
+              
+              // 시작 시간대 찾기 (툴팁 위치 계산용)
+              const startHour = dayBlock ? dayBlock.startHour : null;
+              const startMin = dayBlock ? dayBlock.startMin : 0;
+              const startBlockTop = startHour !== null ? (startHour * 40 + startHour * 1 + (startMin / 60) * 40) : 0;
+              
               return (
                 <div key={day} className="schedule-day-column">
+                  {/* 툴팁을 컬럼 레벨로 이동 */}
+                  {isDayHovered && dayBlock && startHour !== null && (
+                    <div
+                      className="schedule-block-tooltip"
+                      style={{
+                        top: `${startBlockTop}px`,
+                      }}
+                    >
+                      <div className="tooltip-content">
+                        <div className="tooltip-label">근무 시간</div>
+                        <div className="tooltip-time">
+                          {dayBlock.startTime} - {dayBlock.endTime}
+                        </div>
+                        <div className="tooltip-label">휴게 시간</div>
+                        <div className="tooltip-break">
+                          {workerData?.workInfo?.breakTime || 0} 분
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {hours.map((hour) => {
                     // 해당 시간대에 포함되는 블록 찾기
                     const block = blocks.find((block) => {
@@ -376,13 +412,9 @@ export default function WorkerManagePage() {
                     });
 
                     // 블록이 시작하는 시간인지 확인
-                    const isBlockStart = blocks.some(
-                      (block) => block.startHour === hour
-                    );
+                    const isBlockStart = block && block.startHour === hour;
                     // 블록이 끝나는 시간인지 확인
-                    const isBlockEnd = blocks.some(
-                      (block) => block.endHour === hour
-                    );
+                    const isBlockEnd = block && block.endHour === hour;
 
                     // 블록의 시작 위치 계산 (분 단위)
                     let blockTop = 0;
@@ -398,12 +430,12 @@ export default function WorkerManagePage() {
                       }
                     }
 
+                    const isHovered = block && hoveredBlockGroup === block.groupId;
+
                     return (
                       <div
                         key={hour}
-                        className={`schedule-cell ${
-                          block ? "has-schedule" : ""
-                        }`}
+                        className="schedule-cell"
                         title={
                           block
                             ? `근무 시간: ${block.startTime} - ${block.endTime}`
@@ -412,12 +444,18 @@ export default function WorkerManagePage() {
                       >
                         {block && (
                           <div
-                            className="schedule-block"
+                            className={`schedule-block ${
+                              isHovered ? "hovered" : ""
+                            }`}
                             style={{
                               top: `${blockTop}%`,
                               height: `${blockHeight}%`,
                             }}
-                          ></div>
+                            onMouseEnter={() =>
+                              setHoveredBlockGroup(block.groupId)
+                            }
+                            onMouseLeave={() => setHoveredBlockGroup(null)}
+                          />
                         )}
                       </div>
                     );
