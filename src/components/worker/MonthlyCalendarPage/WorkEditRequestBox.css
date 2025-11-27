@@ -1,11 +1,18 @@
 .work-edit-box {
-  margin-top: 8px;
-  margin-bottom: 8px;
-  padding: 16px 18px 16px;
-  border-radius: 14px;
+  margin-top: 12px;
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-radius: 12px;
   border: 1px solid #e1e5ef;
   background-color: #fff;
-  box-shadow: 0 3px 8px rgba(15, 35, 95, 0.05);
+  box-shadow: 0 2px 6px rgba(15, 35, 95, 0.04);
+}
+
+/* 주간 캘린더에서 사용할 때 상단 구분선 추가 */
+.work-edit-box.weekly-style {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e1e5ef;
 }
 
 .work-edit-row {
@@ -28,26 +35,33 @@
 
 .work-edit-label {
   font-size: 13px;
-  font-weight: 500;
-  color: #555b65;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 2px;
 }
 
 .work-edit-input,
 .work-edit-select {
   border-radius: 8px;
-  border: 1px solid #dde1ec;
-  padding: 8px 10px;
-  font-size: 13px;
+  border: 1px solid #e1e5ef;
+  padding: 10px 8px;
+  font-size: 14px;
   background-color: #f8f9fc;
+  transition: all 0.2s;
+  min-width: 50px;
+  flex-shrink: 0;
 }
 
 .work-edit-input-date {
-  min-width: 150px;
+  min-width: 110px;
+  max-width: 130px;
+  flex-shrink: 1;
 }
 
 .work-edit-input.readonly {
   background-color: #f1f2f6;
-  color: #777b89;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .work-edit-input:focus,
@@ -55,6 +69,7 @@
   outline: none;
   border-color: #7097ff;
   background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(112, 151, 255, 0.1);
 }
 
 .work-edit-wage-wrapper {
@@ -80,7 +95,8 @@
 .work-edit-time-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .work-edit-time-tilde {
@@ -101,36 +117,50 @@
 .work-edit-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e1e5ef;
 }
 
 .work-edit-btn {
-  min-width: 92px;
-  padding: 8px 0;
+  min-width: 100px;
+  padding: 10px 20px;
   border-radius: 8px;
   border: none;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .work-edit-btn-confirm {
-  background-color: #3bb44a;
+  background-color: var(--color-green);
   color: #fff;
 }
 
-.work-edit-btn-confirm:hover {
-  background-color: #33a043;
+.work-edit-btn-confirm:hover:not(:disabled) {
+  background-color: #22b038;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 200, 64, 0.3);
+}
+
+.work-edit-btn-confirm:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .work-edit-btn-delete {
-  background-color: #f26b6b;
+  background-color: var(--color-red);
   color: #fff;
 }
 
 .work-edit-btn-delete:hover {
-  background-color: #e05a5a;
+  background-color: #e06d6d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(243, 129, 129, 0.3);
 }
 
 .work-edit-btn-cancel {
@@ -140,5 +170,6 @@
 
 .work-edit-btn-cancel:hover {
   background-color: #e2e4ec;
+  transform: translateY(-1px);
 }
 

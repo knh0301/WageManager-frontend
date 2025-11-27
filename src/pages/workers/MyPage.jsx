@@ -21,9 +21,9 @@ export default function MyPage() {
     profileImageUrl: null,
   });
 
+  
   // 프로필 이미지 상태 관리
   const [profileImage, setProfileImage] = useState(user.profileImageUrl);
-
 
   // 임시 근무지 데이터
   const [workplaces] = useState([
