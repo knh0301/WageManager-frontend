@@ -208,6 +208,17 @@
   margin-bottom: 20px;
 }
 
+.basic-info-header .confirm-buttons {
+  margin-left: auto;
+  margin-bottom: 0;
+}
+
+.worker-info-display {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .profile-icon {
   width: 80px;
   height: 80px;
@@ -907,6 +918,18 @@
   font-size: 0.9rem;
   color: #666666;
   flex: 1;
+}
+
+.break-time-by-day-display {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.break-time-day-display-item {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .break-time-value {
