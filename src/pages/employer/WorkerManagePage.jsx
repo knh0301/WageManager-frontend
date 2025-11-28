@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FaUser, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import "../../styles/workerManagePage.css";
@@ -15,6 +15,7 @@ const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function WorkerManagePage() {
+  const [workplaces, setWorkplaces] = useState(() => initialWorkplaces);
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [hoveredBlockGroup, setHoveredBlockGroup] = useState(null);
@@ -32,6 +33,12 @@ export default function WorkerManagePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [confirmedWorker, setConfirmedWorker] = useState(null);
   const [newWorkerWorkInfo, setNewWorkerWorkInfo] = useState(null);
+  // 근무지 추가 모드 상태
+  const [isAddingWorkplace, setIsAddingWorkplace] = useState(false);
+  const [newWorkplaceName, setNewWorkplaceName] = useState("");
+  const [newWorkplaceAddress, setNewWorkplaceAddress] = useState("");
+  const [newWorkplaceBusinessNumber, setNewWorkplaceBusinessNumber] = useState("");
+  const [newWorkplaceIsSmallBusiness, setNewWorkplaceIsSmallBusiness] = useState(false);
 
   const resetAddWorkerFlow = () => {
     setWorkerCode("");
@@ -41,7 +48,7 @@ export default function WorkerManagePage() {
   };
 
   const selectedWorkplace =
-    initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
+    workplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
 
   const workers = useMemo(() => {
     return workersList[selectedWorkplaceId] || [];
@@ -164,7 +171,20 @@ export default function WorkerManagePage() {
   };
 
   const handleWorkplaceChange = (e) => {
-    const newWorkplaceId = Number(e.target.value);
+    const value = e.target.value;
+    if (value === "add") {
+      // 근무지 추가 모드 활성화
+      setIsAddingWorkplace(true);
+      setNewWorkplaceName("");
+      setNewWorkplaceAddress("");
+      setNewWorkplaceBusinessNumber("");
+      setNewWorkplaceIsSmallBusiness(false);
+      // selectedWorkplaceId는 변경하지 않음 (select의 value는 isAddingWorkplace에 따라 "add"로 표시됨)
+      return;
+    }
+    // 일반 근무지 선택 시 근무지 추가 모드 해제
+    setIsAddingWorkplace(false);
+    const newWorkplaceId = Number(value);
     setSelectedWorkplaceId(newWorkplaceId);
     setSelectedWorker(null);
     // 근무지 변경 시 수정 모드 해제
@@ -174,6 +194,72 @@ export default function WorkerManagePage() {
       resetAddWorkerFlow();
       setIsAddingWorker(false);
     }
+  };
+
+  const handleAddWorkplace = () => {
+    if (!newWorkplaceName.trim()) {
+      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
+      return;
+    }
+
+    if (!newWorkplaceAddress.trim()) {
+      Swal.fire("입력 오류", "주소를 입력해주세요.", "error");
+      return;
+    }
+
+    if (!newWorkplaceBusinessNumber.trim()) {
+      Swal.fire("입력 오류", "사업자 등록 번호를 입력해주세요.", "error");
+      return;
+    }
+
+    // 사업자 등록 번호 형식 검증 (예: 123-45-67890)
+    const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
+    if (!businessNumberPattern.test(newWorkplaceBusinessNumber.trim())) {
+      Swal.fire("입력 오류", "사업자 등록 번호 형식이 올바르지 않습니다. (예: 123-45-67890)", "error");
+      return;
+    }
+
+    // 중복 확인
+    if (workplaces.some((wp) => wp.name === newWorkplaceName.trim())) {
+      Swal.fire("입력 오류", "이미 존재하는 근무지입니다.", "error");
+      return;
+    }
+
+    // 새 근무지 추가
+    const newId = Math.max(...workplaces.map((wp) => wp.id), 0) + 1;
+    const newWorkplace = {
+      id: newId,
+      name: newWorkplaceName.trim(),
+      address: newWorkplaceAddress.trim(),
+      businessNumber: newWorkplaceBusinessNumber.trim(),
+      isSmallBusiness: newWorkplaceIsSmallBusiness,
+    };
+    setWorkplaces((prev) => [...prev, newWorkplace]);
+    
+    // 새 근무지의 직원 목록 초기화
+    setWorkersList((prev) => ({
+      ...prev,
+      [newId]: [],
+    }));
+
+    // 새 근무지 선택
+    setSelectedWorkplaceId(newId);
+    setSelectedWorker(null);
+    setIsAddingWorkplace(false);
+    setNewWorkplaceName("");
+    setNewWorkplaceAddress("");
+    setNewWorkplaceBusinessNumber("");
+    setNewWorkplaceIsSmallBusiness(false);
+
+    Swal.fire("추가 완료", `${newWorkplaceName.trim()}이(가) 추가되었습니다.`, "success");
+  };
+
+  const handleCancelAddWorkplace = () => {
+    setIsAddingWorkplace(false);
+    setNewWorkplaceName("");
+    setNewWorkplaceAddress("");
+    setNewWorkplaceBusinessNumber("");
+    setNewWorkplaceIsSmallBusiness(false);
   };
 
   const handleWorkerClick = (workerName) => {
@@ -445,44 +531,135 @@ export default function WorkerManagePage() {
       <div className="worker-manage-left-panel">
         <div className="worker-manage-workplace-select">
           <select
-            value={selectedWorkplaceId}
+            value={isAddingWorkplace ? "add" : selectedWorkplaceId}
             onChange={handleWorkplaceChange}
             className="workplace-select"
           >
-            {initialWorkplaces.map((wp) => (
+            {workplaces.map((wp) => (
               <option key={wp.id} value={wp.id}>
                 {wp.name}
               </option>
             ))}
+            <option value="add">+ 근무지 추가</option>
           </select>
         </div>
 
-        <div className="worker-manage-worker-list">
-          {workers.map((worker) => (
-            <div
-              key={worker}
-              className={`worker-item ${
-                currentWorker === worker ? "selected" : ""
-              }`}
-              onClick={() => handleWorkerClick(worker)}
-            >
-              {worker}
+        {!isAddingWorkplace && (
+          <>
+            <div className="worker-manage-worker-list">
+              {workers.map((worker) => (
+                <div
+                  key={worker}
+                  className={`worker-item ${
+                    currentWorker === worker ? "selected" : ""
+                  }`}
+                  onClick={() => handleWorkerClick(worker)}
+                >
+                  {worker}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <button
-          type="button"
-          className="add-worker-button"
-          onClick={handleAddWorker}
-        >
-          근무자 추가
-        </button>
+            <button
+              type="button"
+              className="add-worker-button"
+              onClick={handleAddWorker}
+            >
+              근무자 추가
+            </button>
+          </>
+        )}
       </div>
 
       {/* 중앙 콘텐츠 영역 */}
-      <div className="worker-manage-center-panel">
-        {isAddingWorker ? (
+      <div className={`worker-manage-center-panel ${isAddingWorkplace ? 'adding-workplace' : ''}`}>
+        {isAddingWorkplace ? (
+          <div className="info-card">
+            <div className="info-card-header">
+              <h3 className="info-card-title">근무지 추가</h3>
+            </div>
+            <div className="info-card-content">
+              <div className="info-field">
+                <label className="info-label">근무지 이름</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  placeholder="근무지 이름을 입력하세요"
+                  value={newWorkplaceName}
+                  onChange={(e) => setNewWorkplaceName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="info-field">
+                <label className="info-label">주소</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  placeholder="주소를 입력하세요"
+                  value={newWorkplaceAddress}
+                  onChange={(e) => setNewWorkplaceAddress(e.target.value)}
+                />
+              </div>
+
+              <div className="info-field">
+                <label className="info-label">사업자 등록 번호</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  placeholder="123-45-67890"
+                  value={newWorkplaceBusinessNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9-]/g, "");
+                    // 자동으로 하이픈 추가 (123-45-67890 형식)
+                    let formatted = value.replace(/-/g, "");
+                    if (formatted.length > 3) {
+                      formatted = formatted.slice(0, 3) + "-" + formatted.slice(3);
+                    }
+                    if (formatted.length > 6) {
+                      formatted = formatted.slice(0, 6) + "-" + formatted.slice(6, 11);
+                    }
+                    setNewWorkplaceBusinessNumber(formatted);
+                  }}
+                  maxLength={12}
+                />
+              </div>
+
+              <div className="toggle-row">
+                <div className="toggle-item">
+                  <label className="toggle-label">5인 미만 사업장</label>
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={newWorkplaceIsSmallBusiness}
+                      onChange={(e) =>
+                        setNewWorkplaceIsSmallBusiness(e.target.checked)
+                      }
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="add-worker-button-container">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={handleCancelAddWorkplace}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className="add-button-large"
+                  onClick={handleAddWorkplace}
+                >
+                  추가
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : isAddingWorker ? (
           <>
             {/* 근무자 코드 검색 카드 */}
             <div className="info-card">
@@ -1338,8 +1515,9 @@ export default function WorkerManagePage() {
       </div>
 
       {/* 오른쪽 스케줄 그리드 */}
-      <div className="worker-manage-right-panel">
-        <div className="schedule-grid-container">
+      {!isAddingWorkplace && (
+        <div className="worker-manage-right-panel">
+          <div className="schedule-grid-container">
           <div className="schedule-grid-header">
             <div className="schedule-time-column"></div>
             {daysOfWeek.map((day) => (
@@ -1513,7 +1691,8 @@ export default function WorkerManagePage() {
             })}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
