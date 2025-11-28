@@ -1,8 +1,13 @@
 import { useState, useMemo } from "react";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import "../../styles/workerManagePage.css";
-import { initialWorkplaces, workplaceWorkers, workerInfo } from "./dummyData";
+import {
+  initialWorkplaces,
+  workplaceWorkers,
+  workerInfo,
+  workerCodeMap,
+} from "./dummyData";
 import { formatCurrency } from "./utils/formatUtils";
 import TimeInput from "./components/TimeInput";
 
@@ -18,6 +23,25 @@ export default function WorkerManagePage() {
   const [editedWorkInfo, setEditedWorkInfo] = useState(null);
   // 수정된 근무 정보를 저장하는 상태
   const [updatedWorkInfo, setUpdatedWorkInfo] = useState({});
+  // 근무자 추가 모드 상태
+  const [isAddingWorker, setIsAddingWorker] = useState(false);
+  const [workerCode, setWorkerCode] = useState("");
+  const [searchedWorker, setSearchedWorker] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [confirmedWorker, setConfirmedWorker] = useState(null);
+  const [newWorkerWorkInfo, setNewWorkerWorkInfo] = useState(null);
+  // 근무 시간/휴게 시간 추가용 선택 요일
+  const [selectedDayForSchedule, setSelectedDayForSchedule] = useState("일");
+  const [selectedDayForBreak, setSelectedDayForBreak] = useState("일");
+
+  const resetAddWorkerFlow = () => {
+    setWorkerCode("");
+    setSearchedWorker(null);
+    setConfirmedWorker(null);
+    setNewWorkerWorkInfo(null);
+    setSelectedDayForSchedule("일");
+    setSelectedDayForBreak("일");
+  };
 
   const selectedWorkplace =
     initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -126,6 +150,10 @@ export default function WorkerManagePage() {
     // 근무지 변경 시 수정 모드 해제
     setIsEditingWork(false);
     setEditedWorkInfo(null);
+    if (isAddingWorker) {
+      resetAddWorkerFlow();
+      setIsAddingWorker(false);
+    }
   };
 
   const handleWorkerClick = (workerName) => {
@@ -134,11 +162,16 @@ export default function WorkerManagePage() {
       setIsEditingWork(false);
       setEditedWorkInfo(null);
     }
+    if (isAddingWorker) {
+      resetAddWorkerFlow();
+      setIsAddingWorker(false);
+    }
     setSelectedWorker(workerName);
   };
 
-  const handleAddWorker = () => {
-    alert("근무자 추가 기능 (구현 예정)");
+  const handleCancelAddWorker = () => {
+    resetAddWorkerFlow();
+    setIsAddingWorker(false);
   };
 
   const handleDismissWorker = async () => {
@@ -176,6 +209,92 @@ export default function WorkerManagePage() {
         "success"
       );
     }
+  };
+
+  // 근무자 코드로 검색 (더미 데이터)
+  const searchWorkerByCode = async (code) => {
+    // TODO: 실제 API 호출로 변경
+    setIsSearching(true);
+
+    // 시뮬레이션: API 호출 지연
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const worker = workerCodeMap[code];
+    setIsSearching(false);
+
+    if (worker) {
+      setSearchedWorker(worker);
+    } else {
+      Swal.fire("검색 실패", "해당 근무자 코드를 찾을 수 없습니다.", "error");
+      setSearchedWorker(null);
+    }
+  };
+
+  const handleAddWorker = () => {
+    resetAddWorkerFlow();
+    setIsAddingWorker(true);
+    setSelectedWorker(null);
+  };
+
+  const handleSearchWorker = () => {
+    if (!workerCode.trim()) {
+      Swal.fire("입력 오류", "근무자 코드를 입력해주세요.", "warning");
+      return;
+    }
+    searchWorkerByCode(workerCode.trim());
+  };
+
+  const handleConfirmWorker = () => {
+    if (!searchedWorker) return;
+
+    // 근무자 정보 확인 완료 (검색된 정보 그대로 사용)
+    setConfirmedWorker({
+      ...searchedWorker,
+      name: searchedWorker.name,
+      birthDate: searchedWorker.birthDate,
+    });
+
+    // 기본 근무 정보 초기화
+    setNewWorkerWorkInfo({
+      workplace: selectedWorkplace,
+      weeklySchedule: {},
+      breakTime: {},
+      hourlyWage: 0,
+      payday: 1,
+      socialInsurance: false,
+      withholdingTax: false,
+    });
+  };
+
+  const handleSaveNewWorker = () => {
+    if (!confirmedWorker || !newWorkerWorkInfo) return;
+
+    // 근무자 목록에 추가
+    setWorkersList((prev) => {
+      const updated = { ...prev };
+      const workplaceWorkersList = [...(updated[selectedWorkplaceId] || [])];
+      if (!workplaceWorkersList.includes(confirmedWorker.name)) {
+        workplaceWorkersList.push(confirmedWorker.name);
+        updated[selectedWorkplaceId] = workplaceWorkersList;
+      }
+      return updated;
+    });
+
+    // TODO: 백엔드 API 호출로 workerInfo에 추가
+    // 현재는 더미 데이터이므로 실제 저장은 백엔드 연동 시 구현
+
+    Swal.fire(
+      "추가 완료",
+      `${confirmedWorker.name}님이 추가되었습니다.`,
+      "success"
+    );
+
+    const newWorkerName = confirmedWorker.name;
+    resetAddWorkerFlow();
+    setIsAddingWorker(false);
+
+    // 추가된 근무자 선택
+    setSelectedWorker(newWorkerName);
   };
 
   // 주간 스케줄 그리드 데이터 생성 (수정된 정보 반영)
@@ -306,7 +425,497 @@ export default function WorkerManagePage() {
 
       {/* 중앙 콘텐츠 영역 */}
       <div className="worker-manage-center-panel">
-        {workerData ? (
+        {isAddingWorker ? (
+          <>
+            {/* 근무자 코드 검색 카드 */}
+            <div className="info-card">
+              <div className="info-card-header">
+                <h3 className="info-card-title">근무자 코드</h3>
+              </div>
+              <div className="info-card-content">
+                <div className="info-field">
+                  <label className="info-label">근무자 코드</label>
+                  <div className="search-input-group">
+                    <input
+                      type="text"
+                      className="worker-code-input"
+                      value={workerCode}
+                      onChange={(e) => setWorkerCode(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearchWorker();
+                        }
+                      }}
+                      placeholder="근무자 코드를 입력하세요"
+                    />
+                    <button
+                      type="button"
+                      className="search-button"
+                      onClick={handleSearchWorker}
+                      disabled={isSearching}
+                    >
+                      {isSearching ? "검색 중..." : "검색"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 근무자 정보 확인 카드 */}
+            {searchedWorker && (
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h3 className="info-card-title">근무자 정보</h3>
+                </div>
+                <div className="info-card-content">
+                  <div className="basic-info-header">
+                    <div className="profile-icon">
+                      <FaUser />
+                    </div>
+                    <div className="worker-info-inputs">
+                      <div className="info-field">
+                        <label className="info-label">이름</label>
+                        <input
+                          type="text"
+                          className="info-input"
+                          value={searchedWorker.name}
+                          readOnly
+                        />
+                      </div>
+                      <div className="info-field">
+                        <label className="info-label">생년월일</label>
+                        <div className="birthdate-inputs">
+                          <input
+                            type="text"
+                            className="info-input birthdate-input"
+                            value={searchedWorker.birthDate.split(".")[0]}
+                            readOnly
+                          />
+                          <span>년</span>
+                          <input
+                            type="text"
+                            className="info-input birthdate-input"
+                            value={searchedWorker.birthDate.split(".")[1]}
+                            readOnly
+                          />
+                          <span>월</span>
+                          <input
+                            type="text"
+                            className="info-input birthdate-input"
+                            value={searchedWorker.birthDate.split(".")[2]}
+                            readOnly
+                          />
+                          <span>일</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="confirm-buttons">
+                    <button
+                      type="button"
+                      className="confirm-button"
+                      onClick={handleConfirmWorker}
+                    >
+                      확인
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 근무 정보 설정 카드 */}
+            {confirmedWorker && newWorkerWorkInfo && (
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h3 className="info-card-title">근무 정보</h3>
+                </div>
+                <div className="info-card-content">
+                  <div className="info-field">
+                    <label className="info-label">근무지</label>
+                    <input
+                      type="text"
+                      className="info-input"
+                      value={selectedWorkplace}
+                      readOnly
+                    />
+                  </div>
+
+                  {/* 근무 시간 설정 */}
+                  <div className="info-field">
+                    <label className="info-label">근무 시간</label>
+                    <div className="schedule-add-section">
+                      <div className="schedule-input-group">
+                        <select
+                          className="day-select"
+                          value={selectedDayForSchedule}
+                          onChange={(e) =>
+                            setSelectedDayForSchedule(e.target.value)
+                          }
+                        >
+                          {daysOfWeek.map((day) => (
+                            <option key={day} value={day}>
+                              {day}요일
+                            </option>
+                          ))}
+                        </select>
+                        <div className="time-wheel-wrapper">
+                          <TimeInput
+                            value={
+                              newWorkerWorkInfo.weeklySchedule?.[
+                                selectedDayForSchedule
+                              ]?.start || "00:00"
+                            }
+                            onChange={(val) => {
+                              const currentSchedule = newWorkerWorkInfo
+                                .weeklySchedule?.[selectedDayForSchedule] || {
+                                start: "00:00",
+                                end: "00:00",
+                              };
+                              setNewWorkerWorkInfo({
+                                ...newWorkerWorkInfo,
+                                weeklySchedule: {
+                                  ...newWorkerWorkInfo.weeklySchedule,
+                                  [selectedDayForSchedule]: {
+                                    ...currentSchedule,
+                                    start: val,
+                                  },
+                                },
+                              });
+                            }}
+                          />
+                          <span className="time-separator">~</span>
+                          <TimeInput
+                            value={
+                              newWorkerWorkInfo.weeklySchedule?.[
+                                selectedDayForSchedule
+                              ]?.end || "00:00"
+                            }
+                            onChange={(val) => {
+                              const currentSchedule = newWorkerWorkInfo
+                                .weeklySchedule?.[selectedDayForSchedule] || {
+                                start: "00:00",
+                                end: "00:00",
+                              };
+                              setNewWorkerWorkInfo({
+                                ...newWorkerWorkInfo,
+                                weeklySchedule: {
+                                  ...newWorkerWorkInfo.weeklySchedule,
+                                  [selectedDayForSchedule]: {
+                                    ...currentSchedule,
+                                    end: val,
+                                  },
+                                },
+                              });
+                            }}
+                            allowMidnight
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="add-schedule-button"
+                          onClick={() => {
+                            const currentSchedule =
+                              newWorkerWorkInfo.weeklySchedule?.[
+                                selectedDayForSchedule
+                              ];
+                            if (
+                              !currentSchedule ||
+                              !currentSchedule.start ||
+                              !currentSchedule.end
+                            ) {
+                              Swal.fire(
+                                "입력 오류",
+                                "근무 시간을 입력해주세요.",
+                                "warning"
+                              );
+                              return;
+                            }
+                            // 이미 추가된 경우 업데이트만 함
+                            setNewWorkerWorkInfo({
+                              ...newWorkerWorkInfo,
+                              weeklySchedule: {
+                                ...newWorkerWorkInfo.weeklySchedule,
+                                [selectedDayForSchedule]: {
+                                  start: currentSchedule.start || "00:00",
+                                  end: currentSchedule.end || "00:00",
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          근무 시간 추가
+                        </button>
+                      </div>
+                      {/* 추가된 근무 시간 목록 */}
+                      <div className="schedule-list">
+                        {Object.entries(
+                          newWorkerWorkInfo.weeklySchedule || {}
+                        ).map(([day, schedule]) => {
+                          if (!schedule) return null;
+                          return (
+                            <div key={day} className="schedule-item">
+                              <span className="schedule-day">{day}요일</span>
+                              <span className="schedule-time">
+                                {schedule.start} ~ {schedule.end}
+                                {(() => {
+                                  const [startHour, startMin] = schedule.start
+                                    .split(":")
+                                    .map(Number);
+                                  const [endHour, endMin] = schedule.end
+                                    .split(":")
+                                    .map(Number);
+                                  const startDecimal =
+                                    startHour + startMin / 60;
+                                  const endDecimal = endHour + endMin / 60;
+                                  const crossesMidnight =
+                                    endDecimal <= startDecimal;
+                                  return crossesMidnight ? " (익일)" : "";
+                                })()}
+                              </span>
+                              <button
+                                type="button"
+                                className="remove-schedule-button"
+                                onClick={() => {
+                                  const updatedSchedule = {
+                                    ...newWorkerWorkInfo.weeklySchedule,
+                                  };
+                                  delete updatedSchedule[day];
+                                  setNewWorkerWorkInfo({
+                                    ...newWorkerWorkInfo,
+                                    weeklySchedule: updatedSchedule,
+                                  });
+                                }}
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 휴게 시간 설정 */}
+                  <div className="info-field">
+                    <label className="info-label">휴게 시간</label>
+                    <div className="break-time-add-section">
+                      <div className="break-time-input-group">
+                        <select
+                          className="day-select"
+                          value={selectedDayForBreak}
+                          onChange={(e) =>
+                            setSelectedDayForBreak(e.target.value)
+                          }
+                        >
+                          {daysOfWeek.map((day) => (
+                            <option key={day} value={day}>
+                              {day}요일
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          className="break-time-input-field"
+                          value={
+                            newWorkerWorkInfo.breakTime?.[
+                              selectedDayForBreak
+                            ] || 0
+                          }
+                          min="0"
+                          onChange={(e) => {
+                            const newBreakTime =
+                              typeof newWorkerWorkInfo.breakTime === "object"
+                                ? { ...newWorkerWorkInfo.breakTime }
+                                : {};
+                            newBreakTime[selectedDayForBreak] =
+                              parseInt(e.target.value) || 0;
+                            setNewWorkerWorkInfo({
+                              ...newWorkerWorkInfo,
+                              breakTime: newBreakTime,
+                            });
+                          }}
+                        />
+                        <span className="break-time-unit">분</span>
+                        <button
+                          type="button"
+                          className="add-break-time-button"
+                          onClick={() => {
+                            const schedule =
+                              newWorkerWorkInfo.weeklySchedule?.[
+                                selectedDayForBreak
+                              ];
+                            if (!schedule) {
+                              Swal.fire(
+                                "입력 오류",
+                                "해당 요일에 근무 시간을 먼저 추가해주세요.",
+                                "warning"
+                              );
+                              return;
+                            }
+                            const breakTime =
+                              newWorkerWorkInfo.breakTime?.[
+                                selectedDayForBreak
+                              ] || 0;
+                            if (breakTime <= 0) {
+                              Swal.fire(
+                                "입력 오류",
+                                "휴게 시간을 입력해주세요.",
+                                "warning"
+                              );
+                              return;
+                            }
+                            // 이미 추가된 경우 업데이트만 함
+                            setNewWorkerWorkInfo({
+                              ...newWorkerWorkInfo,
+                              breakTime: {
+                                ...newWorkerWorkInfo.breakTime,
+                                [selectedDayForBreak]: breakTime,
+                              },
+                            });
+                          }}
+                        >
+                          휴게시간 추가
+                        </button>
+                      </div>
+                      {/* 추가된 휴게 시간 목록 */}
+                      <div className="break-time-list">
+                        {Object.entries(newWorkerWorkInfo.breakTime || {}).map(
+                          ([day, breakTime]) => {
+                            if (
+                              !newWorkerWorkInfo.weeklySchedule?.[day] ||
+                              breakTime <= 0
+                            )
+                              return null;
+                            return (
+                              <div key={day} className="break-time-item">
+                                <span className="break-time-day">
+                                  {day}요일
+                                </span>
+                                <span className="break-time-value">
+                                  {breakTime}분
+                                </span>
+                                <button
+                                  type="button"
+                                  className="remove-break-time-button"
+                                  onClick={() => {
+                                    const updatedBreakTime = {
+                                      ...newWorkerWorkInfo.breakTime,
+                                    };
+                                    delete updatedBreakTime[day];
+                                    setNewWorkerWorkInfo({
+                                      ...newWorkerWorkInfo,
+                                      breakTime: updatedBreakTime,
+                                    });
+                                  }}
+                                >
+                                  삭제
+                                </button>
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 시급 설정 */}
+                  <div className="info-field">
+                    <label className="info-label">시급</label>
+                    <div className="wage-input-group">
+                      <input
+                        type="number"
+                        className="info-input"
+                        value={newWorkerWorkInfo.hourlyWage || ""}
+                        min="0"
+                        onChange={(e) =>
+                          setNewWorkerWorkInfo({
+                            ...newWorkerWorkInfo,
+                            hourlyWage: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                      <span className="wage-unit">원</span>
+                    </div>
+                  </div>
+
+                  {/* 급여 지급일 설정 */}
+                  <div className="info-field">
+                    <label className="info-label">급여 지급일</label>
+                    <div className="payday-input-group">
+                      <span className="payday-text">매월</span>
+                      <input
+                        type="number"
+                        className="payday-input"
+                        value={newWorkerWorkInfo.payday || ""}
+                        min="1"
+                        max="31"
+                        onChange={(e) =>
+                          setNewWorkerWorkInfo({
+                            ...newWorkerWorkInfo,
+                            payday: parseInt(e.target.value) || 1,
+                          })
+                        }
+                      />
+                      <span>일</span>
+                    </div>
+                  </div>
+
+                  {/* 4대보험 및 소득세 */}
+                  <div className="info-field">
+                    <label className="info-label">4대보험</label>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={newWorkerWorkInfo.socialInsurance || false}
+                        onChange={(e) =>
+                          setNewWorkerWorkInfo({
+                            ...newWorkerWorkInfo,
+                            socialInsurance: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div className="info-field">
+                    <label className="info-label">소득세</label>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={newWorkerWorkInfo.withholdingTax || false}
+                        onChange={(e) =>
+                          setNewWorkerWorkInfo({
+                            ...newWorkerWorkInfo,
+                            withholdingTax: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div className="add-worker-button-container">
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={handleCancelAddWorker}
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      className="add-button-large"
+                      onClick={handleSaveNewWorker}
+                    >
+                      추가
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : workerData ? (
           <>
             {/* 기본 정보 카드 */}
             <div className="info-card">
@@ -454,6 +1063,23 @@ export default function WorkerManagePage() {
                                       </span>
                                     ) : null;
                                   })()}
+                                  <button
+                                    type="button"
+                                    className="remove-schedule-button-x"
+                                    onClick={() => {
+                                      const updatedSchedule = {
+                                        ...currentWorkInfo.weeklySchedule,
+                                      };
+                                      delete updatedSchedule[day];
+                                      setEditedWorkInfo({
+                                        ...currentWorkInfo,
+                                        weeklySchedule: updatedSchedule,
+                                      });
+                                    }}
+                                    title="삭제"
+                                  >
+                                    <FaTimes />
+                                  </button>
                                 </>
                               ) : (
                                 <button
@@ -610,51 +1236,60 @@ export default function WorkerManagePage() {
                   )}
                 </div>
 
-                <div className="info-field">
-                  <label className="info-label">시급</label>
-                  {isEditingWork && currentWorkInfo ? (
-                    <input
-                      type="number"
-                      className="info-input"
-                      value={currentWorkInfo.hourlyWage || 0}
-                      onChange={(e) =>
-                        setEditedWorkInfo({
-                          ...currentWorkInfo,
-                          hourlyWage: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  ) : (
-                    <div className="info-value">
-                      {formatCurrency(
-                        currentWorkInfo?.hourlyWage ||
-                          workerData.workInfo.hourlyWage
-                      )}
-                    </div>
-                  )}
-                </div>
+                <div className="info-field-row">
+                  <div className="info-field">
+                    <label className="info-label">시급</label>
+                    {isEditingWork && currentWorkInfo ? (
+                      <div className="wage-input-group">
+                        <input
+                          type="number"
+                          className="info-input"
+                          value={currentWorkInfo.hourlyWage || 0}
+                          onChange={(e) =>
+                            setEditedWorkInfo({
+                              ...currentWorkInfo,
+                              hourlyWage: parseInt(e.target.value) || 0,
+                            })
+                          }
+                        />
+                        <span className="wage-unit">원</span>
+                      </div>
+                    ) : (
+                      <div className="info-value">
+                        {formatCurrency(
+                          currentWorkInfo?.hourlyWage ||
+                            workerData.workInfo.hourlyWage
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="info-field">
-                  <label className="info-label">급여 지급일</label>
-                  {isEditingWork && currentWorkInfo ? (
-                    <input
-                      type="number"
-                      className="info-input"
-                      value={currentWorkInfo.payday || 1}
-                      min="1"
-                      max="31"
-                      onChange={(e) =>
-                        setEditedWorkInfo({
-                          ...currentWorkInfo,
-                          payday: parseInt(e.target.value) || 1,
-                        })
-                      }
-                    />
-                  ) : (
-                    <div className="info-value">
-                      매월 {workerData.workInfo.payday} 일
-                    </div>
-                  )}
+                  <div className="info-field">
+                    <label className="info-label">급여 지급일</label>
+                    {isEditingWork && currentWorkInfo ? (
+                      <div className="payday-input-group">
+                        <span className="payday-text">매월</span>
+                        <input
+                          type="number"
+                          className="payday-input"
+                          value={currentWorkInfo.payday || 1}
+                          min="1"
+                          max="31"
+                          onChange={(e) =>
+                            setEditedWorkInfo({
+                              ...currentWorkInfo,
+                              payday: parseInt(e.target.value) || 1,
+                            })
+                          }
+                        />
+                        <span>일</span>
+                      </div>
+                    ) : (
+                      <div className="info-value">
+                        매월 {workerData.workInfo.payday} 일
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="toggle-row">
@@ -740,13 +1375,14 @@ export default function WorkerManagePage() {
               // 익일 근무의 두 번째 부분이 hover되면 원래 요일에서만 툴팁 표시
               let shouldShowTooltip = false;
               let tooltipBlock = null;
-              
+
               if (hoveredBlock) {
                 if (hoveredBlock.isSecondPart && hoveredBlock.originalDay) {
                   // 익일 근무의 두 번째 부분이 hover된 경우
                   // 원래 요일(originalDay)에서만 툴팁 표시
                   if (day === hoveredBlock.originalDay) {
-                    const originalDayBlocks = weeklyScheduleGrid[hoveredBlock.originalDay] || [];
+                    const originalDayBlocks =
+                      weeklyScheduleGrid[hoveredBlock.originalDay] || [];
                     tooltipBlock = originalDayBlocks.find((b) => b.isFirstPart);
                     shouldShowTooltip = tooltipBlock !== undefined;
                   }

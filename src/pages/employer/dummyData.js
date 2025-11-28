@@ -631,6 +631,50 @@ export const remittanceData = buildRemittanceData(
   filterByContext("remittance")
 );
 
+// 근무자 코드로 검색 가능한 근무자 정보 (더미 데이터)
+export const workerCodeMap = {
+  "A1B2C3": {
+    name: "김철수",
+    birthDate: "1998.05.15",
+    code: "A1B2C3",
+  },
+  "D4E5F6": {
+    name: "이영희",
+    birthDate: "1999.08.20",
+    code: "D4E5F6",
+  },
+  "G7H8I9": {
+    name: "박민수",
+    birthDate: "2000.03.10",
+    code: "G7H8I9",
+  },
+  "J0K1L2": {
+    name: "최지은",
+    birthDate: "2001.11.25",
+    code: "J0K1L2",
+  },
+  "M3N4O5": {
+    name: "정수진",
+    birthDate: "2002.07.18",
+    code: "M3N4O5",
+  },
+  "P6Q7R8": {
+    name: "한동욱",
+    birthDate: "1997.12.03",
+    code: "P6Q7R8",
+  },
+  "S9T0U1": {
+    name: "윤서연",
+    birthDate: "2003.02.14",
+    code: "S9T0U1",
+  },
+  "V2W3X4": {
+    name: "강민호",
+    birthDate: "1999.09.22",
+    code: "V2W3X4",
+  },
+};
+
 // 직원 기본 정보 및 근무 정보
 export const workerInfo = {
   "맥도날드 잠실점": {
