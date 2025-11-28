@@ -272,6 +272,78 @@ export default function WorkerManagePage() {
     setNewWorkplaceIsSmallBusiness(false);
   };
 
+  const handleDeleteWorkplace = () => {
+    if (!selectedWorkplaceId) return;
+
+    const workplaceToDelete = workplaces.find((wp) => wp.id === selectedWorkplaceId);
+    if (!workplaceToDelete) return;
+
+    Swal.fire({
+      title: "근무지 삭제",
+      text: `${workplaceToDelete.name}을(를) 삭제하시겠습니까?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "삭제",
+      cancelButtonText: "취소",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // 근무지 삭제
+        const updatedWorkplaces = workplaces.filter(
+          (wp) => wp.id !== selectedWorkplaceId
+        );
+
+        // 삭제할 근무지가 없으면 종료
+        if (updatedWorkplaces.length === 0) {
+          Swal.fire("오류", "최소 하나의 근무지는 필요합니다.", "error");
+          return;
+        }
+
+        setWorkplaces(updatedWorkplaces);
+
+        // workersList에서 해당 근무지 제거
+        setWorkersList((prev) => {
+          const updated = { ...prev };
+          delete updated[selectedWorkplaceId];
+          return updated;
+        });
+
+        // addedWorkerInfo에서 해당 근무지 관련 정보 제거
+        setAddedWorkerInfo((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            if (key.startsWith(`${workplaceToDelete.name}-`)) {
+              delete updated[key];
+            }
+          });
+          return updated;
+        });
+
+        // updatedWorkInfo에서 해당 근무지 관련 정보 제거
+        setUpdatedWorkInfo((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            if (key.startsWith(`${workplaceToDelete.name}-`)) {
+              delete updated[key];
+            }
+          });
+          return updated;
+        });
+
+        // 삭제된 근무지가 선택되어 있으면 첫 번째 근무지 선택
+        const newSelectedWorkplaceId = updatedWorkplaces[0].id;
+        setSelectedWorkplaceId(newSelectedWorkplaceId);
+        setSelectedWorker(null);
+        setIsAddingWorkplace(false);
+        setIsEditingWork(false);
+        setEditedWorkInfo(null);
+
+        Swal.fire("삭제 완료", `${workplaceToDelete.name}이(가) 삭제되었습니다.`, "success");
+      }
+    });
+  };
+
   const handleWorkerClick = (workerName) => {
     // 직원이 변경되면 수정 모드 해제
     if (editedWorkInfo?.workerName !== workerName) {
@@ -540,18 +612,30 @@ export default function WorkerManagePage() {
       {/* 왼쪽 사이드바 */}
       <div className="worker-manage-left-panel">
         <div className="worker-manage-workplace-select">
-          <select
-            value={isAddingWorkplace ? "add" : selectedWorkplaceId}
-            onChange={handleWorkplaceChange}
-            className="workplace-select"
-          >
-            {workplaces.map((wp) => (
-              <option key={wp.id} value={wp.id}>
-                {wp.name}
-              </option>
-            ))}
-            <option value="add">+ 근무지 추가</option>
-          </select>
+          <div className="workplace-select-wrapper">
+            <select
+              value={isAddingWorkplace ? "add" : selectedWorkplaceId}
+              onChange={handleWorkplaceChange}
+              className="workplace-select"
+            >
+              {workplaces.map((wp) => (
+                <option key={wp.id} value={wp.id}>
+                  {wp.name}
+                </option>
+              ))}
+              <option value="add">+ 근무지 추가</option>
+            </select>
+            {!isAddingWorkplace && selectedWorkplaceId && workplaces.length > 1 && (
+              <button
+                type="button"
+                className="delete-workplace-button"
+                onClick={handleDeleteWorkplace}
+                title="근무지 삭제"
+              >
+                <FaTimes />
+              </button>
+            )}
+          </div>
         </div>
 
         {!isAddingWorkplace && (

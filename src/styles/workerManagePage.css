@@ -25,14 +25,40 @@
   margin-bottom: 0;
 }
 
+.workplace-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .workplace-select {
-  width: 100%;
+  flex: 1;
   padding: 10px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 0.95rem;
   background: #ffffff;
   cursor: pointer;
+}
+
+.delete-workplace-button {
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #ff4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.delete-workplace-button:hover {
+  background: #fff5f5;
+  border-color: #ff4444;
+  color: #cc0000;
 }
 
 .worker-list {
@@ -1016,7 +1042,7 @@
 .remove-schedule-button,
 .remove-break-time-button {
   padding: 4px 12px;
-  background: #ff4444;
+  background: var(--color-red);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -1027,7 +1053,7 @@
 
 .remove-schedule-button:hover,
 .remove-break-time-button:hover {
-  background: #cc0000;
+  background: var(--color-red);
 }
 
 .add-break-time-button {
