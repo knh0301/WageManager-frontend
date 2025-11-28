@@ -208,9 +208,11 @@
 }
 
 .worker-manage-center-panel.adding-workplace {
-  flex: 0 0 60%;
+  flex: 1 1 auto;
   max-width: 800px;
   margin: 0 auto;
+  width: 100%;
+  min-width: 0;
 }
 
 /* 근무지 관리 */
@@ -219,8 +221,7 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  min-height: 200px;
 }
 
 .workplace-list {
