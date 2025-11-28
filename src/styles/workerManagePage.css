@@ -178,7 +178,7 @@
 .info-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #666666;
+  color: var(--color-main-dark);
 }
 
 .info-value {
@@ -263,7 +263,7 @@
 }
 
 .dismiss-button:hover {
-  background: #d32f2f;
+  background: var(--color-red);
 }
 
 .weekly-schedule-inputs {
@@ -358,8 +358,8 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  background: #ff4444;
-  color: #ffffff;
+  background: none;
+  color: #666666;
   border: none;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -373,7 +373,7 @@
 }
 
 .remove-schedule-button-x:hover {
-  background: #cc0000;
+  background: none;
 }
 
 .time-display {

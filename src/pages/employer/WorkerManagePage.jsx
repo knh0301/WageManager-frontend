@@ -943,13 +943,15 @@ export default function WorkerManagePage() {
                     </div>
                   </div>
                 </div>
-                <div className="info-field">
-                  <label className="info-label">전화 번호</label>
-                  <div className="info-value">{workerData.basicInfo.phone}</div>
-                </div>
-                <div className="info-field">
-                  <label className="info-label">이메일</label>
-                  <div className="info-value">{workerData.basicInfo.email}</div>
+                <div className="info-field-row">
+                  <div className="info-field">
+                    <label className="info-label">전화 번호</label>
+                    <div className="info-value">{workerData.basicInfo.phone}</div>
+                  </div>
+                  <div className="info-field">
+                    <label className="info-label">이메일</label>
+                    <div className="info-value">{workerData.basicInfo.email}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1149,7 +1151,7 @@ export default function WorkerManagePage() {
 
                         return (
                           <div key={day} className="break-time-day-row">
-                            <span className="day-label">{day}요일</span>
+                            <span className="day-label-small">{day}요일</span>
                             {hasSchedule ? (
                               <div className="break-time-input-group">
                                 <input
