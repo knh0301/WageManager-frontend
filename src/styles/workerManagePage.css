@@ -46,7 +46,7 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background: #ffffff;
-  color: #ff4444;
+  color: var(--color-red);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -57,8 +57,8 @@
 
 .delete-workplace-button:hover {
   background: #fff5f5;
-  border-color: #ff4444;
-  color: #cc0000;
+  border-color: var(--color-red);
+  color: var(--color-red);
 }
 
 .worker-list {
