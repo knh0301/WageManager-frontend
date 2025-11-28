@@ -41,6 +41,10 @@ export default function WorkerManagePage() {
     useState("");
   const [newWorkplaceIsSmallBusiness, setNewWorkplaceIsSmallBusiness] =
     useState(false);
+  // 근무지 관리 모드 상태
+  const [isManagingWorkplaces, setIsManagingWorkplaces] = useState(false);
+  const [selectedWorkplaceForEdit, setSelectedWorkplaceForEdit] = useState(null);
+  const [editingWorkplace, setEditingWorkplace] = useState(null);
 
   const resetAddWorkerFlow = () => {
     setWorkerCode("");
@@ -184,8 +188,11 @@ export default function WorkerManagePage() {
       // selectedWorkplaceId는 변경하지 않음 (select의 value는 isAddingWorkplace에 따라 "add"로 표시됨)
       return;
     }
-    // 일반 근무지 선택 시 근무지 추가 모드 해제
+    // 일반 근무지 선택 시 모든 모드 해제
     setIsAddingWorkplace(false);
+    setIsManagingWorkplaces(false);
+    setSelectedWorkplaceForEdit(null);
+    setEditingWorkplace(null);
     const newWorkplaceId = Number(value);
     setSelectedWorkplaceId(newWorkplaceId);
     setSelectedWorker(null);
@@ -196,6 +203,19 @@ export default function WorkerManagePage() {
       resetAddWorkerFlow();
       setIsAddingWorker(false);
     }
+  };
+
+  const handleManageWorkplaces = () => {
+    setIsManagingWorkplaces(true);
+    setIsAddingWorkplace(false);
+    setSelectedWorkplaceForEdit(null);
+    setEditingWorkplace(null);
+  };
+
+  const handleCancelManageWorkplaces = () => {
+    setIsManagingWorkplaces(false);
+    setSelectedWorkplaceForEdit(null);
+    setEditingWorkplace(null);
   };
 
   const handleAddWorkplace = () => {
@@ -342,6 +362,116 @@ export default function WorkerManagePage() {
         Swal.fire("삭제 완료", `${workplaceToDelete.name}이(가) 삭제되었습니다.`, "success");
       }
     });
+  };
+
+  const handleEditWorkplace = (workplace) => {
+    setEditingWorkplace({
+      id: workplace.id,
+      name: workplace.name || "",
+      address: workplace.address || "",
+      businessNumber: workplace.businessNumber || "",
+      isSmallBusiness: workplace.isSmallBusiness || false,
+    });
+    setSelectedWorkplaceForEdit(workplace.id);
+  };
+
+  const handleSaveWorkplaceEdit = () => {
+    if (!editingWorkplace) return;
+
+    if (!editingWorkplace.name.trim()) {
+      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
+      return;
+    }
+
+    if (!editingWorkplace.address.trim()) {
+      Swal.fire("입력 오류", "주소를 입력해주세요.", "error");
+      return;
+    }
+
+    if (!editingWorkplace.businessNumber.trim()) {
+      Swal.fire("입력 오류", "사업자 등록 번호를 입력해주세요.", "error");
+      return;
+    }
+
+    // 사업자 등록 번호 형식 검증
+    const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
+    if (!businessNumberPattern.test(editingWorkplace.businessNumber.trim())) {
+      Swal.fire("입력 오류", "사업자 등록 번호 형식이 올바르지 않습니다. (예: 123-45-67890)", "error");
+      return;
+    }
+
+    // 중복 확인 (자기 자신 제외)
+    const isDuplicate = workplaces.some(
+      (wp) =>
+        wp.name === editingWorkplace.name.trim() && wp.id !== editingWorkplace.id
+    );
+    if (isDuplicate) {
+      Swal.fire("입력 오류", "이미 존재하는 근무지입니다.", "error");
+      return;
+    }
+
+    // 근무지 정보 업데이트
+    setWorkplaces((prev) =>
+      prev.map((wp) =>
+        wp.id === editingWorkplace.id
+          ? {
+              ...wp,
+              name: editingWorkplace.name.trim(),
+              address: editingWorkplace.address.trim(),
+              businessNumber: editingWorkplace.businessNumber.trim(),
+              isSmallBusiness: editingWorkplace.isSmallBusiness,
+            }
+          : wp
+      )
+    );
+
+    // 이름이 변경된 경우 workersList, addedWorkerInfo, updatedWorkInfo의 키도 업데이트
+    const oldWorkplace = workplaces.find((wp) => wp.id === editingWorkplace.id);
+    if (oldWorkplace && oldWorkplace.name !== editingWorkplace.name.trim()) {
+      // workersList는 ID 기반이므로 변경 불필요
+      // addedWorkerInfo와 updatedWorkInfo는 이름 기반 키를 사용하므로 업데이트 필요
+      setAddedWorkerInfo((prev) => {
+        const updated = {};
+        Object.keys(prev).forEach((key) => {
+          if (key.startsWith(`${oldWorkplace.name}-`)) {
+            const newKey = key.replace(
+              `${oldWorkplace.name}-`,
+              `${editingWorkplace.name.trim()}-`
+            );
+            updated[newKey] = prev[key];
+          } else {
+            updated[key] = prev[key];
+          }
+        });
+        return updated;
+      });
+
+      setUpdatedWorkInfo((prev) => {
+        const updated = {};
+        Object.keys(prev).forEach((key) => {
+          if (key.startsWith(`${oldWorkplace.name}-`)) {
+            const newKey = key.replace(
+              `${oldWorkplace.name}-`,
+              `${editingWorkplace.name.trim()}-`
+            );
+            updated[newKey] = prev[key];
+          } else {
+            updated[key] = prev[key];
+          }
+        });
+        return updated;
+      });
+    }
+
+    setEditingWorkplace(null);
+    setSelectedWorkplaceForEdit(null);
+
+    Swal.fire("수정 완료", "근무지 정보가 수정되었습니다.", "success");
+  };
+
+  const handleCancelWorkplaceEdit = () => {
+    setEditingWorkplace(null);
+    setSelectedWorkplaceForEdit(null);
   };
 
   const handleWorkerClick = (workerName) => {
@@ -610,7 +740,8 @@ export default function WorkerManagePage() {
   return (
     <div className="worker-manage-page">
       {/* 왼쪽 사이드바 */}
-      <div className="worker-manage-left-panel">
+      {!isManagingWorkplaces && (
+        <div className="worker-manage-left-panel">
         <div className="worker-manage-workplace-select">
           <div className="workplace-select-wrapper">
             <select
@@ -625,7 +756,7 @@ export default function WorkerManagePage() {
               ))}
               <option value="add">+ 근무지 추가</option>
             </select>
-            {!isAddingWorkplace && selectedWorkplaceId && workplaces.length > 1 && (
+            {!isAddingWorkplace && !isManagingWorkplaces && selectedWorkplaceId && workplaces.length > 1 && (
               <button
                 type="button"
                 className="delete-workplace-button"
@@ -638,7 +769,7 @@ export default function WorkerManagePage() {
           </div>
         </div>
 
-        {!isAddingWorkplace && (
+        {!isAddingWorkplace && !isManagingWorkplaces && (
           <>
             <div className="worker-manage-worker-list">
               {workers.map((worker) => (
@@ -663,15 +794,188 @@ export default function WorkerManagePage() {
             </button>
           </>
         )}
-      </div>
+
+        {!isAddingWorkplace && !isManagingWorkplaces && (
+          <button
+            type="button"
+            className="manage-workplace-button"
+            onClick={handleManageWorkplaces}
+          >
+            근무지 관리
+          </button>
+        )}
+        </div>
+      )}
 
       {/* 중앙 콘텐츠 영역 */}
       <div
         className={`worker-manage-center-panel ${
-          isAddingWorkplace ? "adding-workplace" : ""
+          isAddingWorkplace || isManagingWorkplaces ? "adding-workplace" : ""
         }`}
       >
-        {isAddingWorkplace ? (
+        {isManagingWorkplaces ? (
+          <div className="workplace-manage-container">
+            <div className="info-card">
+              <div className="info-card-header">
+                <h3 className="info-card-title">근무지 목록</h3>
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={handleCancelManageWorkplaces}
+                >
+                  닫기
+                </button>
+              </div>
+              <div className="info-card-content">
+                <div className="workplace-list">
+                  {workplaces.map((workplace) => (
+                    <div
+                      key={workplace.id}
+                      className={`workplace-list-item ${
+                        selectedWorkplaceForEdit === workplace.id
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() => handleEditWorkplace(workplace)}
+                    >
+                      <div className="workplace-list-name">
+                        {workplace.name}
+                      </div>
+                      {selectedWorkplaceForEdit === workplace.id && (
+                        <div className="workplace-list-details">
+                          <div className="info-field">
+                            <label className="info-label">주소</label>
+                            <div className="info-value">
+                              {workplace.address || "-"}
+                            </div>
+                          </div>
+                          <div className="info-field">
+                            <label className="info-label">사업자 등록 번호</label>
+                            <div className="info-value">
+                              {workplace.businessNumber || "-"}
+                            </div>
+                          </div>
+                          <div className="info-field">
+                            <label className="info-label">5인 미만 사업장</label>
+                            <div className="info-value">
+                              {workplace.isSmallBusiness ? "예" : "아니오"}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {editingWorkplace && (
+              <div className="info-card">
+                <div className="info-card-header">
+                  <h3 className="info-card-title">근무지 수정</h3>
+                </div>
+                <div className="info-card-content">
+                  <div className="info-field">
+                    <label className="info-label">근무지 이름</label>
+                    <input
+                      type="text"
+                      className="info-input"
+                      placeholder="근무지 이름을 입력하세요"
+                      value={editingWorkplace.name}
+                      onChange={(e) =>
+                        setEditingWorkplace({
+                          ...editingWorkplace,
+                          name: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="info-field">
+                    <label className="info-label">주소</label>
+                    <input
+                      type="text"
+                      className="info-input"
+                      placeholder="주소를 입력하세요"
+                      value={editingWorkplace.address}
+                      onChange={(e) =>
+                        setEditingWorkplace({
+                          ...editingWorkplace,
+                          address: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="info-field">
+                    <label className="info-label">사업자 등록 번호</label>
+                    <input
+                      type="text"
+                      className="info-input"
+                      placeholder="123-45-67890"
+                      value={editingWorkplace.businessNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9-]/g, "");
+                        let formatted = value.replace(/-/g, "");
+                        if (formatted.length > 3) {
+                          formatted =
+                            formatted.slice(0, 3) + "-" + formatted.slice(3);
+                        }
+                        if (formatted.length > 6) {
+                          formatted =
+                            formatted.slice(0, 6) +
+                            "-" +
+                            formatted.slice(6, 11);
+                        }
+                        setEditingWorkplace({
+                          ...editingWorkplace,
+                          businessNumber: formatted,
+                        });
+                      }}
+                      maxLength={12}
+                    />
+                  </div>
+
+                  <div className="toggle-row">
+                    <div className="toggle-item">
+                      <label className="toggle-label">5인 미만 사업장</label>
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={editingWorkplace.isSmallBusiness}
+                          onChange={(e) =>
+                            setEditingWorkplace({
+                              ...editingWorkplace,
+                              isSmallBusiness: e.target.checked,
+                            })
+                          }
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="add-worker-button-container">
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={handleCancelWorkplaceEdit}
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      className="add-button-large"
+                      onClick={handleSaveWorkplaceEdit}
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : isAddingWorkplace ? (
           <div className="info-card">
             <div className="info-card-header">
               <h3 className="info-card-title">근무지 추가</h3>
@@ -1615,7 +1919,7 @@ export default function WorkerManagePage() {
       </div>
 
       {/* 오른쪽 스케줄 그리드 */}
-      {!isAddingWorkplace && (
+      {!isAddingWorkplace && !isManagingWorkplaces && (
         <div className="worker-manage-right-panel">
           <div className="schedule-grid-container">
             <div className="schedule-grid-header">

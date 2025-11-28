@@ -1,7 +1,13 @@
 // 중앙 집중형 더미 데이터 (향후 백엔드 연동 시 제거 예정)
 
 export const initialWorkplaces = [
-  { id: 1, name: "맥도날드 잠실점" },
+  {
+    id: 1,
+    name: "맥도날드 잠실점",
+    address: "서울특별시 송파구 올림픽로 300 롯데월드타워 지하1층",
+    businessNumber: "120-88-12345",
+    isSmallBusiness: false,
+  },
   { id: 2, name: "스타벅스 강남역점" },
   { id: 3, name: "롯데리아" },
   { id: 4, name: "버거킹" },
