@@ -269,6 +269,26 @@
   gap: 4px;
 }
 
+.time-wheel-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.time-separator {
+  font-size: 1.2rem;
+  color: #4a4f67;
+  font-weight: 600;
+}
+
+.overnight-label {
+  font-size: 0.85rem;
+  color: #666666;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
 .time-select {
   padding: 6px 8px;
   border: 1px solid #e0e0e0;
@@ -276,6 +296,39 @@
   font-size: 0.9rem;
   background: #ffffff;
   cursor: pointer;
+}
+
+.time-input-hour,
+.time-input-minute {
+  padding: 6px 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 60px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.time-input-hour:focus,
+.time-input-minute:focus {
+  outline: none;
+  border-color: var(--color-main);
+}
+
+.add-schedule-button {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #f5f5f5;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-schedule-button:hover {
+  background: #e0e0e0;
+  border-color: #d0d0d0;
 }
 
 .time-display {

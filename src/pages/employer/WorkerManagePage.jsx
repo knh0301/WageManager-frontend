@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import "../../styles/workerManagePage.css";
 import { initialWorkplaces, workplaceWorkers, workerInfo } from "./dummyData";
 import { formatCurrency } from "./utils/formatUtils";
+import TimeInput from "./components/TimeInput";
 
 const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
 const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -43,7 +44,11 @@ export default function WorkerManagePage() {
   // 수정 중인 근무 정보 관리 (저장된 정보 우선, 수정 중이면 수정 중 정보)
   const currentWorkInfo = useMemo(() => {
     // 수정 모드일 때는 수정 중인 정보 사용
-    if (isEditingWork && editedWorkInfo && editedWorkInfo.workerName === currentWorker) {
+    if (
+      isEditingWork &&
+      editedWorkInfo &&
+      editedWorkInfo.workerName === currentWorker
+    ) {
       return editedWorkInfo;
     }
     // 저장된 수정 정보가 있으면 그것을 사용
@@ -53,25 +58,34 @@ export default function WorkerManagePage() {
     }
     // 기본 데이터 사용
     return workerData?.workInfo || null;
-  }, [editedWorkInfo, currentWorker, workerData, isEditingWork, updatedWorkInfo, selectedWorkplace]);
-
+  }, [
+    editedWorkInfo,
+    currentWorker,
+    workerData,
+    isEditingWork,
+    updatedWorkInfo,
+    selectedWorkplace,
+  ]);
 
   // 수정 모드 시작
   const handleStartEdit = () => {
-    if (workerData?.workInfo) {
+    const workInfoToUse = currentWorkInfo || workerData?.workInfo;
+    if (workInfoToUse) {
       // breakTime이 숫자면 요일별 객체로 변환
-      const breakTime = typeof workerData.workInfo.breakTime === 'number'
-        ? daysOfWeek.reduce((acc, day) => {
-            acc[day] = workerData.workInfo.breakTime;
-            return acc;
-          }, {})
-        : workerData.workInfo.breakTime || daysOfWeek.reduce((acc, day) => {
-            acc[day] = 0;
-            return acc;
-          }, {});
-      
+      const breakTime =
+        typeof workInfoToUse.breakTime === "number"
+          ? daysOfWeek.reduce((acc, day) => {
+              acc[day] = workInfoToUse.breakTime;
+              return acc;
+            }, {})
+          : workInfoToUse.breakTime ||
+            daysOfWeek.reduce((acc, day) => {
+              acc[day] = 0;
+              return acc;
+            }, {});
+
       setEditedWorkInfo({
-        ...workerData.workInfo,
+        ...workInfoToUse,
         breakTime,
         workerName: currentWorker,
       });
@@ -97,7 +111,7 @@ export default function WorkerManagePage() {
           workerName: currentWorker,
         },
       }));
-      
+
       // TODO: 백엔드 API 호출
       Swal.fire("저장 완료", "근무 정보가 수정되었습니다.", "success");
       setIsEditingWork(false);
@@ -156,7 +170,11 @@ export default function WorkerManagePage() {
         setSelectedWorker(null);
       }
 
-      Swal.fire("퇴사 처리 완료", `${currentWorker}님이 퇴사 처리되었습니다.`, "success");
+      Swal.fire(
+        "퇴사 처리 완료",
+        `${currentWorker}님이 퇴사 처리되었습니다.`,
+        "success"
+      );
     }
   };
 
@@ -170,29 +188,75 @@ export default function WorkerManagePage() {
     const schedule = workInfoToUse.weeklySchedule;
     const grid = {};
 
+    // 먼저 모든 요일을 초기화
     daysOfWeek.forEach((day) => {
       grid[day] = [];
+    });
+
+    // 각 요일의 스케줄 처리
+    daysOfWeek.forEach((day, dayIndex) => {
       if (schedule[day]) {
         const { start, end } = schedule[day];
         const [startHour, startMin] = start.split(":").map(Number);
         const [endHour, endMin] = end.split(":").map(Number);
         const startDecimal = startHour + startMin / 60;
-        const endDecimal = endHour + endMin / 60;
+        let endDecimal = endHour + endMin / 60;
 
-        // 각 블록에 고유한 그룹 ID 부여 (요일 + 인덱스)
-        const groupId = `${day}-0`;
+        // 익일 근무인지 확인 (end가 start보다 작거나 같으면 익일)
+        const crossesMidnight = endDecimal <= startDecimal;
 
-        grid[day].push({
-          start: startDecimal,
-          end: endDecimal,
-          startTime: start,
-          endTime: end,
-          startHour,
-          startMin,
-          endHour,
-          endMin,
-          groupId,
-        });
+        if (crossesMidnight) {
+          // 익일 근무인 경우
+          // 1. 당일 블록: start부터 24:00까지
+          const groupId = `${day}-0`;
+          grid[day].push({
+            start: startDecimal,
+            end: 24,
+            startTime: start,
+            endTime: "24:00",
+            startHour,
+            startMin,
+            endHour: 24,
+            endMin: 0,
+            groupId,
+            crossesMidnight: true,
+            isFirstPart: true,
+          });
+
+          // 2. 다음 날 블록: 00:00부터 end까지
+          const nextDayIndex = (dayIndex + 1) % 7;
+          const nextDay = daysOfWeek[nextDayIndex];
+          const nextDayGroupId = `${day}-0`; // 같은 그룹 ID 사용 (연속된 블록)
+          grid[nextDay].push({
+            start: 0,
+            end: endDecimal,
+            startTime: "00:00",
+            endTime: end,
+            startHour: 0,
+            startMin: 0,
+            endHour,
+            endMin,
+            groupId: nextDayGroupId,
+            crossesMidnight: true,
+            isSecondPart: true,
+            originalDay: day, // 원래 시작한 요일 저장
+          });
+        } else {
+          // 일반 근무인 경우
+          const groupId = `${day}-0`;
+          grid[day].push({
+            start: startDecimal,
+            end: endDecimal,
+            startTime: start,
+            endTime: end,
+            startHour,
+            startMin,
+            endHour,
+            endMin,
+            groupId,
+            crossesMidnight: false,
+          });
+        }
       }
     });
 
@@ -272,15 +336,11 @@ export default function WorkerManagePage() {
                 </div>
                 <div className="info-field">
                   <label className="info-label">전화 번호</label>
-                  <div className="info-value">
-                    {workerData.basicInfo.phone}
-                  </div>
+                  <div className="info-value">{workerData.basicInfo.phone}</div>
                 </div>
                 <div className="info-field">
                   <label className="info-label">이메일</label>
-                  <div className="info-value">
-                    {workerData.basicInfo.email}
-                  </div>
+                  <div className="info-value">{workerData.basicInfo.email}</div>
                 </div>
               </div>
             </div>
@@ -328,126 +388,119 @@ export default function WorkerManagePage() {
                   <label className="info-label">근무 시간</label>
                   <div className="weekly-schedule-inputs">
                     {daysOfWeek.map((day) => {
-                      const schedule = isEditingWork && currentWorkInfo
-                        ? currentWorkInfo.weeklySchedule?.[day]
-                        : (currentWorkInfo?.weeklySchedule?.[day] || workerData.workInfo.weeklySchedule[day]);
+                      const schedule =
+                        isEditingWork && currentWorkInfo
+                          ? currentWorkInfo.weeklySchedule?.[day]
+                          : currentWorkInfo?.weeklySchedule?.[day] ||
+                            workerData.workInfo.weeklySchedule[day];
                       return (
                         <div key={day} className="day-schedule-row">
                           <span className="day-label-small">{day}요일</span>
                           {isEditingWork && currentWorkInfo ? (
-                            <div className="time-inputs">
-                              <select
-                                className="time-select"
-                                value={
-                                  schedule
-                                    ? parseInt(schedule.start.split(":")[0])
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const hour = e.target.value;
-                                  const minute = schedule
-                                    ? schedule.start.split(":")[1]
-                                    : "00";
-                                  const newSchedule = schedule
-                                    ? { ...schedule, start: `${hour}:${minute}` }
-                                    : { start: `${hour}:${minute}`, end: "00:00" };
-                                  setEditedWorkInfo({
-                                    ...currentWorkInfo,
-                                    weeklySchedule: {
-                                      ...currentWorkInfo.weeklySchedule,
-                                      [day]: newSchedule,
-                                    },
-                                  });
-                                }}
-                              >
-                                <option value="">휴무</option>
-                                {hours.map((h) => (
-                                  <option key={h} value={h}>
-                                    {String(h).padStart(2, "0")}
-                                  </option>
-                                ))}
-                              </select>
-                              {schedule && (
+                            <div className="time-wheel-wrapper">
+                              {schedule ? (
                                 <>
-                                  <span>:</span>
-                                  <select
-                                    className="time-select"
-                                    value={
-                                      schedule.start.split(":")[1] || "00"
-                                    }
-                                    onChange={(e) => {
-                                      const [hour] = schedule.start.split(":");
+                                  <TimeInput
+                                    value={schedule.start || "00:00"}
+                                    onChange={(val) => {
                                       setEditedWorkInfo({
                                         ...currentWorkInfo,
                                         weeklySchedule: {
                                           ...currentWorkInfo.weeklySchedule,
                                           [day]: {
                                             ...schedule,
-                                            start: `${hour}:${e.target.value}`,
+                                            start: val,
                                           },
                                         },
                                       });
                                     }}
-                                  >
-                                    <option value="00">00</option>
-                                    <option value="30">30</option>
-                                  </select>
-                                  <span> - </span>
-                                  <select
-                                    className="time-select"
-                                    value={
-                                      parseInt(schedule.end.split(":")[0]) || ""
-                                    }
-                                    onChange={(e) => {
-                                      const hour = e.target.value;
-                                      const minute = schedule.end.split(":")[1];
+                                  />
+                                  <span className="time-separator">~</span>
+                                  <TimeInput
+                                    value={schedule.end || "00:00"}
+                                    onChange={(val) => {
                                       setEditedWorkInfo({
                                         ...currentWorkInfo,
                                         weeklySchedule: {
                                           ...currentWorkInfo.weeklySchedule,
                                           [day]: {
                                             ...schedule,
-                                            end: `${hour}:${minute}`,
+                                            end: val,
                                           },
                                         },
                                       });
                                     }}
-                                  >
-                                    {hours.map((h) => (
-                                      <option key={h} value={h}>
-                                        {String(h).padStart(2, "0")}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <span>:</span>
-                                  <select
-                                    className="time-select"
-                                    value={schedule.end.split(":")[1] || "00"}
-                                    onChange={(e) => {
-                                      const [hour] = schedule.end.split(":");
-                                      setEditedWorkInfo({
-                                        ...currentWorkInfo,
-                                        weeklySchedule: {
-                                          ...currentWorkInfo.weeklySchedule,
-                                          [day]: {
-                                            ...schedule,
-                                            end: `${hour}:${e.target.value}`,
-                                          },
-                                        },
-                                      });
-                                    }}
-                                  >
-                                    <option value="00">00</option>
-                                    <option value="30">30</option>
-                                  </select>
+                                    allowMidnight
+                                  />
+                                  {(() => {
+                                    const [startHour, startMin] = (
+                                      schedule.start || "00:00"
+                                    )
+                                      .split(":")
+                                      .map(Number);
+                                    const [endHour, endMin] = (
+                                      schedule.end || "00:00"
+                                    )
+                                      .split(":")
+                                      .map(Number);
+                                    const startDecimal =
+                                      startHour + startMin / 60;
+                                    const endDecimal = endHour + endMin / 60;
+                                    const crossesMidnight =
+                                      endDecimal <= startDecimal;
+                                    return crossesMidnight ? (
+                                      <span className="overnight-label">
+                                        (익일)
+                                      </span>
+                                    ) : null;
+                                  })()}
                                 </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="add-schedule-button"
+                                  onClick={() => {
+                                    setEditedWorkInfo({
+                                      ...currentWorkInfo,
+                                      weeklySchedule: {
+                                        ...currentWorkInfo.weeklySchedule,
+                                        [day]: { start: "09:00", end: "18:00" },
+                                      },
+                                    });
+                                  }}
+                                >
+                                  근무 추가
+                                </button>
                               )}
                             </div>
                           ) : (
                             <div className="time-display">
-                              {schedule
-                                ? `${schedule.start} - ${schedule.end}`
-                                : "휴무"}
+                              {schedule ? (
+                                <>
+                                  {`${schedule.start} - ${schedule.end}`}
+                                  {(() => {
+                                    const [startHour, startMin] = schedule.start
+                                      .split(":")
+                                      .map(Number);
+                                    const [endHour, endMin] = schedule.end
+                                      .split(":")
+                                      .map(Number);
+                                    const startDecimal =
+                                      startHour + startMin / 60;
+                                    const endDecimal = endHour + endMin / 60;
+                                    const crossesMidnight =
+                                      endDecimal <= startDecimal;
+                                    return crossesMidnight ? (
+                                      <span className="overnight-label">
+                                        {" "}
+                                        (익일)
+                                      </span>
+                                    ) : null;
+                                  })()}
+                                </>
+                              ) : (
+                                "휴무"
+                              )}
                             </div>
                           )}
                         </div>
@@ -461,11 +514,13 @@ export default function WorkerManagePage() {
                   {isEditingWork && currentWorkInfo ? (
                     <div className="break-time-by-day">
                       {daysOfWeek.map((day) => {
-                        const breakTime = typeof currentWorkInfo.breakTime === 'object'
-                          ? currentWorkInfo.breakTime[day] || 0
-                          : currentWorkInfo.breakTime || 0;
-                        const hasSchedule = currentWorkInfo.weeklySchedule?.[day];
-                        
+                        const breakTime =
+                          typeof currentWorkInfo.breakTime === "object"
+                            ? currentWorkInfo.breakTime[day] || 0
+                            : currentWorkInfo.breakTime || 0;
+                        const hasSchedule =
+                          currentWorkInfo.weeklySchedule?.[day];
+
                         return (
                           <div key={day} className="break-time-day-row">
                             <span className="day-label">{day}요일</span>
@@ -477,13 +532,17 @@ export default function WorkerManagePage() {
                                   value={breakTime}
                                   min="0"
                                   onChange={(e) => {
-                                    const newBreakTime = typeof currentWorkInfo.breakTime === 'object'
-                                      ? { ...currentWorkInfo.breakTime }
-                                      : daysOfWeek.reduce((acc, d) => {
-                                          acc[d] = currentWorkInfo.breakTime || 0;
-                                          return acc;
-                                        }, {});
-                                    newBreakTime[day] = parseInt(e.target.value) || 0;
+                                    const newBreakTime =
+                                      typeof currentWorkInfo.breakTime ===
+                                      "object"
+                                        ? { ...currentWorkInfo.breakTime }
+                                        : daysOfWeek.reduce((acc, d) => {
+                                            acc[d] =
+                                              currentWorkInfo.breakTime || 0;
+                                            return acc;
+                                          }, {});
+                                    newBreakTime[day] =
+                                      parseInt(e.target.value) || 0;
                                     setEditedWorkInfo({
                                       ...currentWorkInfo,
                                       breakTime: newBreakTime,
@@ -502,23 +561,43 @@ export default function WorkerManagePage() {
                   ) : (
                     <div className="break-time-display">
                       {(() => {
-                        const breakTime = currentWorkInfo?.breakTime || workerData.workInfo.breakTime;
-                        if (typeof breakTime === 'object') {
+                        const breakTime =
+                          currentWorkInfo?.breakTime ||
+                          workerData.workInfo.breakTime;
+                        if (typeof breakTime === "object") {
                           // 요일별로 다른 경우
-                          const uniqueValues = [...new Set(Object.values(breakTime))];
-                          if (uniqueValues.length === 1 && uniqueValues[0] > 0) {
-                            return <div className="info-value">{uniqueValues[0]} 분 (요일별 동일)</div>;
+                          const uniqueValues = [
+                            ...new Set(Object.values(breakTime)),
+                          ];
+                          if (
+                            uniqueValues.length === 1 &&
+                            uniqueValues[0] > 0
+                          ) {
+                            return (
+                              <div className="info-value">
+                                {uniqueValues[0]} 분 (요일별 동일)
+                              </div>
+                            );
                           }
                           return (
                             <div className="break-time-by-day-display">
                               {daysOfWeek.map((day) => {
                                 const value = breakTime[day] || 0;
-                                const hasSchedule = currentWorkInfo?.weeklySchedule?.[day] || workerData.workInfo.weeklySchedule[day];
+                                const hasSchedule =
+                                  currentWorkInfo?.weeklySchedule?.[day] ||
+                                  workerData.workInfo.weeklySchedule[day];
                                 if (!hasSchedule) return null;
                                 return (
-                                  <div key={day} className="break-time-day-display-item">
-                                    <span className="day-label-small">{day}요일</span>
-                                    <span className="break-time-value">{value} 분</span>
+                                  <div
+                                    key={day}
+                                    className="break-time-day-display-item"
+                                  >
+                                    <span className="day-label-small">
+                                      {day}요일
+                                    </span>
+                                    <span className="break-time-value">
+                                      {value} 분
+                                    </span>
                                   </div>
                                 );
                               })}
@@ -547,7 +626,10 @@ export default function WorkerManagePage() {
                     />
                   ) : (
                     <div className="info-value">
-                      {formatCurrency(currentWorkInfo?.hourlyWage || workerData.workInfo.hourlyWage)}
+                      {formatCurrency(
+                        currentWorkInfo?.hourlyWage ||
+                          workerData.workInfo.hourlyWage
+                      )}
                     </div>
                   )}
                 </div>
@@ -648,20 +730,72 @@ export default function WorkerManagePage() {
             </div>
             {daysOfWeek.map((day) => {
               const blocks = weeklyScheduleGrid[day] || [];
-              // 해당 요일의 블록 정보 (툴팁 표시용)
-              const dayBlock = blocks.length > 0 ? blocks[0] : null;
-              const dayBlockGroupId = dayBlock?.groupId;
-              const isDayHovered = dayBlockGroupId && hoveredBlockGroup === dayBlockGroupId;
+
+              // hover된 블록 찾기
+              const hoveredBlock = blocks.find(
+                (block) => hoveredBlockGroup === block.groupId
+              );
+
+              // 툴팁 표시 여부 결정
+              // 익일 근무의 두 번째 부분이 hover되면 원래 요일에서만 툴팁 표시
+              let shouldShowTooltip = false;
+              let tooltipBlock = null;
               
+              if (hoveredBlock) {
+                if (hoveredBlock.isSecondPart && hoveredBlock.originalDay) {
+                  // 익일 근무의 두 번째 부분이 hover된 경우
+                  // 원래 요일(originalDay)에서만 툴팁 표시
+                  if (day === hoveredBlock.originalDay) {
+                    const originalDayBlocks = weeklyScheduleGrid[hoveredBlock.originalDay] || [];
+                    tooltipBlock = originalDayBlocks.find((b) => b.isFirstPart);
+                    shouldShowTooltip = tooltipBlock !== undefined;
+                  }
+                } else {
+                  // 첫 번째 부분이거나 일반 근무인 경우, 현재 요일에서 툴팁 표시
+                  tooltipBlock = hoveredBlock;
+                  shouldShowTooltip = true;
+                }
+              }
+
               // 시작 시간대 찾기 (툴팁 위치 계산용)
-              const startHour = dayBlock ? dayBlock.startHour : null;
-              const startMin = dayBlock ? dayBlock.startMin : 0;
-              const startBlockTop = startHour !== null ? (startHour * 40 + startHour * 1 + (startMin / 60) * 40) : 0;
-              
+              const startHour = tooltipBlock ? tooltipBlock.startHour : null;
+              const startMin = tooltipBlock ? tooltipBlock.startMin : 0;
+              const startBlockTop =
+                startHour !== null
+                  ? startHour * 40 + startHour * 1 + (startMin / 60) * 40
+                  : 0;
+
+              // 익일 근무인 경우 전체 시간 표시
+              let displayStartTime = tooltipBlock?.startTime || "";
+              let displayEndTime = tooltipBlock?.endTime || "";
+              if (tooltipBlock?.crossesMidnight && tooltipBlock?.isFirstPart) {
+                // 익일 근무의 첫 번째 부분이면 다음 날의 endTime을 찾아서 표시
+                const nextDayIndex = (daysOfWeek.indexOf(day) + 1) % 7;
+                const nextDay = daysOfWeek[nextDayIndex];
+                const nextDayBlocks = weeklyScheduleGrid[nextDay] || [];
+                const secondPart = nextDayBlocks.find(
+                  (b) => b.groupId === tooltipBlock.groupId && b.isSecondPart
+                );
+                if (secondPart) {
+                  displayEndTime = secondPart.endTime;
+                }
+              } else if (
+                tooltipBlock?.isSecondPart &&
+                tooltipBlock?.originalDay
+              ) {
+                // 익일 근무의 두 번째 부분이면 원래 요일의 startTime 사용
+                const originalDayBlocks =
+                  weeklyScheduleGrid[tooltipBlock.originalDay] || [];
+                const firstPart = originalDayBlocks.find((b) => b.isFirstPart);
+                if (firstPart) {
+                  displayStartTime = firstPart.startTime;
+                }
+              }
+
               return (
                 <div key={day} className="schedule-day-column">
-                  {/* 툴팁을 컬럼 레벨로 이동 */}
-                  {isDayHovered && dayBlock && startHour !== null && (
+                  {/* 툴팁을 컬럼 레벨로 이동 - 익일 근무는 원래 요일에서만 표시 */}
+                  {shouldShowTooltip && tooltipBlock && startHour !== null && (
                     <div
                       className="schedule-block-tooltip"
                       style={{
@@ -671,70 +805,77 @@ export default function WorkerManagePage() {
                       <div className="tooltip-content">
                         <div className="tooltip-label">근무 시간</div>
                         <div className="tooltip-time">
-                          {dayBlock.startTime} - {dayBlock.endTime}
+                          {displayStartTime} - {displayEndTime}
+                          {tooltipBlock?.crossesMidnight && " (익일)"}
                         </div>
                         <div className="tooltip-label">휴게 시간</div>
                         <div className="tooltip-break">
-                          {currentWorkInfo?.breakTime || workerData?.workInfo?.breakTime || 0} 분
+                          {(() => {
+                            const breakTime =
+                              currentWorkInfo?.breakTime ||
+                              workerData?.workInfo?.breakTime ||
+                              0;
+                            if (typeof breakTime === "object") {
+                              // 익일 근무인 경우 원래 요일의 휴게 시간 사용
+                              const dayToUse = tooltipBlock?.originalDay || day;
+                              return breakTime[dayToUse] || 0;
+                            }
+                            return breakTime;
+                          })()}{" "}
+                          분
                         </div>
                       </div>
                     </div>
                   )}
-                  
+
                   {hours.map((hour) => {
-                    // 해당 시간대에 포함되는 블록 찾기
-                    const block = blocks.find((block) => {
+                    // 해당 시간대에 여러 블록이 있을 수 있으므로 모두 찾기
+                    const hourBlocks = blocks.filter((block) => {
                       const blockStartHour = Math.floor(block.start);
                       const blockEndHour = Math.ceil(block.end);
                       return hour >= blockStartHour && hour < blockEndHour;
                     });
 
-                    // 블록이 시작하는 시간인지 확인
-                    const isBlockStart = block && block.startHour === hour;
-                    // 블록이 끝나는 시간인지 확인
-                    const isBlockEnd = block && block.endHour === hour;
-
-                    // 블록의 시작 위치 계산 (분 단위)
-                    let blockTop = 0;
-                    let blockHeight = 100;
-                    if (block) {
-                      if (isBlockStart) {
-                        blockTop = (block.startMin / 60) * 100;
-                      }
-                      if (isBlockEnd) {
-                        blockHeight = (block.endMin / 60) * 100;
-                      } else if (isBlockStart) {
-                        blockHeight = 100 - blockTop;
-                      }
-                    }
-
-                    const isHovered = block && hoveredBlockGroup === block.groupId;
-
                     return (
-                      <div
-                        key={hour}
-                        className="schedule-cell"
-                        title={
-                          block
-                            ? `근무 시간: ${block.startTime} - ${block.endTime}`
-                            : ""
-                        }
-                      >
-                        {block && (
-                          <div
-                            className={`schedule-block ${
-                              isHovered ? "hovered" : ""
-                            }`}
-                            style={{
-                              top: `${blockTop}%`,
-                              height: `${blockHeight}%`,
-                            }}
-                            onMouseEnter={() =>
-                              setHoveredBlockGroup(block.groupId)
-                            }
-                            onMouseLeave={() => setHoveredBlockGroup(null)}
-                          />
-                        )}
+                      <div key={hour} className="schedule-cell">
+                        {hourBlocks.map((block, blockIndex) => {
+                          // 블록이 시작하는 시간인지 확인
+                          const isBlockStart = block.startHour === hour;
+                          // 블록이 끝나는 시간인지 확인
+                          const isBlockEnd = block.endHour === hour;
+
+                          // 블록의 시작 위치 계산 (분 단위)
+                          let blockTop = 0;
+                          let blockHeight = 100;
+
+                          if (isBlockStart) {
+                            blockTop = (block.startMin / 60) * 100;
+                          }
+                          if (isBlockEnd) {
+                            blockHeight = (block.endMin / 60) * 100;
+                          } else if (isBlockStart) {
+                            blockHeight = 100 - blockTop;
+                          }
+
+                          const isHovered = hoveredBlockGroup === block.groupId;
+
+                          return (
+                            <div
+                              key={`${block.groupId}-${blockIndex}`}
+                              className={`schedule-block ${
+                                isHovered ? "hovered" : ""
+                              }`}
+                              style={{
+                                top: `${blockTop}%`,
+                                height: `${blockHeight}%`,
+                              }}
+                              onMouseEnter={() =>
+                                setHoveredBlockGroup(block.groupId)
+                              }
+                              onMouseLeave={() => setHoveredBlockGroup(null)}
+                            />
+                          );
+                        })}
                       </div>
                     );
                   })}

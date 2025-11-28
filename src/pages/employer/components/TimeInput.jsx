@@ -24,7 +24,7 @@ function TimeInput({ label, value, onChange, allowMidnight = false } = {}) {
 
   return (
     <div className="time-wheel">
-      <span className="time-wheel-label">{label}</span>
+      {label && <span className="time-wheel-label">{label}</span>}
       <div className="time-wheel-columns">
         <input
           type="number"
@@ -50,7 +50,7 @@ function TimeInput({ label, value, onChange, allowMidnight = false } = {}) {
 }
 
 TimeInput.propTypes = {
-  label: PropTypes.string.isRequired,
+  label: PropTypes.string,
   value: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   allowMidnight: PropTypes.bool,
