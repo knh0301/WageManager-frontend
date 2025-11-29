@@ -222,32 +222,6 @@ export default function WorkerManagePage() {
   };
 
   const handleAddWorkplace = () => {
-    if (!newWorkplaceName.trim()) {
-      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
-      return;
-    }
-
-    if (!newWorkplaceAddress.trim()) {
-      Swal.fire("입력 오류", "주소를 입력해주세요.", "error");
-      return;
-    }
-
-    if (!newWorkplaceBusinessNumber.trim()) {
-      Swal.fire("입력 오류", "사업자 등록 번호를 입력해주세요.", "error");
-      return;
-    }
-
-    // 사업자 등록 번호 형식 검증 (예: 123-45-67890)
-    const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
-    if (!businessNumberPattern.test(newWorkplaceBusinessNumber.trim())) {
-      Swal.fire(
-        "입력 오류",
-        "사업자 등록 번호 형식이 올바르지 않습니다. (예: 123-45-67890)",
-        "error"
-      );
-      return;
-    }
-
     // 중복 확인
     if (workplaces.some((wp) => wp.name === newWorkplaceName.trim())) {
       Swal.fire("입력 오류", "이미 존재하는 근무지입니다.", "error");
@@ -386,32 +360,6 @@ export default function WorkerManagePage() {
 
   const handleSaveWorkplaceEdit = () => {
     if (!editingWorkplace) return;
-
-    if (!editingWorkplace.name.trim()) {
-      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
-      return;
-    }
-
-    if (!editingWorkplace.address.trim()) {
-      Swal.fire("입력 오류", "주소를 입력해주세요.", "error");
-      return;
-    }
-
-    if (!editingWorkplace.businessNumber.trim()) {
-      Swal.fire("입력 오류", "사업자 등록 번호를 입력해주세요.", "error");
-      return;
-    }
-
-    // 사업자 등록 번호 형식 검증
-    const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
-    if (!businessNumberPattern.test(editingWorkplace.businessNumber.trim())) {
-      Swal.fire(
-        "입력 오류",
-        "사업자 등록 번호 형식이 올바르지 않습니다. (예: 123-45-67890)",
-        "error"
-      );
-      return;
-    }
 
     // 중복 확인 (자기 자신 제외)
     const isDuplicate = workplaces.some(
@@ -1894,17 +1842,19 @@ export default function WorkerManagePage() {
                             <div className="tooltip-label">휴게 시간</div>
                             <div className="tooltip-break">
                               {(() => {
-                                const breakTime =
-                                  currentWorkInfo?.breakTime ||
-                                  workerData?.workInfo?.breakTime ||
-                                  0;
-                                if (typeof breakTime === "object") {
+                                const rawBreakSource =
+                                  isAddingWorker && newWorkerWorkInfo
+                                    ? newWorkerWorkInfo.breakTime
+                                    : currentWorkInfo?.breakTime ??
+                                      workerData?.workInfo?.breakTime ??
+                                      0;
+                                if (typeof rawBreakSource === "object") {
                                   // 익일 근무인 경우 원래 요일의 휴게 시간 사용
                                   const dayToUse =
                                     tooltipBlock?.originalDay || day;
-                                  return breakTime[dayToUse] || 0;
+                                  return rawBreakSource[dayToUse] || 0;
                                 }
-                                return breakTime;
+                                return rawBreakSource;
                               })()}{" "}
                               분
                             </div>

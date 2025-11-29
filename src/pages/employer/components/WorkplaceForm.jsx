@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import Swal from "sweetalert2";
 
 export default function WorkplaceForm({
   title,
@@ -10,6 +11,42 @@ export default function WorkplaceForm({
   saveButtonText = "저장",
   autoFocus = false,
 }) {
+  const validateForm = () => {
+    if (!formData.name?.trim()) {
+      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
+      return false;
+    }
+
+    if (!formData.address?.trim()) {
+      Swal.fire("입력 오류", "주소를 입력해주세요.", "error");
+      return false;
+    }
+
+    if (!formData.businessNumber?.trim()) {
+      Swal.fire("입력 오류", "사업자 등록 번호를 입력해주세요.", "error");
+      return false;
+    }
+
+    // 사업자 등록 번호 형식 검증 (예: 123-45-67890)
+    const businessNumberPattern = /^\d{3}-\d{2}-\d{5}$/;
+    if (!businessNumberPattern.test(formData.businessNumber.trim())) {
+      Swal.fire(
+        "입력 오류",
+        "사업자 등록 번호 형식이 올바르지 않습니다. (예: 123-45-67890)",
+        "error"
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = () => {
+    if (validateForm()) {
+      onSave();
+    }
+  };
+
   const handleBusinessNumberChange = (e) => {
     const value = e.target.value.replace(/[^0-9-]/g, "");
     // 자동으로 하이픈 추가 (123-45-67890 형식)
@@ -100,7 +137,11 @@ export default function WorkplaceForm({
           <button type="button" className="cancel-button" onClick={onCancel}>
             {cancelButtonText}
           </button>
-          <button type="button" className="add-button-large" onClick={onSave}>
+          <button
+            type="button"
+            className="add-button-large"
+            onClick={handleSave}
+          >
             {saveButtonText}
           </button>
         </div>
