@@ -536,6 +536,7 @@ export default function WorkerManagePage() {
   };
 
   const handleSearchWorker = () => {
+    if (isSearching) return;
     if (!workerCode.trim()) {
       Swal.fire("입력 오류", "근무자 코드를 입력해주세요.", "warning");
       return;
