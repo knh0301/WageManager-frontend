@@ -152,10 +152,13 @@ export default function WorkerManagePage() {
   const handleSaveEdit = () => {
     if (editedWorkInfo && currentWorker) {
       // 급여 지급일 검증
-      if (editedWorkInfo.payday && editedWorkInfo.payday > 31) {
+      if (
+        editedWorkInfo.payday &&
+        (editedWorkInfo.payday < 1 || editedWorkInfo.payday > 31)
+      ) {
         Swal.fire(
           "입력 오류",
-          "급여 지급일은 31일을 초과할 수 없습니다.",
+          "급여 지급일은 1일에서 31일 사이여야 합니다.",
           "error"
         );
         return;
