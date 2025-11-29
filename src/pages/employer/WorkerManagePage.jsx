@@ -191,6 +191,7 @@ export default function WorkerManagePage() {
     const newWorkplaceId = Number(value);
     setSelectedWorkplaceId(newWorkplaceId);
     setSelectedWorker(null);
+    setHoveredBlockGroup(null);
     // 근무지 변경 시 수정 모드 해제
     setIsEditingWork(false);
     setEditedWorkInfo(null);
@@ -450,11 +451,13 @@ export default function WorkerManagePage() {
       setIsAddingWorker(false);
     }
     setSelectedWorker(workerName);
+    setHoveredBlockGroup(null);
   };
 
   const handleCancelAddWorker = () => {
     resetAddWorkerFlow();
     setIsAddingWorker(false);
+    setHoveredBlockGroup(null);
   };
 
   const handleDismissWorker = async () => {
@@ -517,6 +520,7 @@ export default function WorkerManagePage() {
     resetAddWorkerFlow();
     setIsAddingWorker(true);
     setSelectedWorker(null);
+    setHoveredBlockGroup(null);
   };
 
   const handleSearchWorker = () => {
