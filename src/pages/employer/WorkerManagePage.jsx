@@ -315,7 +315,7 @@ export default function WorkerManagePage() {
         setAddedWorkerInfo((prev) => {
           const updated = { ...prev };
           Object.keys(updated).forEach((key) => {
-            if (key.startsWith(`${workplaceToDelete.name}-`)) {
+            if (key.startsWith(`${workplaceToDelete.name}::`)) {
               delete updated[key];
             }
           });
@@ -398,10 +398,10 @@ export default function WorkerManagePage() {
       setAddedWorkerInfo((prev) => {
         const updated = {};
         Object.keys(prev).forEach((key) => {
-          if (key.startsWith(`${oldWorkplace.name}-`)) {
+          if (key.startsWith(`${oldWorkplace.name}::`)) {
             const newKey = key.replace(
-              `${oldWorkplace.name}-`,
-              `${editingWorkplace.name.trim()}-`
+              `${oldWorkplace.name}::`,
+              `${editingWorkplace.name.trim()}::`
             );
             updated[newKey] = prev[key];
           } else {
@@ -573,7 +573,7 @@ export default function WorkerManagePage() {
     });
 
     // 추가된 근무자 정보 저장
-    const workerInfoKey = `${selectedWorkplace}-${confirmedWorker.name}`;
+    const workerInfoKey = `${selectedWorkplace}::${confirmedWorker.name}`;
     setAddedWorkerInfo((prev) => ({
       ...prev,
       [workerInfoKey]: {
