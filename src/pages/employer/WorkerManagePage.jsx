@@ -10,6 +10,7 @@ import {
 } from "./dummyData";
 import { formatCurrency } from "./utils/formatUtils";
 import TimeInput from "./components/TimeInput";
+import WorkplaceForm from "./components/WorkplaceForm";
 
 const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
 const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -908,199 +909,38 @@ export default function WorkerManagePage() {
             </div>
 
             {editingWorkplace && (
-              <div className="info-card">
-                <div className="info-card-header">
-                  <h3 className="info-card-title">근무지 수정</h3>
-                </div>
-                <div className="info-card-content">
-                  <div className="info-field">
-                    <label className="info-label">근무지 이름</label>
-                    <input
-                      type="text"
-                      className="info-input"
-                      placeholder="근무지 이름을 입력하세요"
-                      value={editingWorkplace.name}
-                      onChange={(e) =>
-                        setEditingWorkplace({
-                          ...editingWorkplace,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="info-field">
-                    <label className="info-label">주소</label>
-                    <input
-                      type="text"
-                      className="info-input"
-                      placeholder="주소를 입력하세요"
-                      value={editingWorkplace.address}
-                      onChange={(e) =>
-                        setEditingWorkplace({
-                          ...editingWorkplace,
-                          address: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="info-field">
-                    <label className="info-label">사업자 등록 번호</label>
-                    <input
-                      type="text"
-                      className="info-input"
-                      placeholder="123-45-67890"
-                      value={editingWorkplace.businessNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9-]/g, "");
-                        let formatted = value.replace(/-/g, "");
-                        if (formatted.length > 3) {
-                          formatted =
-                            formatted.slice(0, 3) + "-" + formatted.slice(3);
-                        }
-                        if (formatted.length > 6) {
-                          formatted =
-                            formatted.slice(0, 6) +
-                            "-" +
-                            formatted.slice(6, 11);
-                        }
-                        setEditingWorkplace({
-                          ...editingWorkplace,
-                          businessNumber: formatted,
-                        });
-                      }}
-                      maxLength={12}
-                    />
-                  </div>
-
-                  <div className="toggle-row">
-                    <div className="toggle-item">
-                      <label className="toggle-label">5인 미만 사업장</label>
-                      <label className="toggle-switch">
-                        <input
-                          type="checkbox"
-                          checked={editingWorkplace.isSmallBusiness}
-                          onChange={(e) =>
-                            setEditingWorkplace({
-                              ...editingWorkplace,
-                              isSmallBusiness: e.target.checked,
-                            })
-                          }
-                        />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="add-worker-button-container">
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={handleCancelWorkplaceEdit}
-                    >
-                      취소
-                    </button>
-                    <button
-                      type="button"
-                      className="add-button-large"
-                      onClick={handleSaveWorkplaceEdit}
-                    >
-                      저장
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <WorkplaceForm
+                title="근무지 수정"
+                formData={editingWorkplace}
+                onFormDataChange={setEditingWorkplace}
+                onCancel={handleCancelWorkplaceEdit}
+                onSave={handleSaveWorkplaceEdit}
+                cancelButtonText="취소"
+                saveButtonText="저장"
+              />
             )}
           </div>
         ) : isAddingWorkplace ? (
-          <div className="info-card">
-            <div className="info-card-header">
-              <h3 className="info-card-title">근무지 추가</h3>
-            </div>
-            <div className="info-card-content">
-              <div className="info-field">
-                <label className="info-label">근무지 이름</label>
-                <input
-                  type="text"
-                  className="info-input"
-                  placeholder="근무지 이름을 입력하세요"
-                  value={newWorkplaceName}
-                  onChange={(e) => setNewWorkplaceName(e.target.value)}
-                  autoFocus
-                />
-              </div>
-
-              <div className="info-field">
-                <label className="info-label">주소</label>
-                <input
-                  type="text"
-                  className="info-input"
-                  placeholder="주소를 입력하세요"
-                  value={newWorkplaceAddress}
-                  onChange={(e) => setNewWorkplaceAddress(e.target.value)}
-                />
-              </div>
-
-              <div className="info-field">
-                <label className="info-label">사업자 등록 번호</label>
-                <input
-                  type="text"
-                  className="info-input"
-                  placeholder="123-45-67890"
-                  value={newWorkplaceBusinessNumber}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9-]/g, "");
-                    // 자동으로 하이픈 추가 (123-45-67890 형식)
-                    let formatted = value.replace(/-/g, "");
-                    if (formatted.length > 3) {
-                      formatted =
-                        formatted.slice(0, 3) + "-" + formatted.slice(3);
-                    }
-                    if (formatted.length > 6) {
-                      formatted =
-                        formatted.slice(0, 6) + "-" + formatted.slice(6, 11);
-                    }
-                    setNewWorkplaceBusinessNumber(formatted);
-                  }}
-                  maxLength={12}
-                />
-              </div>
-
-              <div className="toggle-row">
-                <div className="toggle-item">
-                  <label className="toggle-label">5인 미만 사업장</label>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={newWorkplaceIsSmallBusiness}
-                      onChange={(e) =>
-                        setNewWorkplaceIsSmallBusiness(e.target.checked)
-                      }
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="add-worker-button-container">
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={handleCancelAddWorkplace}
-                >
-                  뒤로 가기
-                </button>
-                <button
-                  type="button"
-                  className="add-button-large"
-                  onClick={handleAddWorkplace}
-                >
-                  추가
-                </button>
-              </div>
-            </div>
-          </div>
+          <WorkplaceForm
+            title="근무지 추가"
+            formData={{
+              name: newWorkplaceName,
+              address: newWorkplaceAddress,
+              businessNumber: newWorkplaceBusinessNumber,
+              isSmallBusiness: newWorkplaceIsSmallBusiness,
+            }}
+            onFormDataChange={(data) => {
+              setNewWorkplaceName(data.name || "");
+              setNewWorkplaceAddress(data.address || "");
+              setNewWorkplaceBusinessNumber(data.businessNumber || "");
+              setNewWorkplaceIsSmallBusiness(data.isSmallBusiness || false);
+            }}
+            onCancel={handleCancelAddWorkplace}
+            onSave={handleAddWorkplace}
+            cancelButtonText="뒤로 가기"
+            saveButtonText="추가"
+            autoFocus={true}
+          />
         ) : isAddingWorker ? (
           <>
             {/* 근무자 코드 검색 카드 */}
