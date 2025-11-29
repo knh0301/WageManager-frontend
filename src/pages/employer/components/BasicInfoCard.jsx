@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { FaUser } from "react-icons/fa";
 
 export default function BasicInfoCard({ workerData, onDismiss }) {
@@ -5,11 +6,7 @@ export default function BasicInfoCard({ workerData, onDismiss }) {
     <div className="info-card">
       <div className="info-card-header">
         <h3 className="info-card-title">기본 정보</h3>
-        <button
-          type="button"
-          className="dismiss-button"
-          onClick={onDismiss}
-        >
+        <button type="button" className="dismiss-button" onClick={onDismiss}>
           퇴사
         </button>
       </div>
@@ -40,5 +37,14 @@ export default function BasicInfoCard({ workerData, onDismiss }) {
   );
 }
 
-
-
+BasicInfoCard.propTypes = {
+  workerData: PropTypes.shape({
+    basicInfo: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      birthDate: PropTypes.string.isRequired,
+      phone: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+  onDismiss: PropTypes.func.isRequired,
+};

@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { FaTimes } from "react-icons/fa";
 import TimeInput from "./TimeInput";
 import { formatCurrency } from "../utils/formatUtils";
@@ -13,27 +14,17 @@ export default function WorkInfoCard({
   onCancelEdit,
   onUpdateWorkInfo,
 }) {
-  const workInfoToUse = currentWorkInfo || workerData.workInfo;
-
   return (
     <div className="info-card">
       <div className="info-card-header">
         <h3 className="info-card-title">근무 정보</h3>
         {!isEditingWork ? (
-          <button
-            type="button"
-            className="edit-button"
-            onClick={onStartEdit}
-          >
+          <button type="button" className="edit-button" onClick={onStartEdit}>
             수정
           </button>
         ) : (
           <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              type="button"
-              className="edit-button"
-              onClick={onSaveEdit}
-            >
+            <button type="button" className="edit-button" onClick={onSaveEdit}>
               저장
             </button>
             <button
@@ -56,10 +47,11 @@ export default function WorkInfoCard({
           <label className="info-label">근무 시간</label>
           <div className="weekly-schedule-inputs">
             {daysOfWeek.map((day) => {
-              const schedule = isEditingWork && currentWorkInfo
-                ? currentWorkInfo.weeklySchedule?.[day]
-                : currentWorkInfo?.weeklySchedule?.[day] ||
-                  workerData.workInfo.weeklySchedule[day];
+              const schedule =
+                isEditingWork && currentWorkInfo
+                  ? currentWorkInfo.weeklySchedule?.[day]
+                  : currentWorkInfo?.weeklySchedule?.[day] ||
+                    workerData.workInfo.weeklySchedule[day];
               return (
                 <div key={day} className="day-schedule-row">
                   <span className="day-label-small">{day}요일</span>
@@ -105,9 +97,7 @@ export default function WorkInfoCard({
                             )
                               .split(":")
                               .map(Number);
-                            const [endHour, endMin] = (
-                              schedule.end || "00:00"
-                            )
+                            const [endHour, endMin] = (schedule.end || "00:00")
                               .split(":")
                               .map(Number);
                             const startDecimal = startHour + startMin / 60;
@@ -272,10 +262,7 @@ export default function WorkInfoCard({
                     .filter((day) => scheduleToUse[day])
                     .map((day) => breakTime[day] || 0);
                   const uniqueValues = [...new Set(breakTimeValues)];
-                  if (
-                    uniqueValues.length === 1 &&
-                    uniqueValues[0] > 0
-                  ) {
+                  if (uniqueValues.length === 1 && uniqueValues[0] > 0) {
                     return (
                       <div className="info-value">
                         {uniqueValues[0]} 분 (요일별 동일)
@@ -296,9 +283,7 @@ export default function WorkInfoCard({
                             className="break-time-day-display-item"
                           >
                             <span className="day-label-small">{day}요일</span>
-                            <span className="break-time-value">
-                              {value} 분
-                            </span>
+                            <span className="break-time-value">{value} 분</span>
                           </div>
                         );
                       })}
@@ -360,8 +345,7 @@ export default function WorkInfoCard({
               </div>
             ) : (
               <div className="info-value">
-                매월{" "}
-                {currentWorkInfo?.payday || workerData.workInfo.payday} 일
+                매월 {currentWorkInfo?.payday || workerData.workInfo.payday} 일
               </div>
             )}
           </div>
@@ -416,5 +400,23 @@ export default function WorkInfoCard({
   );
 }
 
-
-
+WorkInfoCard.propTypes = {
+  workerData: PropTypes.shape({
+    workInfo: PropTypes.shape({
+      workplace: PropTypes.string.isRequired,
+      weeklySchedule: PropTypes.object.isRequired,
+      breakTime: PropTypes.oneOfType([PropTypes.number, PropTypes.object])
+        .isRequired,
+      hourlyWage: PropTypes.number.isRequired,
+      payday: PropTypes.number.isRequired,
+      socialInsurance: PropTypes.bool.isRequired,
+      withholdingTax: PropTypes.bool.isRequired,
+    }).isRequired,
+  }).isRequired,
+  currentWorkInfo: PropTypes.object,
+  isEditingWork: PropTypes.bool.isRequired,
+  onStartEdit: PropTypes.func.isRequired,
+  onSaveEdit: PropTypes.func.isRequired,
+  onCancelEdit: PropTypes.func.isRequired,
+  onUpdateWorkInfo: PropTypes.func.isRequired,
+};

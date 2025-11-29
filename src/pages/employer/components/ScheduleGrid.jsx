@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
 const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -44,9 +46,7 @@ export default function ScheduleGrid({
                 if (day === hoveredBlock.originalDay) {
                   const originalDayBlocks =
                     weeklyScheduleGrid[hoveredBlock.originalDay] || [];
-                  tooltipBlock = originalDayBlocks.find(
-                    (b) => b.isFirstPart
-                  );
+                  tooltipBlock = originalDayBlocks.find((b) => b.isFirstPart);
                   shouldShowTooltip = tooltipBlock !== undefined;
                 }
               } else {
@@ -66,10 +66,7 @@ export default function ScheduleGrid({
             // 익일 근무인 경우 전체 시간 표시
             let displayStartTime = tooltipBlock?.startTime || "";
             let displayEndTime = tooltipBlock?.endTime || "";
-            if (
-              tooltipBlock?.crossesMidnight &&
-              tooltipBlock?.isFirstPart
-            ) {
+            if (tooltipBlock?.crossesMidnight && tooltipBlock?.isFirstPart) {
               const nextDayIndex = (daysOfWeek.indexOf(day) + 1) % 7;
               const nextDay = daysOfWeek[nextDayIndex];
               const nextDayBlocks = weeklyScheduleGrid[nextDay] || [];
@@ -93,40 +90,37 @@ export default function ScheduleGrid({
 
             return (
               <div key={day} className="schedule-day-column">
-                {shouldShowTooltip &&
-                  tooltipBlock &&
-                  startHour !== null && (
-                    <div
-                      className="schedule-block-tooltip"
-                      style={{
-                        top: `${startBlockTop}px`,
-                      }}
-                    >
-                      <div className="tooltip-content">
-                        <div className="tooltip-label">근무 시간</div>
-                        <div className="tooltip-time">
-                          {displayStartTime} - {displayEndTime}
-                          {tooltipBlock?.crossesMidnight && " (익일)"}
-                        </div>
-                        <div className="tooltip-label">휴게 시간</div>
-                        <div className="tooltip-break">
-                          {(() => {
-                            const breakTime =
-                              currentWorkInfo?.breakTime ||
-                              workerData?.workInfo?.breakTime ||
-                              0;
-                            if (typeof breakTime === "object") {
-                              const dayToUse =
-                                tooltipBlock?.originalDay || day;
-                              return breakTime[dayToUse] || 0;
-                            }
-                            return breakTime;
-                          })()}{" "}
-                          분
-                        </div>
+                {shouldShowTooltip && tooltipBlock && startHour !== null && (
+                  <div
+                    className="schedule-block-tooltip"
+                    style={{
+                      top: `${startBlockTop}px`,
+                    }}
+                  >
+                    <div className="tooltip-content">
+                      <div className="tooltip-label">근무 시간</div>
+                      <div className="tooltip-time">
+                        {displayStartTime} - {displayEndTime}
+                        {tooltipBlock?.crossesMidnight && " (익일)"}
+                      </div>
+                      <div className="tooltip-label">휴게 시간</div>
+                      <div className="tooltip-break">
+                        {(() => {
+                          const breakTime =
+                            currentWorkInfo?.breakTime ||
+                            workerData?.workInfo?.breakTime ||
+                            0;
+                          if (typeof breakTime === "object") {
+                            const dayToUse = tooltipBlock?.originalDay || day;
+                            return breakTime[dayToUse] || 0;
+                          }
+                          return breakTime;
+                        })()}{" "}
+                        분
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {hours.map((hour) => {
                   const hourBlocks = blocks.filter((block) => {
@@ -182,5 +176,14 @@ export default function ScheduleGrid({
   );
 }
 
-
-
+ScheduleGrid.propTypes = {
+  weeklyScheduleGrid: PropTypes.object.isRequired,
+  hoveredBlockGroup: PropTypes.string,
+  onHoverBlock: PropTypes.func.isRequired,
+  currentWorkInfo: PropTypes.object,
+  workerData: PropTypes.shape({
+    workInfo: PropTypes.shape({
+      breakTime: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
+    }),
+  }),
+};

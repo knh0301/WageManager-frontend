@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 export default function WorkplaceForm({
   title,
   formData,
@@ -95,18 +97,10 @@ export default function WorkplaceForm({
         </div>
 
         <div className="add-worker-button-container">
-          <button
-            type="button"
-            className="cancel-button"
-            onClick={onCancel}
-          >
+          <button type="button" className="cancel-button" onClick={onCancel}>
             {cancelButtonText}
           </button>
-          <button
-            type="button"
-            className="add-button-large"
-            onClick={onSave}
-          >
+          <button type="button" className="add-button-large" onClick={onSave}>
             {saveButtonText}
           </button>
         </div>
@@ -115,3 +109,18 @@ export default function WorkplaceForm({
   );
 }
 
+WorkplaceForm.propTypes = {
+  title: PropTypes.string.isRequired,
+  formData: PropTypes.shape({
+    name: PropTypes.string,
+    address: PropTypes.string,
+    businessNumber: PropTypes.string,
+    isSmallBusiness: PropTypes.bool,
+  }).isRequired,
+  onFormDataChange: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  onSave: PropTypes.func.isRequired,
+  cancelButtonText: PropTypes.string,
+  saveButtonText: PropTypes.string,
+  autoFocus: PropTypes.bool,
+};
