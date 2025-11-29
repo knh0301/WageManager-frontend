@@ -180,16 +180,6 @@ export default function WorkerManagePage() {
 
   const handleWorkplaceChange = (e) => {
     const value = e.target.value;
-    if (value === "add") {
-      // 근무지 추가 모드 활성화
-      setIsAddingWorkplace(true);
-      setNewWorkplaceName("");
-      setNewWorkplaceAddress("");
-      setNewWorkplaceBusinessNumber("");
-      setNewWorkplaceIsSmallBusiness(false);
-      // selectedWorkplaceId는 변경하지 않음 (select의 value는 isAddingWorkplace에 따라 "add"로 표시됨)
-      return;
-    }
     // 일반 근무지 선택 시 모든 모드 해제
     setIsAddingWorkplace(false);
     setIsManagingWorkplaces(false);
@@ -590,11 +580,7 @@ export default function WorkerManagePage() {
     if (!searchedWorker) return;
 
     // 근무자 정보 확인 완료 (검색된 정보 그대로 사용)
-    setConfirmedWorker({
-      ...searchedWorker,
-      name: searchedWorker.name,
-      birthDate: searchedWorker.birthDate,
-    });
+    setConfirmedWorker(searchedWorker);
 
     // 기본 근무 정보 초기화
     setNewWorkerWorkInfo({
@@ -661,12 +647,11 @@ export default function WorkerManagePage() {
       "success"
     );
 
-    const newWorkerName = confirmedWorker.name;
     resetAddWorkerFlow();
     setIsAddingWorker(false);
 
     // 추가된 근무자 선택
-    setSelectedWorker(newWorkerName);
+    setSelectedWorker(confirmedWorker.name);
   };
 
   // 주간 스케줄 그리드 데이터 생성 (수정된 정보 반영)
@@ -769,7 +754,7 @@ export default function WorkerManagePage() {
           <div className="worker-manage-workplace-select">
             <div className="workplace-select-wrapper">
               <select
-                value={isAddingWorkplace ? "add" : selectedWorkplaceId}
+                value={selectedWorkplaceId}
                 onChange={handleWorkplaceChange}
                 className="workplace-select"
               >

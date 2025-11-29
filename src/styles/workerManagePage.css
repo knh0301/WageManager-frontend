@@ -62,16 +62,13 @@
   color: var(--color-red);
 }
 
-.worker-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.worker-manage-worker-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.worker-list-item {
+.worker-item {
   padding: 12px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -80,11 +77,11 @@
   font-size: 0.9rem;
 }
 
-.worker-list-item:hover {
+.worker-item:hover {
   background: #e8f4f8;
 }
 
-.worker-list-item.selected {
+.worker-item.selected {
   background: var(--color-main);
   color: #ffffff;
   font-weight: 600;
@@ -126,77 +123,6 @@
 .manage-workplace-button:hover {
   background: var(--color-main);
   color: #ffffff;
-}
-
-/* 근무지 추가 카드 */
-.add-workplace-card {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-top: 16px;
-}
-
-.add-workplace-header {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.add-workplace-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #333333;
-  margin: 0;
-}
-
-.add-workplace-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.add-workplace-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.add-workplace-toggle-field {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.add-workplace-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  box-sizing: border-box;
-}
-
-.add-workplace-input:focus {
-  outline: none;
-  border-color: var(--color-main);
-}
-
-.add-workplace-field .toggle-label {
-  font-size: 0.95rem;
-  color: #333333;
-  font-weight: 500;
-}
-
-.add-workplace-field .toggle-switch {
-  margin-left: auto;
-}
-
-.add-workplace-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 8px;
 }
 
 /* 중앙 패널 */
@@ -293,8 +219,7 @@
 }
 
 .edit-button,
-.cancel-button,
-.save-button {
+.cancel-button {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -320,15 +245,6 @@
 
 .cancel-button:hover {
   background: #d0d0d0;
-}
-
-.save-button {
-  background: var(--color-main);
-  color: #ffffff;
-}
-
-.save-button:hover {
-  background: var(--color-main-dark);
 }
 
 .info-card-content {
@@ -411,24 +327,6 @@
   flex-shrink: 0;
 }
 
-.profile-icon-large {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999999;
-  font-size: 2.5rem;
-}
-
-.worker-basic-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .worker-name {
   font-size: 1.3rem;
   font-weight: 700;
@@ -474,12 +372,6 @@
   min-width: 50px;
 }
 
-.time-inputs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .time-wheel-wrapper {
   display: flex;
   gap: 8px;
@@ -500,32 +392,6 @@
   font-weight: 500;
   margin-left: 2px;
   white-space: nowrap;
-}
-
-.time-select {
-  padding: 6px 8px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: #ffffff;
-  cursor: pointer;
-}
-
-.time-input-hour,
-.time-input-minute {
-  padding: 6px 8px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  width: 60px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.time-input-hour:focus,
-.time-input-minute:focus {
-  outline: none;
-  border-color: var(--color-main);
 }
 
 .add-schedule-button {
@@ -833,82 +699,6 @@
   color: #333333;
 }
 
-/* 근무자 추가 모달 */
-.add-worker-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.add-worker-modal {
-  background: #ffffff;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.add-worker-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.add-worker-modal-header h3 {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #333333;
-}
-
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #999999;
-  cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.modal-close-button:hover {
-  background: #f5f5f5;
-  color: #333333;
-}
-
-.add-worker-modal-body {
-  padding: 24px;
-}
-
-.worker-code-search {
-  margin-bottom: 24px;
-}
-
-.search-label {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333333;
-  margin-bottom: 8px;
-}
-
 .search-input-group {
   display: flex;
   gap: 8px;
@@ -949,33 +739,6 @@
   cursor: not-allowed;
 }
 
-.searched-worker-info {
-  margin-top: 24px;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 12px;
-}
-
-.worker-profile-section {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.worker-info-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-}
-
-.worker-info-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
 .confirm-buttons {
   display: flex;
   gap: 8px;
@@ -998,30 +761,6 @@
   background: var(--color-main-dark);
 }
 
-.worker-info-summary {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.work-info-setup {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.setup-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
   .worker-manage-page {
@@ -1041,64 +780,6 @@
   }
 }
 
-/* 근무 시간/휴게 시간 추가 섹션 */
-.schedule-add-section,
-.break-time-add-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.schedule-input-group,
-.break-time-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.day-select {
-  padding: 8px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background: #ffffff;
-  cursor: pointer;
-  min-width: 80px;
-}
-
-.schedule-list,
-.break-time-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.schedule-item,
-.break-time-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.schedule-day,
-.break-time-day {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #333333;
-  min-width: 50px;
-}
-
-.schedule-time {
-  font-size: 0.9rem;
-  color: #666666;
-  flex: 1;
-}
-
 .break-time-by-day-display {
   display: flex;
   flex-direction: column;
@@ -1115,56 +796,6 @@
   font-size: 0.9rem;
   color: #666666;
   flex: 1;
-}
-
-.remove-schedule-button,
-.remove-break-time-button {
-  padding: 4px 12px;
-  background: var(--color-red);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.remove-schedule-button:hover,
-.remove-break-time-button:hover {
-  background: var(--color-red);
-}
-
-.add-break-time-button {
-  padding: 8px 16px;
-  background: var(--color-main);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.add-break-time-button:hover {
-  background: var(--color-main-dark);
-}
-
-.birthdate-inputs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.birthdate-input {
-  width: 80px;
-}
-
-.birthdate-inputs span {
-  font-size: 0.9rem;
-  color: #666666;
-  margin: 0 4px;
 }
 
 .wage-input-group {
