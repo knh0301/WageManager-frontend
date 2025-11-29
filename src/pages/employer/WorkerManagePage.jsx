@@ -298,6 +298,11 @@ export default function WorkerManagePage() {
       cancelButtonText: "취소",
     }).then((result) => {
       if (result.isConfirmed) {
+        if (isAddingWorker) {
+          resetAddWorkerFlow();
+          setIsAddingWorker(false);
+          setHoveredBlockGroup(null);
+        }
         // 근무지 삭제
         const updatedWorkplaces = workplaces.filter(
           (wp) => wp.id !== selectedWorkplaceId
@@ -913,7 +918,7 @@ export default function WorkerManagePage() {
                       className="worker-code-input"
                       value={workerCode}
                       onChange={(e) => setWorkerCode(e.target.value)}
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           handleSearchWorker();
                         }
