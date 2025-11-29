@@ -47,11 +47,10 @@ export default function WorkInfoCard({
           <label className="info-label">근무 시간</label>
           <div className="weekly-schedule-inputs">
             {daysOfWeek.map((day) => {
+              // currentWorkInfo가 있으면 항상 우선 사용
               const schedule =
-                isEditingWork && currentWorkInfo
-                  ? currentWorkInfo.weeklySchedule?.[day]
-                  : currentWorkInfo?.weeklySchedule?.[day] ||
-                    workerData.workInfo.weeklySchedule[day];
+                currentWorkInfo?.weeklySchedule?.[day] ??
+                workerData.workInfo.weeklySchedule[day];
               return (
                 <div key={day} className="day-schedule-row">
                   <span className="day-label-small">{day}요일</span>
@@ -252,11 +251,12 @@ export default function WorkInfoCard({
           ) : (
             <div className="break-time-display">
               {(() => {
+                // currentWorkInfo가 있으면 항상 우선 사용
                 const breakTime =
-                  currentWorkInfo?.breakTime || workerData.workInfo.breakTime;
+                  currentWorkInfo?.breakTime ?? workerData.workInfo.breakTime;
                 if (typeof breakTime === "object") {
                   const scheduleToUse =
-                    currentWorkInfo?.weeklySchedule ||
+                    currentWorkInfo?.weeklySchedule ??
                     workerData.workInfo.weeklySchedule;
                   const breakTimeValues = daysOfWeek
                     .filter((day) => scheduleToUse[day])
@@ -274,7 +274,7 @@ export default function WorkInfoCard({
                       {daysOfWeek.map((day) => {
                         const value = breakTime[day] || 0;
                         const hasSchedule =
-                          currentWorkInfo?.weeklySchedule?.[day] ||
+                          currentWorkInfo?.weeklySchedule?.[day] ??
                           workerData.workInfo.weeklySchedule[day];
                         if (!hasSchedule) return null;
                         return (
@@ -317,7 +317,7 @@ export default function WorkInfoCard({
             ) : (
               <div className="info-value">
                 {formatCurrency(
-                  currentWorkInfo?.hourlyWage || workerData.workInfo.hourlyWage
+                  currentWorkInfo?.hourlyWage ?? workerData.workInfo.hourlyWage
                 )}
               </div>
             )}
@@ -345,7 +345,7 @@ export default function WorkInfoCard({
               </div>
             ) : (
               <div className="info-value">
-                매월 {currentWorkInfo?.payday || workerData.workInfo.payday} 일
+                매월 {currentWorkInfo?.payday ?? workerData.workInfo.payday} 일
               </div>
             )}
           </div>
@@ -358,9 +358,8 @@ export default function WorkInfoCard({
               <input
                 type="checkbox"
                 checked={
-                  isEditingWork && currentWorkInfo
-                    ? currentWorkInfo.socialInsurance
-                    : workerData.workInfo.socialInsurance
+                  currentWorkInfo?.socialInsurance ??
+                  workerData.workInfo.socialInsurance
                 }
                 disabled={!isEditingWork}
                 onChange={(e) =>
@@ -379,9 +378,8 @@ export default function WorkInfoCard({
               <input
                 type="checkbox"
                 checked={
-                  isEditingWork && currentWorkInfo
-                    ? currentWorkInfo.withholdingTax
-                    : workerData.workInfo.withholdingTax
+                  currentWorkInfo?.withholdingTax ??
+                  workerData.workInfo.withholdingTax
                 }
                 disabled={!isEditingWork}
                 onChange={(e) =>

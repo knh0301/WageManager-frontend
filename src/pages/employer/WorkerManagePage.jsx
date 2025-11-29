@@ -1344,11 +1344,12 @@ export default function WorkerManagePage() {
                   <label className="info-label">근무 시간</label>
                   <div className="weekly-schedule-inputs">
                     {daysOfWeek.map((day) => {
+                      // currentWorkInfo가 있으면 항상 우선 사용
+                      // 삭제된 요일은 undefined이므로, currentWorkInfo.weeklySchedule이 존재하면 그 안에서 찾고, 없으면 원본 사용
                       const schedule =
-                        isEditingWork && currentWorkInfo
-                          ? currentWorkInfo.weeklySchedule?.[day]
-                          : currentWorkInfo?.weeklySchedule?.[day] ||
-                            workerData.workInfo.weeklySchedule[day];
+                        currentWorkInfo?.weeklySchedule !== undefined
+                          ? currentWorkInfo.weeklySchedule[day]
+                          : workerData.workInfo.weeklySchedule[day];
                       return (
                         <div key={day} className="day-schedule-row">
                           <span className="day-label-small">{day}요일</span>
@@ -1415,7 +1416,8 @@ export default function WorkerManagePage() {
                                     className="remove-schedule-button-x"
                                     onClick={() => {
                                       const updatedSchedule = {
-                                        ...currentWorkInfo.weeklySchedule,
+                                        ...(currentWorkInfo.weeklySchedule ||
+                                          {}),
                                       };
                                       delete updatedSchedule[day];
                                       setEditedWorkInfo({
@@ -1572,7 +1574,7 @@ export default function WorkerManagePage() {
                           // 요일별로 다른 경우
                           // 근무 시간이 있는 요일의 휴게시간만 고려
                           const scheduleToUse =
-                            currentWorkInfo?.weeklySchedule ||
+                            currentWorkInfo?.weeklySchedule ??
                             workerData.workInfo.weeklySchedule;
                           const breakTimeValues = daysOfWeek
                             .filter((day) => scheduleToUse[day])
@@ -1593,7 +1595,7 @@ export default function WorkerManagePage() {
                               {daysOfWeek.map((day) => {
                                 const value = breakTime[day] || 0;
                                 const hasSchedule =
-                                  currentWorkInfo?.weeklySchedule?.[day] ||
+                                  currentWorkInfo?.weeklySchedule?.[day] ??
                                   workerData.workInfo.weeklySchedule[day];
                                 if (!hasSchedule) return null;
                                 return (
