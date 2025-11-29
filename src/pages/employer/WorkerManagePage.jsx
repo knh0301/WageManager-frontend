@@ -219,6 +219,17 @@ export default function WorkerManagePage() {
     setEditingWorkplace(null);
   };
 
+  const handleAddWorkplaceFromManage = () => {
+    setIsManagingWorkplaces(false);
+    setIsAddingWorkplace(true);
+    setSelectedWorkplaceForEdit(null);
+    setEditingWorkplace(null);
+    setNewWorkplaceName("");
+    setNewWorkplaceAddress("");
+    setNewWorkplaceBusinessNumber("");
+    setNewWorkplaceIsSmallBusiness(false);
+  };
+
   const handleAddWorkplace = () => {
     if (!newWorkplaceName.trim()) {
       Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
@@ -752,7 +763,7 @@ export default function WorkerManagePage() {
   return (
     <div className="worker-manage-page">
       {/* 왼쪽 사이드바 */}
-      {!isManagingWorkplaces && (
+      {!isManagingWorkplaces && !isAddingWorkplace && (
         <div className="worker-manage-left-panel">
           <div className="worker-manage-workplace-select">
             <div className="workplace-select-wrapper">
@@ -832,13 +843,22 @@ export default function WorkerManagePage() {
             <div className="info-card">
               <div className="info-card-header">
                 <h3 className="info-card-title">근무지 목록</h3>
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={handleCancelManageWorkplaces}
-                >
-                  닫기
-                </button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    className="add-button-large"
+                    onClick={handleAddWorkplaceFromManage}
+                  >
+                    근무지 추가
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel-button"
+                    onClick={handleCancelManageWorkplaces}
+                  >
+                    닫기
+                  </button>
+                </div>
               </div>
               <div className="info-card-content">
                 <div className="workplace-list">
