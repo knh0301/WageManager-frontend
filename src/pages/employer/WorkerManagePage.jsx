@@ -79,7 +79,7 @@ export default function WorkerManagePage() {
       return null;
     }
     // 추가된 근무자 정보 우선 확인
-    const addedInfo = addedWorkerInfo[`${selectedWorkplace}-${currentWorker}`];
+    const addedInfo = addedWorkerInfo[`${selectedWorkplace}::${currentWorker}`];
     if (addedInfo) {
       return addedInfo;
     }
