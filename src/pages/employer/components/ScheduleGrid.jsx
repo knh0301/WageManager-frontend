@@ -107,8 +107,8 @@ export default function ScheduleGrid({
                       <div className="tooltip-break">
                         {(() => {
                           const breakTime =
-                            currentWorkInfo?.breakTime ||
-                            workerData?.workInfo?.breakTime ||
+                            currentWorkInfo?.breakTime ??
+                            workerData?.workInfo?.breakTime ??
                             0;
                           if (typeof breakTime === "object") {
                             const dayToUse = tooltipBlock?.originalDay || day;

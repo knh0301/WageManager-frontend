@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { FaUser } from "react-icons/fa";
 
 export default function BasicInfoCard({ workerData, onDismiss }) {
+  const basicInfo = workerData?.basicInfo ?? {};
   return (
     <div className="info-card">
       <div className="info-card-header">
@@ -16,7 +17,7 @@ export default function BasicInfoCard({ workerData, onDismiss }) {
             <FaUser />
           </div>
           <div>
-            <div className="worker-name">{workerData.basicInfo.name}</div>
+            <div className="worker-name">{basicInfo.name ?? "-"}</div>
             <div className="worker-birthdate">
               {workerData.basicInfo.birthDate}
             </div>
@@ -25,11 +26,11 @@ export default function BasicInfoCard({ workerData, onDismiss }) {
         <div className="info-field-row">
           <div className="info-field">
             <label className="info-label">전화 번호</label>
-            <div className="info-value">{workerData.basicInfo.phone}</div>
+            <div className="info-value">{basicInfo.phone ?? "-"}</div>
           </div>
           <div className="info-field">
             <label className="info-label">이메일</label>
-            <div className="info-value">{workerData.basicInfo.email}</div>
+            <div className="info-value">{basicInfo.email ?? "-"}</div>
           </div>
         </div>
       </div>
