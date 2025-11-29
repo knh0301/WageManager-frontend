@@ -549,10 +549,13 @@ export default function WorkerManagePage() {
     if (!confirmedWorker || !newWorkerWorkInfo) return;
 
     // 급여 지급일 검증
-    if (newWorkerWorkInfo.payday && newWorkerWorkInfo.payday > 31) {
+    if (
+      newWorkerWorkInfo.payday &&
+      (newWorkerWorkInfo.payday < 1 || newWorkerWorkInfo.payday > 31)
+    ) {
       Swal.fire(
         "입력 오류",
-        "급여 지급일은 31일을 초과할 수 없습니다.",
+        "급여 지급일은 1일에서 31일 사이여야 합니다.",
         "error"
       );
       return;
