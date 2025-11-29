@@ -226,6 +226,12 @@ export default function WorkerManagePage() {
   };
 
   const handleAddWorkplace = () => {
+    // 근무지 이름 검증
+    if (!newWorkplaceName.trim()) {
+      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
+      return;
+    }
+
     // 중복 확인
     if (workplaces.some((wp) => wp.name === newWorkplaceName.trim())) {
       Swal.fire("입력 오류", "이미 존재하는 근무지입니다.", "error");
@@ -364,6 +370,12 @@ export default function WorkerManagePage() {
 
   const handleSaveWorkplaceEdit = () => {
     if (!editingWorkplace) return;
+
+    // 근무지 이름 검증
+    if (!editingWorkplace.name.trim()) {
+      Swal.fire("입력 오류", "근무지 이름을 입력해주세요.", "error");
+      return;
+    }
 
     // 중복 확인 (자기 자신 제외)
     const isDuplicate = workplaces.some(
