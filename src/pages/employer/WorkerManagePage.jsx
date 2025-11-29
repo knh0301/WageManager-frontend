@@ -11,9 +11,9 @@ import {
 import { formatCurrency } from "./utils/formatUtils";
 import TimeInput from "./components/TimeInput";
 import WorkplaceForm from "./components/WorkplaceForm";
+import ScheduleGrid from "./components/ScheduleGrid";
 
 const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
-const hours = Array.from({ length: 24 }, (_, i) => i);
 
 export default function WorkerManagePage() {
   const [workplaces, setWorkplaces] = useState(() => initialWorkplaces);
@@ -1743,195 +1743,15 @@ export default function WorkerManagePage() {
 
       {/* 오른쪽 스케줄 그리드 */}
       {!isAddingWorkplace && !isManagingWorkplaces && (
-        <div className="worker-manage-right-panel">
-          <div className="schedule-grid-container">
-            <div className="schedule-grid-header">
-              <div className="schedule-time-column"></div>
-              {daysOfWeek.map((day) => (
-                <div key={day} className="schedule-day-header">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="schedule-grid-body">
-              <div className="schedule-time-column">
-                {hours.map((hour) => (
-                  <div key={hour} className="schedule-hour-cell">
-                    {hour}
-                  </div>
-                ))}
-              </div>
-              {daysOfWeek.map((day) => {
-                const blocks = weeklyScheduleGrid[day] || [];
-
-                // hover된 블록 찾기
-                const hoveredBlock = blocks.find(
-                  (block) => hoveredBlockGroup === block.groupId
-                );
-
-                // 툴팁 표시 여부 결정
-                // 익일 근무의 두 번째 부분이 hover되면 원래 요일에서만 툴팁 표시
-                let shouldShowTooltip = false;
-                let tooltipBlock = null;
-
-                if (hoveredBlock) {
-                  if (hoveredBlock.isSecondPart && hoveredBlock.originalDay) {
-                    // 익일 근무의 두 번째 부분이 hover된 경우
-                    // 원래 요일(originalDay)에서만 툴팁 표시
-                    if (day === hoveredBlock.originalDay) {
-                      const originalDayBlocks =
-                        weeklyScheduleGrid[hoveredBlock.originalDay] || [];
-                      tooltipBlock = originalDayBlocks.find(
-                        (b) => b.isFirstPart
-                      );
-                      shouldShowTooltip = tooltipBlock !== undefined;
-                    }
-                  } else {
-                    // 첫 번째 부분이거나 일반 근무인 경우, 현재 요일에서 툴팁 표시
-                    tooltipBlock = hoveredBlock;
-                    shouldShowTooltip = true;
-                  }
-                }
-
-                // 시작 시간대 찾기 (툴팁 위치 계산용)
-                const startHour = tooltipBlock ? tooltipBlock.startHour : null;
-                const startMin = tooltipBlock ? tooltipBlock.startMin : 0;
-                const startBlockTop =
-                  startHour !== null
-                    ? startHour * 40 + startHour * 1 + (startMin / 60) * 40
-                    : 0;
-
-                // 익일 근무인 경우 전체 시간 표시
-                let displayStartTime = tooltipBlock?.startTime || "";
-                let displayEndTime = tooltipBlock?.endTime || "";
-                if (
-                  tooltipBlock?.crossesMidnight &&
-                  tooltipBlock?.isFirstPart
-                ) {
-                  // 익일 근무의 첫 번째 부분이면 다음 날의 endTime을 찾아서 표시
-                  const nextDayIndex = (daysOfWeek.indexOf(day) + 1) % 7;
-                  const nextDay = daysOfWeek[nextDayIndex];
-                  const nextDayBlocks = weeklyScheduleGrid[nextDay] || [];
-                  const secondPart = nextDayBlocks.find(
-                    (b) => b.groupId === tooltipBlock.groupId && b.isSecondPart
-                  );
-                  if (secondPart) {
-                    displayEndTime = secondPart.endTime;
-                  }
-                } else if (
-                  tooltipBlock?.isSecondPart &&
-                  tooltipBlock?.originalDay
-                ) {
-                  // 익일 근무의 두 번째 부분이면 원래 요일의 startTime 사용
-                  const originalDayBlocks =
-                    weeklyScheduleGrid[tooltipBlock.originalDay] || [];
-                  const firstPart = originalDayBlocks.find(
-                    (b) => b.isFirstPart
-                  );
-                  if (firstPart) {
-                    displayStartTime = firstPart.startTime;
-                  }
-                }
-
-                return (
-                  <div key={day} className="schedule-day-column">
-                    {/* 툴팁을 컬럼 레벨로 이동 - 익일 근무는 원래 요일에서만 표시 */}
-                    {shouldShowTooltip &&
-                      tooltipBlock &&
-                      startHour !== null && (
-                        <div
-                          className="schedule-block-tooltip"
-                          style={{
-                            top: `${startBlockTop}px`,
-                          }}
-                        >
-                          <div className="tooltip-content">
-                            <div className="tooltip-label">근무 시간</div>
-                            <div className="tooltip-time">
-                              {displayStartTime} - {displayEndTime}
-                              {tooltipBlock?.crossesMidnight && " (익일)"}
-                            </div>
-                            <div className="tooltip-label">휴게 시간</div>
-                            <div className="tooltip-break">
-                              {(() => {
-                                const rawBreakSource =
-                                  isAddingWorker && newWorkerWorkInfo
-                                    ? newWorkerWorkInfo.breakTime
-                                    : currentWorkInfo?.breakTime ??
-                                      workerData?.workInfo?.breakTime ??
-                                      0;
-                                if (typeof rawBreakSource === "object") {
-                                  // 익일 근무인 경우 원래 요일의 휴게 시간 사용
-                                  const dayToUse =
-                                    tooltipBlock?.originalDay || day;
-                                  return rawBreakSource[dayToUse] || 0;
-                                }
-                                return rawBreakSource;
-                              })()}{" "}
-                              분
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                    {hours.map((hour) => {
-                      // 해당 시간대에 여러 블록이 있을 수 있으므로 모두 찾기
-                      const hourBlocks = blocks.filter((block) => {
-                        const blockStartHour = Math.floor(block.start);
-                        const blockEndHour = Math.ceil(block.end);
-                        return hour >= blockStartHour && hour < blockEndHour;
-                      });
-
-                      return (
-                        <div key={hour} className="schedule-cell">
-                          {hourBlocks.map((block, blockIndex) => {
-                            // 블록이 시작하는 시간인지 확인
-                            const isBlockStart = block.startHour === hour;
-                            // 블록이 끝나는 시간인지 확인
-                            const isBlockEnd = block.endHour === hour;
-
-                            // 블록의 시작 위치 계산 (분 단위)
-                            let blockTop = 0;
-                            let blockHeight = 100;
-
-                            if (isBlockStart) {
-                              blockTop = (block.startMin / 60) * 100;
-                            }
-                            if (isBlockEnd) {
-                              blockHeight = (block.endMin / 60) * 100;
-                            } else if (isBlockStart) {
-                              blockHeight = 100 - blockTop;
-                            }
-
-                            const isHovered =
-                              hoveredBlockGroup === block.groupId;
-
-                            return (
-                              <div
-                                key={`${block.groupId}-${blockIndex}`}
-                                className={`schedule-block ${
-                                  isHovered ? "hovered" : ""
-                                }`}
-                                style={{
-                                  top: `${blockTop}%`,
-                                  height: `${blockHeight}%`,
-                                }}
-                                onMouseEnter={() =>
-                                  setHoveredBlockGroup(block.groupId)
-                                }
-                                onMouseLeave={() => setHoveredBlockGroup(null)}
-                              />
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <ScheduleGrid
+          weeklyScheduleGrid={weeklyScheduleGrid}
+          hoveredBlockGroup={hoveredBlockGroup}
+          onHoverBlock={setHoveredBlockGroup}
+          currentWorkInfo={currentWorkInfo}
+          workerData={workerData}
+          isAddingWorker={isAddingWorker}
+          newWorkerWorkInfo={newWorkerWorkInfo}
+        />
       )}
     </div>
   );

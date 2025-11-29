@@ -9,6 +9,8 @@ export default function ScheduleGrid({
   onHoverBlock,
   currentWorkInfo,
   workerData,
+  isAddingWorker = false,
+  newWorkerWorkInfo = null,
 }) {
   return (
     <div className="worker-manage-right-panel">
@@ -106,15 +108,19 @@ export default function ScheduleGrid({
                       <div className="tooltip-label">휴게 시간</div>
                       <div className="tooltip-break">
                         {(() => {
-                          const breakTime =
-                            currentWorkInfo?.breakTime ??
-                            workerData?.workInfo?.breakTime ??
-                            0;
-                          if (typeof breakTime === "object") {
+                          // 우선순위: newWorkerWorkInfo > currentWorkInfo > workerData
+                          const rawBreakSource =
+                            isAddingWorker && newWorkerWorkInfo
+                              ? newWorkerWorkInfo.breakTime
+                              : currentWorkInfo?.breakTime ??
+                                workerData?.workInfo?.breakTime ??
+                                0;
+                          if (typeof rawBreakSource === "object") {
+                            // 익일 근무인 경우 원래 요일의 휴게 시간 사용
                             const dayToUse = tooltipBlock?.originalDay || day;
-                            return breakTime[dayToUse] || 0;
+                            return rawBreakSource[dayToUse] || 0;
                           }
-                          return breakTime;
+                          return rawBreakSource;
                         })()}{" "}
                         분
                       </div>
@@ -186,4 +192,6 @@ ScheduleGrid.propTypes = {
       breakTime: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
     }),
   }),
+  isAddingWorker: PropTypes.bool,
+  newWorkerWorkInfo: PropTypes.object,
 };
