@@ -85,13 +85,13 @@ export default function KakaoRedirect() {
         }
       } catch (error) {
         // 3-2. 404 또는 401 에러인 경우 -> 신규 회원으로 판단하여 회원가입 진행
-        const isUserNotFound = 
-          error.status === 404 || 
-          error.response?.status === 404 || 
-          error.status === 401 || 
-          error.response?.status === 401 ||
-          error.message?.includes('404') ||
-          error.message?.includes('401');
+        // 상태 코드를 숫자로 명시적으로 변환하여 비교
+        const statusCode = 
+          Number(error.response?.status) || 
+          Number(error.status) || 
+          (error.response?.data?.status ? Number(error.response.data.status) : null);
+        
+        const isUserNotFound = statusCode === 404 || statusCode === 401;
         
         if (isUserNotFound) {
           if (import.meta.env.DEV) {
