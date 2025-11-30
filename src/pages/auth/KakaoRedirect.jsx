@@ -43,8 +43,13 @@ export default function KakaoRedirect() {
         },
       });
 
+      // 카카오에서 가져온 전체 사용자 데이터 출력
+      console.log('=== 카카오 사용자 전체 데이터 ===');
+      console.log(JSON.stringify(userResponse.data, null, 2));
+      console.log('==============================');
+
       const kakaoId = userResponse.data.id;
-      console.log('카카오 ID 획득:', kakaoId);
+      console.log('카카오 ID:', kakaoId);
 
       // 3. 백엔드 서버에 가입 여부 확인
       setStatus('서버에 회원 정보 확인 중...');
@@ -79,6 +84,14 @@ export default function KakaoRedirect() {
         const profile = kakaoAccount?.profile;
         const name = profile?.nickname;
         const profileImageUrl = profile?.profile_image_url;
+        
+        console.log('=== 추출한 카카오 사용자 정보 ===');
+        console.log('카카오 ID:', kakaoId);
+        console.log('이름:', name);
+        console.log('프로필 이미지 URL:', profileImageUrl);
+        console.log('카카오 계정 정보:', kakaoAccount);
+        console.log('프로필 정보:', profile);
+        console.log('================================');
         
         // 회원가입 페이지로 이동하면서 카카오 정보 전달
         navigate('/signup', { 
