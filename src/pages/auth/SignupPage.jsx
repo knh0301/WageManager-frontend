@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { kakaoRegister } from '../../api/authApi';
-import { setAuthToken } from '../../features/auth/authSlice';
+import axios from 'axios';
+import { registerUser, kakaoLoginWithToken } from '../../api/authApi';
+import { setAuthToken, setUserDetails } from '../../features/auth/authSlice';
 import Swal from 'sweetalert2';
 import { FaUser, FaTimes } from 'react-icons/fa';
 import './SignupPage.css';
@@ -14,6 +15,62 @@ export default function SignupPage() {
   const { kakaoAccessToken } = location.state || {};
 
   const [userType, setUserType] = useState('');
+  const [phone, setPhone] = useState('');
+  const [kakaoId, setKakaoId] = useState(null);
+  const [kakaoName, setKakaoName] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 디버깅: kakaoId 확인
+  console.log('SignupPage - kakaoId:', kakaoId);
+
+  // 카카오 액세스 토큰으로 카카오 ID 가져오기
+  useEffect(() => {
+    const fetchKakaoUserInfo = async () => {
+      if (!kakaoAccessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const userResponse = await axios.get('https://kapi.kakao.com/v2/user/me', {
+          headers: {
+            Authorization: `Bearer ${kakaoAccessToken}`,
+            'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+          },
+        });
+
+        const kakaoIdFromResponse = userResponse.data.id;
+        const kakaoAccount = userResponse.data.kakao_account;
+        const profile = kakaoAccount?.profile;
+        const name = profile?.nickname;
+        const profileImageUrlFromResponse = profile?.profile_image_url;
+        
+        console.log('카카오 ID:', kakaoIdFromResponse);
+        console.log('카카오 이름:', name);
+        console.log('카카오 프로필 이미지 URL:', profileImageUrlFromResponse);
+        console.log('카카오 사용자 전체 데이터:', userResponse.data);
+        
+        setKakaoId(String(kakaoIdFromResponse));
+        setKakaoName(name || '');
+        setProfileImageUrl(profileImageUrlFromResponse || '');
+      } catch (error) {
+        console.error('카카오 사용자 정보 가져오기 실패:', error);
+        Swal.fire({
+          icon: 'error',
+          title: '오류 발생',
+          text: '카카오 사용자 정보를 가져오는데 실패했습니다.',
+          confirmButtonColor: '#769fcd',
+        }).then(() => {
+          navigate('/');
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchKakaoUserInfo();
+  }, [kakaoAccessToken, navigate]);
 
   // 카카오 액세스 토큰이 없으면 로그인 페이지로 리다이렉트
   if (!kakaoAccessToken) {
@@ -27,6 +84,19 @@ export default function SignupPage() {
     return null;
   }
 
+  // 로딩 중이면 로딩 표시
+  if (isLoading) {
+    return (
+      <div className="signup-container">
+        <div className="signup-box">
+          <div className="signup-content">
+            <p>카카오 사용자 정보를 가져오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleSignup = async () => {
     if (!userType) {
       Swal.fire({
@@ -38,37 +108,77 @@ export default function SignupPage() {
       return;
     }
 
+    if (!phone) {
+      Swal.fire({
+        icon: 'warning',
+        title: '전화번호를 입력해주세요.',
+        confirmButtonColor: '#769fcd',
+      });
+      return;
+    }
+
     try {
-      const response = await kakaoRegister(kakaoAccessToken, userType);
+      // 1. 회원 정보 등록
+      const registerData = {
+        kakaoId: kakaoId,
+        name: kakaoName || '',
+        phone: phone,
+        userType: userType,
+        profileImageUrl: profileImageUrl || '',
+      };
 
-      if (response.success && response.data.accessToken) {
-        // accessToken을 localStorage에 저장
-        localStorage.setItem('token', response.data.accessToken);
-        
-        // Redux에 저장
-        dispatch(setAuthToken({
-          accessToken: response.data.accessToken,
-          userId: response.data.userId,
-          name: response.data.name,
-          userType: response.data.userType,
-        }));
+      console.log('회원 정보 등록 요청 데이터:', registerData);
+      const registerResponse = await registerUser(registerData);
+      console.log('회원 정보 등록 응답:', registerResponse);
 
-        Swal.fire({
-          icon: 'success',
-          title: '회원가입 완료!',
-          text: '로그인되었습니다.',
-          confirmButtonColor: '#769fcd',
-        }).then(() => {
-          // userType에 따라 리다이렉트
-          if (response.data.userType === 'EMPLOYER') {
-            navigate('/employer');
-          } else {
-            navigate('/worker');
-          }
-        });
-      } else {
-        throw new Error(response.error?.message || '회원가입 실패');
+      if (!registerResponse.success || !registerResponse.data.userId) {
+        throw new Error(registerResponse.error?.message || '회원 정보 등록 실패');
       }
+
+      // 2. 회원가입 성공 후 로그인 처리
+      console.log('카카오 로그인 요청 중...');
+      const loginResponse = await kakaoLoginWithToken(kakaoAccessToken);
+      console.log('카카오 로그인 응답:', loginResponse);
+
+      if (!loginResponse.success || !loginResponse.data.accessToken) {
+        throw new Error(loginResponse.error?.message || '로그인 실패');
+      }
+
+      // accessToken을 localStorage에 저장
+      localStorage.setItem('token', loginResponse.data.accessToken);
+
+      // Redux에 모든 정보 저장
+      dispatch(setUserDetails({
+        kakaoId: kakaoId,
+        name: registerResponse.data.name || kakaoName,
+        phone: phone,
+        userType: registerResponse.data.userType,
+        profileImageUrl: profileImageUrl || '',
+        userId: registerResponse.data.userId,
+        workerCode: registerResponse.data.workerCode,
+      }));
+
+      // accessToken도 Redux에 저장
+      dispatch(setAuthToken({
+        accessToken: loginResponse.data.accessToken,
+        userId: registerResponse.data.userId,
+        name: registerResponse.data.name || kakaoName,
+        userType: registerResponse.data.userType,
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: '회원가입 완료!',
+        text: '로그인되었습니다.',
+        confirmButtonColor: '#769fcd',
+      }).then(() => {
+        // userType에 따라 리다이렉트
+        if (registerResponse.data.userType === 'EMPLOYER') {
+          navigate('/employer');
+        } else {
+          navigate('/worker');
+        }
+      });
     } catch (error) {
       console.error('회원가입 에러:', error);
       Swal.fire({
@@ -98,6 +208,19 @@ export default function SignupPage() {
         </div>
         {/* 내용 영역 */}
         <div className="signup-content">
+          {/* 전화번호 입력 */}
+          <div className="form-group">
+            <label className="form-label">
+              전화번호 <span className="required-star">*</span>
+            </label>
+            <input 
+              type="tel" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="010-0000-0000"
+              className="form-input"
+            />
+          </div>
           {/* 역할 선택 */}
           <div className="form-group">
             <label className="form-label">

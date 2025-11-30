@@ -1,9 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER || 'http://localhost:8080';
 
-// 디버깅: API_BASE_URL 확인
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('VITE_WAGEMANAGER:', import.meta.env.VITE_WAGEMANAGER);
-
 // 토큰을 가져오는 헬퍼 함수
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');

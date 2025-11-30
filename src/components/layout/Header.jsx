@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { MdNotificationsNone } from "react-icons/md";
 import NotificationDropdown from "./NotificationDropdown.jsx";
 import "../../styles/header.css";
@@ -9,9 +10,20 @@ export default function Header() {
   const notificationButtonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const user = {
-    name: "김나현",
-  };
+  // Redux에서 사용자 정보 가져오기
+  const authState = useSelector((state) => state.auth);
+  const userName = authState.name;
+  
+  // 디버깅: Redux 상태 확인
+  console.log('=== Redux auth 상태 ===');
+  console.log('전체 auth state:', authState);
+  console.log('userId:', authState.userId);
+  console.log('name:', authState.name);
+  console.log('userType:', authState.userType);
+  console.log('accessToken:', authState.accessToken ? '있음' : '없음');
+  console.log('workerCode:', authState.workerCode);
+  console.log('kakaoPayLink:', authState.kakaoPayLink);
+  console.log('========================');
 
   const toggleNotification = () => {
     setIsNotificationOpen((prev) => !prev);
@@ -64,7 +76,7 @@ export default function Header() {
             </div>
           )}
         </div>
-        <span>{user.name} 님</span>
+        <span>{userName || '사용자'} 님</span>
         <a href="#">로그아웃</a>
       </div>
     </header>

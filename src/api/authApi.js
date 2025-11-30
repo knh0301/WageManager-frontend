@@ -24,3 +24,8 @@ export const kakaoRegister = async (kakaoAccessToken, userType) => {
     },
   });
 };
+
+// 추가 회원 정보 등록
+export const registerUser = async (userData) => {
+  return httpClient.post('/api/users/register', userData);
+};

@@ -5,31 +5,22 @@ const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 
 const buildKakaoAuthUrl = () => {
   if (!REST_API_KEY) {
-    console.error("VITE_KAKAO_REST_API_KEY가 설정되지 않았습니다.");
-    alert("카카오 API 키가 설정되지 않았습니다. .env 파일을 확인해주세요.");
     return null;
   }
-  
   if (!REDIRECT_URI) {
-    console.error("VITE_KAKAO_REDIRECT_URI가 설정되지 않았습니다.");
-    alert("카카오 리다이렉트 URI가 설정되지 않았습니다. .env 파일을 확인해주세요.");
     return null;
   }
-
   const baseUrl = "https://kauth.kakao.com/oauth/authorize";
   const params = new URLSearchParams({
     response_type: "code",
     client_id: REST_API_KEY,
     redirect_uri: REDIRECT_URI,
   });
-  
   const authUrl = `${baseUrl}?${params.toString()}`;
-  console.log("카카오 인증 URL:", authUrl);
   return authUrl;
 };
 
 export default function LoginPage() {
-
   const handleKakaoLogin = () => {
     const kakaoAuthUrl = buildKakaoAuthUrl();
     if (kakaoAuthUrl) {
@@ -41,7 +32,6 @@ export default function LoginPage() {
     <div className="flex justify-center items-center min-h-screen p-5" style={{ backgroundColor: 'var(--color-main)' }}>
       <div className="text-center flex flex-col items-center gap-10">
         <h1 className="text-5xl font-bold m-0" style={{ color: 'var(--color-background)' }}>월급관리소</h1>
-        
         <button 
           className="bg-transparent border-0 p-0 cursor-pointer transition-opacity duration-200 hover:opacity-90 active:opacity-80"
           onClick={handleKakaoLogin}
