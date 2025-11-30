@@ -10,7 +10,6 @@ export default function NotificationPage() {
       type: "announcement",
       title: "시스템 프로그래밍[202502-CSE3209-002]",
       message: "새 공지사항이 등록되었습니다.",
-      time: "20분전",
       icon: MdMic,
     },
     {
@@ -18,7 +17,6 @@ export default function NotificationPage() {
       type: "file",
       title: "시스템 프로그래밍[202502-CSE3209-002]",
       message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
       icon: MdAttachFile,
     },
     {
@@ -26,7 +24,6 @@ export default function NotificationPage() {
       type: "file",
       title: "시스템 프로그래밍[202502-CSE3209-002]",
       message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
       icon: MdAttachFile,
     },
     {
@@ -34,7 +31,6 @@ export default function NotificationPage() {
       type: "file",
       title: "이산구조[202502-CSE1312-005]",
       message: "새 파일이(가) 등록되었습니다.",
-      time: "2일전",
       icon: MdAttachFile,
     },
   ];
@@ -58,7 +54,6 @@ export default function NotificationPage() {
                   <div className="notification-page-message">
                     {notification.message}
                   </div>
-                  <div className="notification-page-time">{notification.time}</div>
                 </div>
               </div>
             );

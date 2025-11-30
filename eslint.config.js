@@ -36,6 +36,8 @@ export default defineConfig([
       // React 17 이상에서는 import React from 'react' 불필요
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
+      // prop-types 검증 비활성화 (프로젝트에서 prop-types 사용 안 함)
+      'react/prop-types': 'off',
       // 대문자로 시작하는 컴포넌트는/아이콘은 unused 검사에서 제외
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
