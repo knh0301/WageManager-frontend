@@ -13,6 +13,7 @@ import EmployerMyPage from "./pages/employer/EmployerMyPage.jsx";
 import EmployerMyPageReceive from "./pages/employer/EmployerMyPageReceive.jsx";
 import NotificationPage from "./pages/NotificationPage.jsx";
 import KakaoRedirect from "./pages/auth/KakaoRedirect.jsx";
+import SignupPage from "./pages/auth/SignupPage.jsx";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/auth" element={<KakaoRedirect />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/worker" element={<WorkerLayout />}>
           <Route
             index

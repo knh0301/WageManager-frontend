@@ -75,11 +75,19 @@ export default function KakaoRedirect() {
         setStatus('신규 회원입니다. 회원가입을 진행합니다...');
         
         // 카카오 프로필 정보에서 닉네임 등 가져오기
-        // const profile = userResponse.data.kakao_account?.profile;
+        const kakaoAccount = userResponse.data.kakao_account;
+        const profile = kakaoAccount?.profile;
+        const name = profile?.nickname;
+        const profileImageUrl = profile?.profile_image_url;
         
-        // TODO: 회원가입 페이지로 이동하면서 카카오 정보 전달
-        alert(`신규 회원입니다. 카카오 ID: ${kakaoId}`);
-        navigate('/'); // 임시 이동
+        // 회원가입 페이지로 이동하면서 카카오 정보 전달
+        navigate('/signup', { 
+          state: { 
+            kakaoId,
+            name,
+            profileImageUrl
+          } 
+        });
       }
 
     } catch (error) {
