@@ -1,16 +1,69 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { MdNotificationsNone } from "react-icons/md";
+import NotificationDropdown from "./NotificationDropdown.jsx";
 import "../../styles/header.css";
 import logoImage from "../../image/logo.png";
 
 export default function Header() {
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const notificationButtonRef = useRef(null);
+  const dropdownRef = useRef(null);
+
   const user = {
     name: "김나현",
   };
 
+  const toggleNotification = () => {
+    setIsNotificationOpen((prev) => !prev);
+  };
+
+  const closeNotification = () => {
+    setIsNotificationOpen(false);
+  };
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationButtonRef.current &&
+        !notificationButtonRef.current.contains(event.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        closeNotification();
+      }
+    };
+
+    if (isNotificationOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationOpen]);
+
   return (
     <header className="header-bar">
       <img src={logoImage} alt="월급 관리소" className="header-logo" />
-      <div>
+      <div className="header-right">
+        <div className="header-notification-wrapper" ref={notificationButtonRef}>
+          <button
+            className="header-icon"
+            aria-label="알림"
+            onClick={toggleNotification}
+          >
+            <MdNotificationsNone />
+          </button>
+          {isNotificationOpen && (
+            <div ref={dropdownRef}>
+              <NotificationDropdown
+                isOpen={isNotificationOpen}
+                onClose={closeNotification}
+              />
+            </div>
+          )}
+        </div>
         <span>{user.name} 님</span>
         <a href="#">로그아웃</a>
       </div>

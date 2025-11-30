@@ -28,16 +28,32 @@
   object-fit: contain;
 }
 
-.header-bar > div {
+.header-bar > div,
+.header-right {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.header-notification-wrapper {
+  position: relative;
 }
 
 .header-bar .header-icon {
   font-size: 1.3em;
   cursor: pointer;
   color: white;
+  background: none;
+  border: none;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.header-bar .header-icon:hover {
+  opacity: 0.8;
 }
 
 .header-bar span {
