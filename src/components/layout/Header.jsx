@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { MdNotificationsNone } from "react-icons/md";
 import NotificationDropdown from "./NotificationDropdown.jsx";
 import "../../styles/header.css";
@@ -9,9 +10,9 @@ export default function Header() {
   const notificationButtonRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const user = {
-    name: "김나현",
-  };
+  // Redux에서 사용자 정보 가져오기
+  const authState = useSelector((state) => state.auth);
+  const userName = authState.name;
 
   const toggleNotification = () => {
     setIsNotificationOpen((prev) => !prev);
@@ -64,7 +65,7 @@ export default function Header() {
             </div>
           )}
         </div>
-        <span>{user.name} 님</span>
+        <span>{userName || '사용자'} 님</span>
         <a href="#">로그아웃</a>
       </div>
     </header>
