@@ -46,14 +46,26 @@ const httpClient = {
   
   async post(url, data, options = {}) {
     try {
+      const authHeaders = getAuthHeaders();
+      // options.headers에 Authorization이 명시적으로 undefined로 설정되어 있으면 제거
+      const headers = { ...authHeaders, ...options.headers };
+      if (options.headers?.Authorization === undefined) {
+        delete headers.Authorization;
+      }
+      
+      // Content-Type이 명시적으로 설정되지 않았으면 application/json으로 설정
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      // options에서 headers를 제외한 나머지만 사용
+      const { headers: _, ...restOptions } = options;
+      
       const response = await fetch(`${API_BASE_URL}${url}`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          ...options.headers,
-        },
+        headers,
         body: JSON.stringify(data),
-        ...options,
+        ...restOptions,
       });
       return this.handleResponse(response);
     } catch (error) {

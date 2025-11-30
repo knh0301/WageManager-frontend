@@ -12,7 +12,12 @@ export const completeKakaoLogin = (userData) => async (dispatch) => {
     }));
 
     // dev/login API 호출
+    console.log('dev/login API 요청 데이터:', { userId: userData.userId });
+    console.log('userData 전체:', userData);
+    
     const loginResponse = await devLogin({ userId: userData.userId });
+    
+    console.log('dev/login API 응답:', loginResponse);
     
     if (loginResponse.success && loginResponse.data.accessToken) {
       // accessToken을 localStorage에 저장
