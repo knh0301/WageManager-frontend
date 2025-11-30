@@ -36,21 +36,31 @@ export default function KakaoRedirect() {
       );
 
       const { access_token } = tokenResponse.data;
-      console.log('카카오 액세스 토큰 획득 성공');
-      console.log('access_token 값:', access_token);
-      console.log('access_token 타입:', typeof access_token);
-      console.log('access_token 길이:', access_token?.length);
+      if (import.meta.env.DEV) {
+        console.log('카카오 액세스 토큰 획득 성공');
+        console.log('access_token 길이:', access_token?.length);
+      }
 
       // 2. 백엔드 서버에 카카오 로그인 요청
       setStatus('서버에 로그인 요청 중...');
       try {
-        console.log('kakaoLoginWithToken 호출 전, 전달할 토큰:', access_token);
+        if (import.meta.env.DEV) {
+          console.log('kakaoLoginWithToken 호출 중...');
+        }
         const loginResponse = await kakaoLoginWithToken(access_token);
-        console.log('카카오 로그인 API 응답:', loginResponse);
+        if (import.meta.env.DEV) {
+          console.log('카카오 로그인 API 응답:', {
+            success: loginResponse.success,
+            hasAccessToken: !!loginResponse.data?.accessToken,
+            userType: loginResponse.data?.userType,
+          });
+        }
         
         // 3-1. 기존 회원인 경우 (200 응답)
         if (loginResponse.success && loginResponse.data.accessToken) {
-          console.log('기존 회원 로그인 성공:', loginResponse);
+          if (import.meta.env.DEV) {
+            console.log('기존 회원 로그인 성공');
+          }
           
           // accessToken을 localStorage에 저장
           localStorage.setItem('token', loginResponse.data.accessToken);
@@ -84,7 +94,9 @@ export default function KakaoRedirect() {
           error.message?.includes('401');
         
         if (isUserNotFound) {
-          console.log('신규 회원으로 판단됨 (404/401):', error);
+          if (import.meta.env.DEV) {
+            console.log('신규 회원으로 판단됨 (404/401)');
+          }
           
           // 회원가입 페이지로 이동하면서 카카오 액세스 토큰 전달
           navigate('/signup', { 
