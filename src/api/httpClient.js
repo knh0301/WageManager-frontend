@@ -12,6 +12,19 @@ const getAuthHeaders = () => {
   return headers;
 };
 
+// 네트워크 에러 처리 공통 함수
+const handleNetworkError = (error) => {
+  console.error('네트워크 에러:', error);
+  throw {
+    message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
+    status: 0,
+    response: {
+      status: 0,
+      data: { message: '서버에 연결할 수 없습니다.' },
+    },
+  };
+};
+
 const httpClient = {
   async get(url, options = {}) {
     try {
@@ -27,16 +40,7 @@ const httpClient = {
       });
       return this.handleResponse(response);
     } catch (error) {
-      // 네트워크 에러 처리 (서버가 실행되지 않았거나 연결 불가)
-      console.error('네트워크 에러:', error);
-      throw {
-        message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
-        status: 0,
-        response: {
-          status: 0,
-          data: { message: '서버에 연결할 수 없습니다.' },
-        },
-      };
+      handleNetworkError(error);
     }
   },
   
@@ -65,16 +69,7 @@ const httpClient = {
       });
       return this.handleResponse(response);
     } catch (error) {
-      // 네트워크 에러 처리
-      console.error('네트워크 에러:', error);
-      throw {
-        message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
-        status: 0,
-        response: {
-          status: 0,
-          data: { message: '서버에 연결할 수 없습니다.' },
-        },
-      };
+      handleNetworkError(error);
     }
   },
 
@@ -91,16 +86,7 @@ const httpClient = {
       });
       return this.handleResponse(response);
     } catch (error) {
-      // 네트워크 에러 처리
-      console.error('네트워크 에러:', error);
-      throw {
-        message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
-        status: 0,
-        response: {
-          status: 0,
-          data: { message: '서버에 연결할 수 없습니다.' },
-        },
-      };
+      handleNetworkError(error);
     }
   },
 
@@ -116,16 +102,7 @@ const httpClient = {
       });
       return this.handleResponse(response);
     } catch (error) {
-      // 네트워크 에러 처리
-      console.error('네트워크 에러:', error);
-      throw {
-        message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
-        status: 0,
-        response: {
-          status: 0,
-          data: { message: '서버에 연결할 수 없습니다.' },
-        },
-      };
+      handleNetworkError(error);
     }
   },
 
