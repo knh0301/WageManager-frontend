@@ -1,7 +1,13 @@
 // 중앙 집중형 더미 데이터 (향후 백엔드 연동 시 제거 예정)
 
 export const initialWorkplaces = [
-  { id: 1, name: "맥도날드 잠실점" },
+  {
+    id: 1,
+    name: "맥도날드 잠실점",
+    address: "서울특별시 송파구 올림픽로 300 롯데월드타워 지하1층",
+    businessNumber: "120-88-12345",
+    isSmallBusiness: false,
+  },
   { id: 2, name: "스타벅스 강남역점" },
   { id: 3, name: "롯데리아" },
   { id: 4, name: "버거킹" },
@@ -630,3 +636,129 @@ export const mockRequests = buildMockRequests(filterByContext("request"));
 export const remittanceData = buildRemittanceData(
   filterByContext("remittance")
 );
+
+// 근무자 코드로 검색 가능한 근무자 정보 (더미 데이터)
+export const workerCodeMap = {
+  "A1B2C3": {
+    name: "김철수",
+    birthDate: "1998.05.15",
+    code: "A1B2C3",
+    phone: "010-1234-5678",
+    email: "kimcheolsu@example.com",
+  },
+  "D4E5F6": {
+    name: "이영희",
+    birthDate: "1999.08.20",
+    code: "D4E5F6",
+    phone: "010-9876-5432",
+    email: "leeyounghee@example.com",
+  },
+};
+
+// 직원 기본 정보 및 근무 정보
+export const workerInfo = {
+  "맥도날드 잠실점": {
+    "오지환": {
+      basicInfo: {
+        name: "오지환",
+        birthDate: "2003.03.01",
+        phone: "010-0000-0000",
+        email: "abc@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: { start: "10:00", end: "16:00" },
+          월: null,
+          화: null,
+          수: null,
+          목: { start: "07:30", end: "13:00" },
+          금: { start: "07:30", end: "13:00" },
+          토: { start: "10:00", end: "16:00" },
+        },
+        breakTime: 60,
+        hourlyWage: 10030,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+    "문보경": {
+      basicInfo: {
+        name: "문보경",
+        birthDate: "2002.05.15",
+        phone: "010-1111-1111",
+        email: "mbk@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: null,
+          월: { start: "10:00", end: "13:00" },
+          화: { start: "07:00", end: "13:00" },
+          수: { start: "07:00", end: "13:00" },
+          목: { start: "07:00", end: "13:00" },
+          금: { start: "07:00", end: "13:00" },
+          토: { start: "10:00", end: "13:00" },
+        },
+        breakTime: 60,
+        hourlyWage: 10500,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+    "홍창기": {
+      basicInfo: {
+        name: "홍창기",
+        birthDate: "2001.08.20",
+        phone: "010-2222-2222",
+        email: "hck@naver.com",
+      },
+      workInfo: {
+        workplace: "맥도날드 잠실점",
+        weeklySchedule: {
+          일: null,
+          월: null,
+          화: null,
+          수: null,
+          목: null,
+          금: null,
+          토: null,
+        },
+        breakTime: 30,
+        hourlyWage: 10000,
+        payday: 1,
+        socialInsurance: false,
+        withholdingTax: false,
+      },
+    },
+  },
+  "스타벅스 강남역점": {
+    "김민수": {
+      basicInfo: {
+        name: "김민수",
+        birthDate: "2000.12.10",
+        phone: "010-3333-3333",
+        email: "kms@naver.com",
+      },
+      workInfo: {
+        workplace: "스타벅스 강남역점",
+        weeklySchedule: {
+          일: null,
+          월: { start: "08:00", end: "16:00" },
+          화: { start: "08:00", end: "16:00" },
+          수: { start: "08:00", end: "16:00" },
+          목: null,
+          금: null,
+          토: null,
+        },
+        breakTime: 30,
+        hourlyWage: 12000,
+        payday: 1,
+        socialInsurance: true,
+        withholdingTax: true,
+      },
+    },
+  },
+};
