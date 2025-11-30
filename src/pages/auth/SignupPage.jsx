@@ -97,6 +97,17 @@ export default function SignupPage() {
     );
   }
 
+  // 전화번호 입력 핸들러 (숫자만 허용)
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+    if (value.length <= 11) { // 최대 11자리
+      setPhone(value);
+    }
+  };
+
+  // 회원가입 버튼 활성화 조건
+  const isSignupButtonDisabled = !userType || !phone || phone.length < 10 || phone.length > 11;
+
   const handleSignup = async () => {
     if (!userType) {
       Swal.fire({
@@ -108,10 +119,11 @@ export default function SignupPage() {
       return;
     }
 
-    if (!phone) {
+    if (!phone || phone.length < 10 || phone.length > 11) {
       Swal.fire({
         icon: 'warning',
-        title: '전화번호를 입력해주세요.',
+        title: '전화번호를 올바르게 입력해주세요.',
+        text: '전화번호는 10자리 또는 11자리 숫자여야 합니다.',
         confirmButtonColor: '#769fcd',
       });
       return;
@@ -216,10 +228,16 @@ export default function SignupPage() {
             <input 
               type="tel" 
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="010-0000-0000"
+              onChange={handlePhoneChange}
+              placeholder="01012345678"
+              maxLength={11}
               className="form-input"
             />
+            {phone && (phone.length < 10 || phone.length > 11) && (
+              <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                전화번호는 10자리 또는 11자리 숫자여야 합니다.
+              </p>
+            )}
           </div>
           {/* 역할 선택 */}
           <div className="form-group">
@@ -255,6 +273,11 @@ export default function SignupPage() {
           <button
             onClick={handleSignup}
             className="submit-button"
+            disabled={isSignupButtonDisabled}
+            style={{
+              opacity: isSignupButtonDisabled ? 0.5 : 1,
+              cursor: isSignupButtonDisabled ? 'not-allowed' : 'pointer',
+            }}
           >
             가입하기
           </button>
