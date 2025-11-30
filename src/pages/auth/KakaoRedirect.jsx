@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { checkKakaoUser } from '../../api/authApi';
+import { completeKakaoLogin } from '../../features/auth/authThunks';
+import Swal from 'sweetalert2';
 
 const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
 const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
@@ -9,6 +12,7 @@ const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 export default function KakaoRedirect() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [status, setStatus] = useState('처리 중...');
 
   const handleKakaoAuth = useCallback(async (code) => {
@@ -56,60 +60,100 @@ export default function KakaoRedirect() {
       try {
         const serverResponse = await checkKakaoUser(kakaoId);
         
-        // 4-1. 기존 회원인 경우 -> 로그인 성공 처리
-        console.log('기존 회원 확인됨:', serverResponse);
-        
-        if (serverResponse.success) {
-            // 임시로 사용자 정보 저장
-            localStorage.setItem('user', JSON.stringify(serverResponse.data));
+        // 4-1. 기존 회원인 경우 (200 응답)
+        if (serverResponse.success && serverResponse.data.userId) {
+          console.log('기존 회원 확인됨:', serverResponse);
+          
+          try {
+            // Redux thunk로 로그인 처리 (userId, workerCode, kakaoPayLink 저장 + dev/login 호출)
+            const loginResult = await dispatch(completeKakaoLogin({
+              userId: serverResponse.data.userId,
+              workerCode: serverResponse.data.workerCode,
+              kakaoPayLink: serverResponse.data.kakaoPayLink,
+            })).unwrap();
             
-            const userRole = serverResponse.data.role || 'WORKER'; 
-            
-            if (userRole === 'EMPLOYER' || userRole === 'employer') {
+            if (loginResult.success) {
+              // userType에 따라 리다이렉트
+              if (loginResult.userType === 'EMPLOYER') {
                 navigate('/employer');
-            } else {
+              } else {
                 navigate('/worker');
+              }
             }
+          } catch (loginError) {
+            // dev/login API 에러 처리 (400, 404, 500)
+            console.error('로그인 API 에러:', loginError);
+            Swal.fire({
+              icon: 'error',
+              title: '로그인 실패',
+              text: loginError.error?.message || loginError.message || '로그인 처리 중 오류가 발생했습니다.',
+              confirmButtonColor: '#769fcd',
+            }).then(() => {
+              navigate('/');
+            });
+          }
+        } else {
+          // 400 에러 등 (success는 true지만 data가 비어있음)
+          throw new Error(serverResponse.error?.message || '잘못된 요청입니다.');
         }
         
       } catch (error) {
         // 4-2. 404 에러 등 발생 시 -> 신규 회원으로 판단하여 회원가입 진행
-        console.log('신규 회원으로 판단됨 (또는 조회 실패):', error);
-        
-        // 회원가입 로직 (추가 정보 입력 페이지로 이동하거나 자동 가입)
-        setStatus('신규 회원입니다. 회원가입을 진행합니다...');
-        
-        // 카카오 프로필 정보에서 닉네임 등 가져오기
-        const kakaoAccount = userResponse.data.kakao_account;
-        const profile = kakaoAccount?.profile;
-        const name = profile?.nickname;
-        const profileImageUrl = profile?.profile_image_url;
-        
-        console.log('=== 추출한 카카오 사용자 정보 ===');
-        console.log('카카오 ID:', kakaoId);
-        console.log('이름:', name);
-        console.log('프로필 이미지 URL:', profileImageUrl);
-        console.log('카카오 계정 정보:', kakaoAccount);
-        console.log('프로필 정보:', profile);
-        console.log('================================');
-        
-        // 회원가입 페이지로 이동하면서 카카오 정보 전달
-        navigate('/signup', { 
-          state: { 
-            kakaoId,
-            name,
-            profileImageUrl
-          } 
-        });
+        if (error.status === 404 || error.response?.status === 404 || error.message?.includes('404')) {
+          console.log('신규 회원으로 판단됨:', error);
+          
+          // 회원가입 로직
+          setStatus('신규 회원입니다. 회원가입을 진행합니다...');
+          
+          // 카카오 프로필 정보에서 닉네임 등 가져오기
+          const kakaoAccount = userResponse.data.kakao_account;
+          const profile = kakaoAccount?.profile;
+          const name = profile?.nickname;
+          const profileImageUrl = profile?.profile_image_url;
+          
+          console.log('=== 추출한 카카오 사용자 정보 ===');
+          console.log('카카오 ID:', kakaoId);
+          console.log('이름:', name);
+          console.log('프로필 이미지 URL:', profileImageUrl);
+          console.log('카카오 계정 정보:', kakaoAccount);
+          console.log('프로필 정보:', profile);
+          console.log('================================');
+          
+          // 회원가입 페이지로 이동하면서 카카오 정보 전달
+          navigate('/signup', { 
+            state: { 
+              kakaoId,
+              name,
+              profileImageUrl
+            } 
+          });
+        } else {
+          // 400, 500 등 다른 에러
+          console.error('서버 에러:', error);
+          Swal.fire({
+            icon: 'error',
+            title: '오류 발생',
+            text: error.response?.data?.error?.message || error.message || '서버 오류가 발생했습니다.',
+            confirmButtonColor: '#769fcd',
+          }).then(() => {
+            navigate('/');
+          });
+        }
       }
 
     } catch (error) {
       console.error('카카오 인증 처리 과정 실패:', error);
       setStatus('인증 처리에 실패했습니다.');
-      alert('로그인 처리 중 오류가 발생했습니다.');
-      navigate('/');
+      Swal.fire({
+        icon: 'error',
+        title: '인증 실패',
+        text: '로그인 처리 중 오류가 발생했습니다.',
+        confirmButtonColor: '#769fcd',
+      }).then(() => {
+        navigate('/');
+      });
     }
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -133,9 +177,8 @@ export default function KakaoRedirect() {
       return () => clearTimeout(timer);
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     handleKakaoAuth(code);
-  }, [searchParams]);
+  }, [searchParams, handleKakaoAuth, navigate]);
 
   return (
     <div className="flex justify-center items-center min-h-screen p-5" style={{ backgroundColor: 'var(--color-main)' }}>

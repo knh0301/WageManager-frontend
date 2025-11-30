@@ -18,3 +18,8 @@ export const checkKakaoUser = async (kakaoId) => {
 export const registerUser = async (userData) => {
   return httpClient.post('/api/users/register', userData);
 };
+
+// 개발용 로그인 (기존 회원)
+export const devLogin = async (userData) => {
+  return httpClient.post('/api/auth/dev/login', userData);
+};

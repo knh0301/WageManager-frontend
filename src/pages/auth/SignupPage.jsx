@@ -95,7 +95,6 @@ export default function SignupPage() {
             <FaTimes size={20} />
           </button>
         </div>
-
         {/* 내용 영역 */}
         <div className="signup-content">
           {/* 프로필 이미지 */}
@@ -113,7 +112,6 @@ export default function SignupPage() {
               </div>
             </div>
           </div>
-
           {/* 이름 */}
           <div className="form-group">
             <label className="form-label">
@@ -126,7 +124,6 @@ export default function SignupPage() {
               className="form-input"
             />
           </div>
-
           {/* 전화번호 */}
           <div className="form-group">
             <label className="form-label">
@@ -140,7 +137,6 @@ export default function SignupPage() {
               className="form-input"
             />
           </div>
-          
           {/* 역할 선택 */}
           <div className="form-group">
             <label className="form-label">
@@ -171,7 +167,6 @@ export default function SignupPage() {
               </label>
             </div>
           </div>
-
           {/* 가입하기 버튼 */}
           <button
             onClick={handleSignup}
