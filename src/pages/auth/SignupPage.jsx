@@ -129,6 +129,8 @@ export default function SignupPage() {
       return;
     }
 
+    let registrationSuccessful = false;
+    
     try {
       // 1. 회원 정보 등록
       const registerData = {
@@ -146,6 +148,9 @@ export default function SignupPage() {
       if (!registerResponse.success || !registerResponse.data.userId) {
         throw new Error(registerResponse.error?.message || '회원 정보 등록 실패');
       }
+
+      // 회원가입 성공 표시
+      registrationSuccessful = true;
 
       // 2. 회원가입 성공 후 로그인 처리
       console.log('카카오 로그인 요청 중...');
@@ -193,13 +198,43 @@ export default function SignupPage() {
       });
     } catch (error) {
       console.error('회원가입 에러:', error);
+      
+      // 에러 상태 코드 확인
+      const statusCode = Number(error.response?.status) || Number(error.status) || 0;
+      
+      // 에러 유형에 따른 처리
+      let errorTitle = '회원가입 실패';
+      let shouldRedirect = false;
+      let redirectPath = '/';
+      
+      if (registrationSuccessful) {
+        // 회원가입은 성공했지만 로그인 실패한 경우
+        errorTitle = '로그인 실패';
+        redirectPath = '/'; // 로그인 페이지로 이동
+        shouldRedirect = true;
+      } else if (statusCode === 0) {
+        // 네트워크 오류: 현재 페이지 유지하여 재시도 가능하게
+        errorTitle = '네트워크 오류';
+        shouldRedirect = false;
+      } else if (statusCode === 400 || statusCode === 409) {
+        // 잘못된 요청이나 중복: 홈으로 리다이렉트
+        shouldRedirect = true;
+      } else if (statusCode >= 500) {
+        // 서버 오류: 현재 페이지 유지하여 재시도 가능하게
+        errorTitle = '서버 오류';
+        shouldRedirect = false;
+      }
+      
       Swal.fire({
         icon: 'error',
-        title: '회원가입 실패',
+        title: errorTitle,
         text: error.error?.message || error.message || '알 수 없는 오류가 발생했습니다.',
         confirmButtonColor: '#769fcd',
       }).then(() => {
-        navigate('/');
+        if (shouldRedirect) {
+          navigate(redirectPath);
+        }
+        // shouldRedirect가 false면 현재 페이지 유지 (재시도 가능)
       });
     }
   };
