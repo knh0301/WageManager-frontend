@@ -59,7 +59,7 @@ export default function KakaoRedirect() {
       setStatus('서버에 회원 정보 확인 중...');
       try {
         const serverResponse = await checkKakaoUser(kakaoId);
-        // 4-1. 기존 회원인 경우 (200 응답)
+        // 4-1. 기존 회원인 경우 (200 응답, userId가 있음)
         if (serverResponse.success && serverResponse.data.userId) {
           console.log('기존 회원 확인됨:', serverResponse);
           try {
@@ -119,8 +119,37 @@ export default function KakaoRedirect() {
               });
             }
           }
+        } else if (serverResponse.success && !serverResponse.data.userId) {
+          // 4-2. 404 응답 (success는 true지만 userId가 없음) -> 신규 회원으로 판단
+          console.log('신규 회원으로 판단됨 (404 응답):', serverResponse);
+          
+          // 회원가입 로직
+          setStatus('신규 회원입니다. 회원가입을 진행합니다...');
+          
+          // 카카오 프로필 정보에서 닉네임 등 가져오기
+          const kakaoAccount = userResponse.data.kakao_account;
+          const profile = kakaoAccount?.profile;
+          const name = profile?.nickname;
+          const profileImageUrl = profile?.profile_image_url;
+          
+          console.log('=== 추출한 카카오 사용자 정보 ===');
+          console.log('카카오 ID:', kakaoId);
+          console.log('이름:', name);
+          console.log('프로필 이미지 URL:', profileImageUrl);
+          console.log('카카오 계정 정보:', kakaoAccount);
+          console.log('프로필 정보:', profile);
+          console.log('================================');
+          
+          // 회원가입 페이지로 이동하면서 카카오 정보 전달
+          navigate('/signup', { 
+            state: { 
+              kakaoId,
+              name,
+              profileImageUrl
+            } 
+          });
         } else {
-          // 400 에러 등 (success는 true지만 data가 비어있음)
+          // 400 에러 등 (success는 false이거나 다른 에러)
           throw new Error(serverResponse.error?.message || '잘못된 요청입니다.');
         }
       } catch (error) {

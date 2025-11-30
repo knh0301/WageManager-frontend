@@ -1,5 +1,9 @@
 const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER || 'http://localhost:8080';
 
+// 디버깅: API_BASE_URL 확인
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('VITE_WAGEMANAGER:', import.meta.env.VITE_WAGEMANAGER);
+
 // 토큰을 가져오는 헬퍼 함수
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
@@ -15,7 +19,9 @@ const getAuthHeaders = () => {
 const httpClient = {
   async get(url, options = {}) {
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const fullUrl = `${API_BASE_URL}${url}`;
+      console.log('Request URL:', fullUrl);
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           ...getAuthHeaders(),
@@ -116,19 +122,30 @@ const httpClient = {
   },
 
   async handleResponse(response) {
+    // 모든 응답을 JSON으로 파싱 (404도 포함)
+    const data = await response.json().catch(() => ({ message: response.statusText }));
+    
+    // response.ok가 false이고, 응답 데이터에 success가 false이거나 없으면 에러로 처리
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      // 백엔드가 success: true로 응답하는 경우 (404도 정상 응답으로 처리)
+      if (data.success === true) {
+        return data;
+      }
+      
+      // success가 false이거나 없으면 에러로 throw
       const error = {
-        ...errorData,
+        ...data,
         status: response.status,
         response: {
           status: response.status,
-          data: errorData,
+          data: data,
         },
       };
       throw error;
     }
-    return response.json();
+    
+    // 200 응답인 경우
+    return data;
   },
 };
 
