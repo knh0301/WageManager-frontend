@@ -59,11 +59,9 @@ export default function KakaoRedirect() {
       setStatus('서버에 회원 정보 확인 중...');
       try {
         const serverResponse = await checkKakaoUser(kakaoId);
-        
         // 4-1. 기존 회원인 경우 (200 응답)
         if (serverResponse.success && serverResponse.data.userId) {
           console.log('기존 회원 확인됨:', serverResponse);
-          
           try {
             // Redux thunk로 로그인 처리 (userId, workerCode, kakaoPayLink 저장 + dev/login 호출)
             const loginResult = await dispatch(completeKakaoLogin({
@@ -71,7 +69,6 @@ export default function KakaoRedirect() {
               workerCode: serverResponse.data.workerCode,
               kakaoPayLink: serverResponse.data.kakaoPayLink,
             })).unwrap();
-            
             if (loginResult.success) {
               // userType에 따라 리다이렉트
               if (loginResult.userType === 'EMPLOYER') {
@@ -82,21 +79,50 @@ export default function KakaoRedirect() {
             }
           } catch (loginError) {
             // dev/login API 에러 처리 (400, 404, 500)
-            console.error('로그인 API 에러:', loginError);
-            Swal.fire({
-              icon: 'error',
-              title: '로그인 실패',
-              text: loginError.error?.message || loginError.message || '로그인 처리 중 오류가 발생했습니다.',
-              confirmButtonColor: '#769fcd',
-            }).then(() => {
-              navigate('/');
-            });
+            console.error('로그인 API 에러:', loginError);            
+            // 404 에러인 경우 -> 신규 회원으로 판단하여 회원가입 진행
+            if (loginError.status === 404 || loginError.response?.status === 404 || loginError.message?.includes('404')) {
+              console.log('dev/login에서 404 발생 - 신규 회원으로 판단됨:', loginError);
+              
+              // 회원가입 로직
+              setStatus('신규 회원입니다. 회원가입을 진행합니다...');
+              
+              // 카카오 프로필 정보에서 닉네임 등 가져오기
+              const kakaoAccount = userResponse.data.kakao_account;
+              const profile = kakaoAccount?.profile;
+              const name = profile?.nickname;
+              const profileImageUrl = profile?.profile_image_url;
+              
+              console.log('=== 추출한 카카오 사용자 정보 ===');
+              console.log('카카오 ID:', kakaoId);
+              console.log('이름:', name);
+              console.log('프로필 이미지 URL:', profileImageUrl);
+              console.log('================================');
+              
+              // 회원가입 페이지로 이동하면서 카카오 정보 전달
+              navigate('/signup', { 
+                state: { 
+                  kakaoId,
+                  name,
+                  profileImageUrl
+                } 
+              });
+            } else {
+              // 400, 500 등 다른 에러
+              Swal.fire({
+                icon: 'error',
+                title: '로그인 실패',
+                text: loginError.error?.message || loginError.message || '로그인 처리 중 오류가 발생했습니다.',
+                confirmButtonColor: '#769fcd',
+              }).then(() => {
+                navigate('/');
+              });
+            }
           }
         } else {
           // 400 에러 등 (success는 true지만 data가 비어있음)
           throw new Error(serverResponse.error?.message || '잘못된 요청입니다.');
         }
-        
       } catch (error) {
         // 4-2. 404 에러 등 발생 시 -> 신규 회원으로 판단하여 회원가입 진행
         if (error.status === 404 || error.response?.status === 404 || error.message?.includes('404')) {
@@ -128,16 +154,29 @@ export default function KakaoRedirect() {
             } 
           });
         } else {
-          // 400, 500 등 다른 에러
+          // 400, 500 등 다른 에러 또는 네트워크 에러
           console.error('서버 에러:', error);
-          Swal.fire({
-            icon: 'error',
-            title: '오류 발생',
-            text: error.response?.data?.error?.message || error.message || '서버 오류가 발생했습니다.',
-            confirmButtonColor: '#769fcd',
-          }).then(() => {
-            navigate('/');
-          });
+          
+          // 네트워크 에러인 경우 (status가 0)
+          if (error.status === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: '서버 연결 실패',
+              text: error.message || '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.',
+              confirmButtonColor: '#769fcd',
+            }).then(() => {
+              navigate('/');
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: '오류 발생',
+              text: error.response?.data?.error?.message || error.message || '서버 오류가 발생했습니다.',
+              confirmButtonColor: '#769fcd',
+            }).then(() => {
+              navigate('/');
+            });
+          }
         }
       }
 
