@@ -12,7 +12,7 @@ const httpClient = {
     });
     return this.handleResponse(response);
   },
-
+  
   async post(url, data, options = {}) {
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'POST',
