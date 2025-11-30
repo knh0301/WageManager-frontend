@@ -1,8 +1,21 @@
 import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { MdMic, MdAttachFile } from "react-icons/md";
 import "../../styles/notificationDropdown.css";
 
 export default function NotificationDropdown({ isOpen, onClose }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleViewAll = () => {
+    onClose();
+    // 현재 경로가 /worker 또는 /employer로 시작하는지 확인
+    if (location.pathname.startsWith("/worker")) {
+      navigate("/worker/notifications");
+    } else if (location.pathname.startsWith("/employer")) {
+      navigate("/employer/notifications");
+    }
+  };
   // 임시 알림 데이터 (나중에 API로 교체)
   const notifications = [
     {
@@ -68,7 +81,12 @@ export default function NotificationDropdown({ isOpen, onClose }) {
           })}
         </div>
         <div className="notification-footer">
-          <button className="notification-view-all-btn">모두 보기</button>
+          <button
+            className="notification-view-all-btn"
+            onClick={handleViewAll}
+          >
+            모두 보기
+          </button>
         </div>
       </div>
     </>
