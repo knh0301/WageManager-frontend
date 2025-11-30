@@ -58,6 +58,7 @@ export default function KakaoRedirect() {
           // Redux에 저장
           dispatch(setAuthToken({
             accessToken: loginResponse.data.accessToken,
+            userId: loginResponse.data.userId,
             name: loginResponse.data.name,
             userType: loginResponse.data.userType,
           }));

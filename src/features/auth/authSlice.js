@@ -20,6 +20,7 @@ const authSlice = createSlice({
     },
     setAuthToken: (state, action) => {
       state.accessToken = action.payload.accessToken;
+      state.userId = action.payload.userId;
       state.name = action.payload.name;
       state.userType = action.payload.userType;
     },

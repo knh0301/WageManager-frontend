@@ -48,6 +48,7 @@ export default function SignupPage() {
         // Redux에 저장
         dispatch(setAuthToken({
           accessToken: response.data.accessToken,
+          userId: response.data.userId,
           name: response.data.name,
           userType: response.data.userType,
         }));
