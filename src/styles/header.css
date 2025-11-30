@@ -28,10 +28,15 @@
   object-fit: contain;
 }
 
-.header-bar > div {
+.header-bar > div,
+.header-right {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.header-notification-wrapper {
+  position: relative;
 }
 
 .header-bar .header-icon {
