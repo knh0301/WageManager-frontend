@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { registerUser } from '../../api/authApi';
 import Swal from 'sweetalert2';
+import { FaUser, FaTimes } from 'react-icons/fa';
+import './SignupPage.css';
 
 export default function SignupPage() {
   const location = useLocation();
@@ -29,6 +31,7 @@ export default function SignupPage() {
         icon: 'warning',
         title: '역할을 선택해주세요.',
         text: '고용주 또는 근로자 중 하나를 선택해야 합니다.',
+        confirmButtonColor: '#769fcd',
       });
       return;
     }
@@ -37,6 +40,7 @@ export default function SignupPage() {
       Swal.fire({
         icon: 'warning',
         title: '전화번호를 입력해주세요.',
+        confirmButtonColor: '#769fcd',
       });
       return;
     }
@@ -57,6 +61,7 @@ export default function SignupPage() {
           icon: 'success',
           title: '회원가입 완료!',
           text: '로그인 페이지로 이동합니다.',
+          confirmButtonColor: '#769fcd',
         }).then(() => {
           navigate('/');
         });
@@ -69,6 +74,7 @@ export default function SignupPage() {
         icon: 'error',
         title: '회원가입 실패',
         text: error.message || '알 수 없는 오류가 발생했습니다.',
+        confirmButtonColor: '#769fcd',
       }).then(() => {
         navigate('/');
       });
@@ -76,63 +82,104 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-5" style={{ backgroundColor: 'var(--color-main)' }}>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">회원가입</h2>
-        
-        <div className="mb-6 text-left">
-          <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
-          <input 
-            type="text" 
-            value={name} 
-            disabled 
-            className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-500"
-          />
+    <div className="signup-container">
+      {/* 하얀색 박스 */}
+      <div className="signup-box">
+        {/* 헤더 - 회원가입 제목과 X 버튼 */}
+        <div className="signup-header">
+          <h2 className="signup-title">회원가입</h2>
+          <button
+            onClick={() => navigate('/')}
+            className="close-button"
+          >
+            <FaTimes size={20} />
+          </button>
         </div>
 
-        <div className="mb-6 text-left">
-          <label className="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
-          <input 
-            type="tel" 
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="010-0000-0000"
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-3 text-left">역할 선택</label>
-          <div className="flex gap-4">
-            <button
-              onClick={() => setUserType('WORKER')}
-              className={`flex-1 py-3 px-4 rounded-md border-2 transition-all ${
-                userType === 'WORKER' 
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold' 
-                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
-              }`}
-            >
-              근로자
-            </button>
-            <button
-              onClick={() => setUserType('EMPLOYER')}
-              className={`flex-1 py-3 px-4 rounded-md border-2 transition-all ${
-                userType === 'EMPLOYER' 
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold' 
-                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
-              }`}
-            >
-              고용주
-            </button>
+        {/* 내용 영역 */}
+        <div className="signup-content">
+          {/* 프로필 이미지 */}
+          <div className="profile-image-container">
+            <div className="profile-image-wrapper">
+              <div className="profile-image">
+                {profileImageUrl ? (
+                  <img 
+                    src={profileImageUrl} 
+                    alt="Profile" 
+                  />
+                ) : (
+                  <FaUser style={{ fontSize: '3rem', color: '#9ca3af' }} />
+                )}
+              </div>
+            </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleSignup}
-          className="w-full py-3 px-4 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-md transition-colors"
-        >
-          가입 완료
-        </button>
+          {/* 이름 */}
+          <div className="form-group">
+            <label className="form-label">
+              이름 <span className="required-star">*</span>
+            </label>
+            <input 
+              type="text" 
+              value={name} 
+              disabled 
+              className="form-input"
+            />
+          </div>
+
+          {/* 전화번호 */}
+          <div className="form-group">
+            <label className="form-label">
+              전화번호 <span className="required-star">*</span>
+            </label>
+            <input 
+              type="tel" 
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="010-0000-0000"
+              className="form-input"
+            />
+          </div>
+          
+          {/* 역할 선택 */}
+          <div className="form-group">
+            <label className="form-label">
+              역할 <span className="required-star">*</span>
+            </label>
+            <div className="radio-group">
+              <label className="radio-label">
+                <input 
+                  type="radio" 
+                  name="userType" 
+                  value="WORKER"
+                  checked={userType === 'WORKER'}
+                  onChange={() => setUserType('WORKER')}
+                  className="radio-input"
+                />
+                <span className="radio-text">근로자</span>
+              </label>
+              <label className="radio-label">
+                <input 
+                  type="radio" 
+                  name="userType" 
+                  value="EMPLOYER"
+                  checked={userType === 'EMPLOYER'}
+                  onChange={() => setUserType('EMPLOYER')}
+                  className="radio-input"
+                />
+                <span className="radio-text">고용주</span>
+              </label>
+            </div>
+          </div>
+
+          {/* 가입하기 버튼 */}
+          <button
+            onClick={handleSignup}
+            className="submit-button"
+          >
+            가입하기
+          </button>
+        </div>
       </div>
     </div>
   );
