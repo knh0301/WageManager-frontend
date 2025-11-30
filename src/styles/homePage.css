@@ -4,29 +4,43 @@
   align-items: center;
   min-height: 100vh;
   padding: 20px;
+  background-color: var(--color-main);
 }
 
 .home-container {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
 }
 
 .home-title {
-  margin-bottom: 20px;
+  color: white;
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0;
 }
 
-.home-subtitle {
-  margin-bottom: 30px;
-}
-
-.home-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.home-button {
-  padding: 15px 30px;
-  font-size: 1rem;
+.kakao-login-button {
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.kakao-login-button:hover {
+  opacity: 0.9;
+}
+
+.kakao-login-button:active {
+  opacity: 0.8;
+}
+
+.kakao-login-button img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
