@@ -3,17 +3,38 @@ import kakaoLoginIcon from "../../assets/kakao_login_medium_wide.png";
 const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
 const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 
-export default function LoginPage() {
-
-  const buildKakaoAuthUrl = () => {
-    const baseUrl = "https://kauth.kakao.com/oauth/authorize";
+const buildKakaoAuthUrl = () => {
+  if (!REST_API_KEY) {
+    console.error("VITE_KAKAO_REST_API_KEY가 설정되지 않았습니다.");
+    alert("카카오 API 키가 설정되지 않았습니다. .env 파일을 확인해주세요.");
+    return null;
+  }
   
-    return `${baseUrl}?response_type=code&client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}`;
-  };
+  if (!REDIRECT_URI) {
+    console.error("VITE_KAKAO_REDIRECT_URI가 설정되지 않았습니다.");
+    alert("카카오 리다이렉트 URI가 설정되지 않았습니다. .env 파일을 확인해주세요.");
+    return null;
+  }
+
+  const baseUrl = "https://kauth.kakao.com/oauth/authorize";
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: REST_API_KEY,
+    redirect_uri: REDIRECT_URI,
+  });
+  
+  const authUrl = `${baseUrl}?${params.toString()}`;
+  console.log("카카오 인증 URL:", authUrl);
+  return authUrl;
+};
+
+export default function LoginPage() {
 
   const handleKakaoLogin = () => {
     const kakaoAuthUrl = buildKakaoAuthUrl();
-    window.location.href = kakaoAuthUrl;
+    if (kakaoAuthUrl) {
+      window.location.href = kakaoAuthUrl;
+    }
   };
 
   return (

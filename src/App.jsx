@@ -12,13 +12,14 @@ import WorkerManagePage from "./pages/employer/WorkerManagePage.jsx";
 import EmployerMyPage from "./pages/employer/EmployerMyPage.jsx";
 import EmployerMyPageReceive from "./pages/employer/EmployerMyPageReceive.jsx";
 import NotificationPage from "./pages/NotificationPage.jsx";
+import KakaoRedirect from "./pages/auth/KakaoRedirect.jsx";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<LoginPage />} />
-
+        <Route path="/auth" element={<KakaoRedirect />} />
         <Route path="/worker" element={<WorkerLayout />}>
           <Route
             index
