@@ -1,0 +1,373 @@
+.remittance-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 상단 헤더: 월 선택 및 근무지 선택 */
+.remittance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.remittance-header-left {
+  flex: 1;
+}
+
+.remittance-month-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.month-nav-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.month-nav-button:hover {
+  background: #e0e0e0;
+}
+
+.month-display {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333333;
+  min-width: 150px;
+  text-align: center;
+}
+
+.remittance-workplace-select {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.workplace-select {
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #ffffff;
+  cursor: pointer;
+  appearance: none;
+  width: auto;
+  min-width: 120px;
+  max-width: 180px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
+.workplace-select:focus {
+  outline: none;
+  border-color: #769fcd;
+}
+
+/* 급여 카드 및 입금 상태 */
+.remittance-wage-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.wage-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 200px;
+}
+
+.wage-label {
+  font-size: 0.9rem;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.wage-amount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333333;
+}
+
+.remittance-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.remittance-status-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remittance-status-button.completed {
+  background: #4caf50;
+  color: #ffffff;
+}
+
+.remittance-status-button.pending {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.remittance-date {
+  font-size: 0.85rem;
+  color: #666666;
+  margin-top: 4px;
+}
+
+/* 근무 상세 내역 */
+.remittance-detail-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333333;
+  margin: 0;
+}
+
+.remittance-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remittance-detail-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remittance-detail-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #d0d0d0;
+}
+
+.detail-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  padding-right: 24px;
+  margin-right: 24px;
+  position: relative;
+}
+
+.detail-date::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #e0e0e0;
+}
+
+.date-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333333;
+}
+
+.date-day {
+  font-size: 0.9rem;
+  color: #666666;
+  margin-top: 4px;
+}
+
+.detail-time {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #333333;
+  font-weight: 500;
+}
+
+/* 확장 패널 */
+.remittance-detail-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.remittance-detail-panel.open {
+  margin-top: 12px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: #ffffff;
+  max-height: 600px;
+  opacity: 1;
+}
+
+.detail-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.detail-form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-form-label {
+  font-size: 0.9rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.detail-form-input {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f5f5f5;
+  color: #333333;
+  cursor: not-allowed;
+}
+
+.time-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-input {
+  flex: 1;
+}
+
+.time-separator {
+  color: #666666;
+  font-weight: 500;
+}
+
+/* 수당 섹션 */
+.detail-allowance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #f8fbff;
+  border-radius: 10px;
+  border: 1px dashed #d7e3f5;
+}
+
+.allowance-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.allowance-button {
+  padding: 10px 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #666666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.allowance-button.active {
+  border-color: #769fcd;
+  background: rgba(118, 159, 205, 0.1);
+  color: #769fcd;
+  font-weight: 600;
+}
+
+/* 보험 토글 섹션 */
+.detail-insurance-section {
+  display: flex;
+  gap: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.insurance-toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-switch {
+  width: 48px;
+  height: 24px;
+  border-radius: 12px;
+  background: #e0e0e0;
+  position: relative;
+  cursor: default;
+  transition: background 0.3s ease;
+}
+
+.toggle-switch.on {
+  background: #769fcd;
+}
+
+.toggle-slider {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.on .toggle-slider {
+  transform: translateX(24px);
+}
+
+.no-data {
+  text-align: center;
+  color: #999999;
+  padding: 40px 0;
+  font-size: 1rem;
+}
+
