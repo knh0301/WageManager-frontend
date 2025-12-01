@@ -100,8 +100,8 @@
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 20px 24px;
-  min-width: 300px;
-  width: 500px;
+  width: 100%;
+  max-width: 700px;
   display: flex;
   align-items: center;
   justify-content: space-between;
