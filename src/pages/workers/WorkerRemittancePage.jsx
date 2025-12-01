@@ -7,6 +7,7 @@ import {
 } from "./remittanceDummyData";
 import { formatCurrency, formatBreakTime } from "../employer/utils/formatUtils";
 import { allowanceDefinitions } from "../employer/utils/shiftUtils";
+import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 
 export default function WorkerRemittancePage() {
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
@@ -17,6 +18,8 @@ export default function WorkerRemittancePage() {
     () => new Date().getMonth() + 1
   );
   const [expandedRecordIndex, setExpandedRecordIndex] = useState(null);
+  const [sortOrder, setSortOrder] = useState("latest"); // "latest" 또는 "oldest"
+  const [view, setView] = useState(false);
 
   const selectedWorkplace =
     workerWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -29,8 +32,22 @@ export default function WorkerRemittancePage() {
     if (!selectedWorkplace || !workerRemittanceData[selectedWorkplace]) {
       return [];
     }
-    return workerRemittanceData[selectedWorkplace][monthKey] || [];
-  }, [selectedWorkplace, monthKey]);
+    const records = workerRemittanceData[selectedWorkplace][monthKey] || [];
+    
+    // 날짜 기준으로 정렬 (최신순 또는 과거순)
+    const sortedRecords = [...records].sort((a, b) => {
+      const dateA = a.date;
+      const dateB = b.date;
+      
+      if (sortOrder === "latest") {
+        return dateB - dateA; // 최신순 (큰 날짜가 먼저)
+      } else {
+        return dateA - dateB; // 과거순 (작은 날짜가 먼저)
+      }
+    });
+    
+    return sortedRecords;
+  }, [selectedWorkplace, monthKey, sortOrder]);
 
   const totalWage = useMemo(() => {
     return workRecords.reduce((sum, record) => sum + (record.wage ?? 0), 0);
@@ -104,6 +121,12 @@ export default function WorkerRemittancePage() {
 
   const handleRecordClick = (index) => {
     setExpandedRecordIndex((prev) => (prev === index ? null : index));
+  };
+
+  const handleSortSelect = (order) => {
+    setSortOrder(order);
+    setView(false);
+    setExpandedRecordIndex(null); // 정렬 변경 시 확장된 패널 닫기
   };
 
   return (
@@ -180,7 +203,41 @@ export default function WorkerRemittancePage() {
 
         {/* 근무 상세 내역 */}
         <div className="remittance-detail-section">
-          <h2 className="remittance-detail-title">근무 상세 내역</h2>
+          <div className="remittance-detail-header">
+            <h2 className="remittance-detail-title">근무 상세 내역</h2>
+            <div className="sort-dropdown-wrapper">
+              <button
+                type="button"
+                className="sort-dropdown-button"
+                onClick={() => setView(!view)}
+              >
+                <span>{sortOrder === "latest" ? "최신순" : "과거순"}</span>
+                {view ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
+              </button>
+              {view && (
+                <div className="sort-dropdown-menu">
+                  <button
+                    type="button"
+                    className={`sort-dropdown-item ${
+                      sortOrder === "latest" ? "active" : ""
+                    }`}
+                    onClick={() => handleSortSelect("latest")}
+                  >
+                    최신순
+                  </button>
+                  <button
+                    type="button"
+                    className={`sort-dropdown-item ${
+                      sortOrder === "oldest" ? "active" : ""
+                    }`}
+                    onClick={() => handleSortSelect("oldest")}
+                  >
+                    과거순
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="remittance-detail-list">
           {workRecords.length > 0 ? (
             workRecords.map((record, index) => (
