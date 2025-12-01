@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "./MonthlyCalendarPage.css";
+import "./WorkerMonthlyCalendarPage.css";
 import WorkEditRequestBox from "../../components/worker/MonthlyCalendarPage/WorkEditRequestBox";
 import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkModal";
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
@@ -46,7 +46,7 @@ const getKoreanDayLabel = (dayIndex) => {
   return map[dayIndex] || "";
 };
 
-function MonthlyCalendarPage() {
+function WorkerMonthlyCalendarPage() {
   const today = new Date();
 
   const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
@@ -355,4 +355,4 @@ function MonthlyCalendarPage() {
   );
 }
 
-export default MonthlyCalendarPage;
+export default WorkerMonthlyCalendarPage;

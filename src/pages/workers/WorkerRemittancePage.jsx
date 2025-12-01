@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import "./RemittancePage.css";
+import "./WorkerRemittancePage.css";
 import {
   workerWorkplaces,
   workerRemittanceData,
@@ -8,7 +8,7 @@ import {
 import { formatCurrency, formatBreakTime } from "../employer/utils/formatUtils";
 import { allowanceDefinitions } from "../employer/utils/shiftUtils";
 
-export default function RemittancePage() {
+export default function WorkerRemittancePage() {
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
   const [currentYear, setCurrentYear] = useState(() =>
     new Date().getFullYear()

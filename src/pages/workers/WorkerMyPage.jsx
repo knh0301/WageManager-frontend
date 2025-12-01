@@ -3,9 +3,9 @@ import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import "./MyPage.css";
+import "./WorkerMyPage.css";
 
-export default function MyPage() {
+export default function WorkerMyPage() {
   const [activeTab, setActiveTab] = useState("profile");
 
   // 임시 데이터 (나중에 API로 대체)
