@@ -20,6 +20,7 @@ export default function WorkerRemittancePage() {
   const [expandedRecordIndex, setExpandedRecordIndex] = useState(null);
   const [sortOrder, setSortOrder] = useState("latest"); // "latest" 또는 "oldest"
   const [view, setView] = useState(false);
+  const [workplaceView, setWorkplaceView] = useState(false);
 
   const selectedWorkplace =
     workerWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -113,9 +114,9 @@ export default function WorkerRemittancePage() {
     setExpandedRecordIndex(null);
   };
 
-  const handleWorkplaceChange = (e) => {
-    const newWorkplaceId = Number(e.target.value);
-    setSelectedWorkplaceId(newWorkplaceId);
+  const handleWorkplaceSelect = (workplaceId) => {
+    setSelectedWorkplaceId(workplaceId);
+    setWorkplaceView(false);
     setExpandedRecordIndex(null);
   };
 
@@ -160,17 +161,32 @@ export default function WorkerRemittancePage() {
         <div className="remittance-wage-section">
           <div className="wage-card-wrapper">
             <div className="remittance-workplace-select-top">
-              <select
-                value={selectedWorkplaceId}
-                onChange={handleWorkplaceChange}
-                className="workplace-select"
-              >
-                {workerWorkplaces.map((wp) => (
-                  <option key={wp.id} value={wp.id}>
-                    {wp.name}
-                  </option>
-                ))}
-              </select>
+              <div className="workplace-dropdown-wrapper">
+                <button
+                  type="button"
+                  className="workplace-dropdown-button"
+                  onClick={() => setWorkplaceView(!workplaceView)}
+                >
+                  <span>{selectedWorkplace}</span>
+                  {workplaceView ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
+                </button>
+                {workplaceView && (
+                  <div className="workplace-dropdown-menu">
+                    {workerWorkplaces.map((wp) => (
+                      <button
+                        key={wp.id}
+                        type="button"
+                        className={`workplace-dropdown-item ${
+                          selectedWorkplaceId === wp.id ? "active" : ""
+                        }`}
+                        onClick={() => handleWorkplaceSelect(wp.id)}
+                      >
+                        {wp.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="wage-card">
             <div className="wage-info-section">
