@@ -1,4 +1,5 @@
 // 근로자 송금 관리 페이지 더미 데이터
+// 나중에 API 연동하게 되면 파일 삭제ㄱㄱ
 
 // 근무지 목록
 export const workerWorkplaces = [
