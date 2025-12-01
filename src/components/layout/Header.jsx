@@ -31,9 +31,8 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      // Redux의 accessToken 또는 localStorage의 token을 사용
-      const token = accessToken || localStorage.getItem('token');
-      const response = await logout(token);
+      // 이미 정의된 accessToken 사용
+      const response = await logout(accessToken);
       
       // 200 응답인 경우
       if (response.success && response.data) {
