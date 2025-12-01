@@ -15,7 +15,7 @@ const initialWorkRecords = {
   "2025-11-29": [], // 토요일 - 휴무
 };
 
-export default function WeeklyCalendarPage() {
+export default function WorkerWeeklyCalendarPage() {
   // TODO: 나중에 API로 교체
   const [workRecords] = useState(initialWorkRecords);
 

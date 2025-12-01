@@ -2,10 +2,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import WorkerLayout from "./layouts/WorkerLayout.jsx";
 import EmployerLayout from "./layouts/EmployerLayout.jsx";
-import MonthlyCalendarPage from "./pages/workers/MonthlyCalendarPage.jsx";
-import WeeklyCalendarPage from "./pages/workers/WeeklyCalendarPage.jsx";
-import RemittancePage from "./pages/workers/RemittancePage.jsx";
-import MyPage from "./pages/workers/MyPage.jsx";
+import WorkerMonthlyCalendarPage from "./pages/workers/WorkerMonthlyCalendarPage.jsx";
+import WorkerWeeklyCalendarPage from "./pages/workers/WorkerWeeklyCalendarPage.jsx";
+import WorkerRemittancePage from "./pages/workers/WorkerRemittancePage.jsx";
+import WorkerMyPage from "./pages/workers/WorkerMyPage.jsx";
 import DailyCalendarPage from "./pages/employer/DailyCalendarPage.jsx";
 import RemittanceManagePage from "./pages/employer/RemittanceManagePage.jsx";
 import WorkerManagePage from "./pages/employer/WorkerManagePage.jsx";
@@ -27,10 +27,10 @@ function App() {
             index
             element={<Navigate to="/worker/monthly-calendar" replace />}
           />
-          <Route path="monthly-calendar" element={<MonthlyCalendarPage />} />
-          <Route path="weekly-calendar" element={<WeeklyCalendarPage />} />
-          <Route path="remittance" element={<RemittancePage />} />
-          <Route path="mypage" element={<MyPage />} />
+          <Route path="monthly-calendar" element={<WorkerMonthlyCalendarPage />} />
+          <Route path="weekly-calendar" element={<WorkerWeeklyCalendarPage />} />
+          <Route path="remittance" element={<WorkerRemittancePage />} />
+          <Route path="mypage" element={<WorkerMyPage />} />
           <Route path="notifications" element={<NotificationPage />} />
         </Route>
 
