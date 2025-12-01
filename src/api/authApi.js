@@ -27,3 +27,14 @@ export const kakaoRegister = async (kakaoAccessToken, userType) => {
 export const registerUser = async (userData) => {
   return httpClient.post('/api/users/register', userData);
 };
+
+// 로그아웃
+export const logout = async (accessToken) => {
+  const headers = {};
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return httpClient.post('/api/auth/logout', {}, {
+    headers,
+  });
+};
