@@ -108,7 +108,7 @@ export default function RemittancePage() {
 
   return (
     <div className="remittance-page">
-        {/* 상단: 월 선택 및 근무지 선택 */}
+        {/* 상단: 월 선택 */}
         <div className="remittance-header">
           <div className="remittance-header-left"></div>
           <div className="remittance-month-nav">
@@ -130,24 +130,26 @@ export default function RemittancePage() {
               &gt;
             </button>
           </div>
-          <div className="remittance-workplace-select">
-            <select
-              value={selectedWorkplaceId}
-              onChange={handleWorkplaceChange}
-              className="workplace-select"
-            >
-              {workerWorkplaces.map((wp) => (
-                <option key={wp.id} value={wp.id}>
-                  {wp.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="remittance-header-right"></div>
         </div>
 
         {/* 급여 카드 및 입금 상태 */}
         <div className="remittance-wage-section">
-          <div className="wage-card">
+          <div className="wage-card-wrapper">
+            <div className="remittance-workplace-select-top">
+              <select
+                value={selectedWorkplaceId}
+                onChange={handleWorkplaceChange}
+                className="workplace-select"
+              >
+                {workerWorkplaces.map((wp) => (
+                  <option key={wp.id} value={wp.id}>
+                    {wp.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="wage-card">
             <div className="wage-info-section">
               <div className="wage-label">급여</div>
               <div className="wage-amount">{formatCurrency(totalWage)}</div>
@@ -172,6 +174,7 @@ export default function RemittancePage() {
                 </button>
               )}
             </div>
+          </div>
           </div>
         </div>
 
@@ -320,6 +323,6 @@ export default function RemittancePage() {
           )}
           </div>
         </div>
-    </div>
+  </div>
   );
 }

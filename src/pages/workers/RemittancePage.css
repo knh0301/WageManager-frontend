@@ -89,9 +89,23 @@
 /* 급여 카드 및 입금 상태 */
 .remittance-wage-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 24px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.wage-card-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.remittance-workplace-select-top {
   margin-bottom: 8px;
 }
 
