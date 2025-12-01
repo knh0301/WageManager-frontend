@@ -25,6 +25,9 @@ export default function LoginPage() {
     const kakaoAuthUrl = buildKakaoAuthUrl();
     if (kakaoAuthUrl) {
       window.location.href = kakaoAuthUrl;
+    } else {
+      console.error('카카오 로그인 설정 오류: 환경 변수가 설정되지 않았습니다.');
+      alert('카카오 로그인 설정이 완료되지 않았습니다. 관리자에게 문의하세요.');
     }
   };
 
@@ -35,11 +38,14 @@ export default function LoginPage() {
         <button 
           className="bg-transparent border-0 p-0 cursor-pointer transition-opacity duration-200 hover:opacity-90 active:opacity-80"
           onClick={handleKakaoLogin}
+          style={{ position: 'relative', zIndex: 1 }}
         >
           <img 
             src={kakaoLoginIcon} 
             alt="카카오 로그인"
             className="block w-full h-auto"
+            style={{ pointerEvents: 'none' }}
+            draggable={false}
           />
         </button>
       </div>
