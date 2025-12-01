@@ -40,11 +40,39 @@ export default function RemittancePage() {
     if (!selectedWorkplace || !remittanceStatus[selectedWorkplace]) {
       return { isCompleted: false, remittanceDate: null };
     }
-    return remittanceStatus[selectedWorkplace][monthKey] || {
+    const status = remittanceStatus[selectedWorkplace][monthKey] || {
       isCompleted: false,
       remittanceDate: null,
     };
-  }, [selectedWorkplace, monthKey]);
+
+    // 해당 월이 지났는지 확인
+    const today = new Date();
+    const currentYearNum = today.getFullYear();
+    const currentMonthNum = today.getMonth() + 1; // 0-based to 1-based
+    
+    // 선택한 월이 현재 월보다 이전인지 확인 (년도도 고려)
+    const isMonthPassed = 
+      currentYearNum > currentYear || 
+      (currentYearNum === currentYear && currentMonthNum > currentMonth);
+
+    // 상태 결정
+    if (status.isCompleted) {
+      return {
+        status: "completed",
+        remittanceDate: status.remittanceDate,
+      };
+    } else if (isMonthPassed) {
+      return {
+        status: "pending",
+        remittanceDate: null,
+      };
+    } else {
+      return {
+        status: "before",
+        remittanceDate: null,
+      };
+    }
+  }, [selectedWorkplace, monthKey, currentYear, currentMonth]);
 
   const handlePrevMonth = () => {
     setCurrentMonth((prev) => {
@@ -120,24 +148,30 @@ export default function RemittancePage() {
         {/* 급여 카드 및 입금 상태 */}
         <div className="remittance-wage-section">
           <div className="wage-card">
-            <div className="wage-label">급여</div>
-            <div className="wage-amount">{formatCurrency(totalWage)}</div>
-          </div>
-          <div className="remittance-status-card">
-            {remittanceInfo.isCompleted ? (
-              <>
-                <button className="remittance-status-button completed">
-                  입금 완료
+            <div className="wage-info-section">
+              <div className="wage-label">급여</div>
+              <div className="wage-amount">{formatCurrency(totalWage)}</div>
+            </div>
+            <div className="remittance-status-card">
+              {remittanceInfo.status === "completed" ? (
+                <>
+                  <button className="remittance-status-button completed">
+                    입금 완료
+                  </button>
+                  <div className="remittance-date">
+                    송금 날짜: {remittanceInfo.remittanceDate}
+                  </div>
+                </>
+              ) : remittanceInfo.status === "pending" ? (
+                <button className="remittance-status-button pending">
+                  입금 대기
                 </button>
-                <div className="remittance-date">
-                  송금 날짜: {remittanceInfo.remittanceDate}
-                </div>
-              </>
-            ) : (
-              <button className="remittance-status-button pending">
-                입금 대기
-              </button>
-            )}
+              ) : (
+                <button className="remittance-status-button before">
+                  입금 전
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -286,6 +320,6 @@ export default function RemittancePage() {
             <p className="no-data">근무 내역이 없습니다.</p>
           )}
         </div>
-    </div>
+  </div>
   );
 }
