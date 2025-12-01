@@ -257,10 +257,6 @@
   width: 100%;
 }
 
-.remittance-status-button.completed {
-  background: var(--color-green);
-}
-
 .remittance-date {
   font-size: 0.85rem;
   color: #666666;
