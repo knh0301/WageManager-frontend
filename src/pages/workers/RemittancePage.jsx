@@ -210,7 +210,7 @@ export default function RemittancePage() {
                   }`}
                 >
                   <div className="detail-panel-content">
-                    <div className="detail-form-grid">
+                    <div className="detail-left-section">
                       <div className="detail-form-item">
                         <label className="detail-form-label">근무지</label>
                         <input
@@ -257,7 +257,7 @@ export default function RemittancePage() {
                         />
                       </div>
                     </div>
-                    <div className="detail-allowance-section">
+                    <div className="detail-right-section">
                       <div className="allowance-buttons">
                         {allowanceDefinitions.map(({ key, label }) => {
                           const allowance = record.allowances?.[key] || {
@@ -290,8 +290,6 @@ export default function RemittancePage() {
                           />
                         </div>
                       )}
-                    </div>
-                    <div className="detail-insurance-section">
                       <div className="insurance-toggle-item">
                         <label className="detail-form-label">4대 보험</label>
                         <div

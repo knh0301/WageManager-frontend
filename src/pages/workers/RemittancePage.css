@@ -274,14 +274,22 @@
 
 .detail-panel-content {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
+  gap: 40px;
+  align-items: flex-start;
 }
 
-.detail-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.detail-left-section {
+  display: flex;
+  flex-direction: column;
   gap: 20px;
+  flex: 1;
+}
+
+.detail-right-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
 }
 
 .detail-form-item {
@@ -304,32 +312,23 @@
   background: #f5f5f5;
   color: #333333;
   cursor: not-allowed;
+  width: 200px;
 }
 
 .time-input-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 200px;
 }
 
 .time-input {
-  flex: 1;
+  width: 80px;
 }
 
 .time-separator {
   color: #666666;
   font-weight: 500;
-}
-
-/* 수당 섹션 */
-.detail-allowance-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-  background: #f8fbff;
-  border-radius: 10px;
-  border: 1px dashed #d7e3f5;
 }
 
 .allowance-buttons {
@@ -343,7 +342,7 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background: #ffffff;
-  color: #666666;
+  color: #333333;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: default;
@@ -351,18 +350,10 @@
 }
 
 .allowance-button.active {
-  border-color: #769fcd;
-  background: rgba(118, 159, 205, 0.1);
-  color: #769fcd;
+  border-color: #000000;
+  background: #ffffff;
+  color: #000000;
   font-weight: 600;
-}
-
-/* 보험 토글 섹션 */
-.detail-insurance-section {
-  display: flex;
-  gap: 32px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
 }
 
 .insurance-toggle-item {
