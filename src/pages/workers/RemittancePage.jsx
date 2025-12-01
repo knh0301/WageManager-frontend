@@ -176,8 +176,9 @@ export default function RemittancePage() {
         </div>
 
         {/* 근무 상세 내역 */}
-        <h2 className="remittance-detail-title">근무 상세 내역</h2>
-        <div className="remittance-detail-list">
+        <div className="remittance-detail-section">
+          <h2 className="remittance-detail-title">근무 상세 내역</h2>
+          <div className="remittance-detail-list">
           {workRecords.length > 0 ? (
             workRecords.map((record, index) => (
               <div key={record.id}>
@@ -319,7 +320,8 @@ export default function RemittancePage() {
           ) : (
             <p className="no-data">근무 내역이 없습니다.</p>
           )}
+          </div>
         </div>
-  </div>
+    </div>
   );
 }
