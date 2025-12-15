@@ -13,6 +13,7 @@ export const kakaoLoginWithToken = async (kakaoAccessToken) => {
     const result = await httpClient.post('/api/auth/kakao/login', { kakaoAccessToken }, {
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json', // JSON 응답 명시적 요청
         Authorization: undefined, // Authorization 헤더 제거
       },
     });

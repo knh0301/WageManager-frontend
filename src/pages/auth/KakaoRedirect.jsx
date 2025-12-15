@@ -122,10 +122,13 @@ export default function KakaoRedirect() {
           console.error('[KakaoRedirect] 에러 스택:', error.stack);
           console.error('[KakaoRedirect] 전체 에러 정보 (JSON):', JSON.stringify(error, null, 2));
           
+          // 에러 메시지 추출 (우선순위: error.error.message > error.message > error.response.data.message > 기본 메시지)
+          const errorMessage = error.error?.message || error.message || error.response?.data?.message || error.response?.data?.error?.message || '로그인 처리 중 오류가 발생했습니다.';
+          
           Swal.fire({
             icon: 'error',
             title: '로그인 실패',
-            text: error.error?.message || error.message || error.response?.data?.message || '로그인 처리 중 오류가 발생했습니다.',
+            text: errorMessage,
             confirmButtonColor: '#769fcd',
           }).then(() => {
             navigate('/');
