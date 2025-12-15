@@ -61,14 +61,35 @@ const httpClient = {
       // options에서 headers를 제외한 나머지만 사용
       const { headers: _, ...restOptions } = options;
       
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const fullUrl = `${API_BASE_URL}${url}`;
+      const requestBody = JSON.stringify(data);
+      
+      if (import.meta.env.DEV) {
+        console.log('[httpClient] POST 요청 시작');
+        console.log('[httpClient] 요청 URL:', fullUrl);
+        console.log('[httpClient] 요청 헤더:', headers);
+        console.log('[httpClient] 요청 본문:', data);
+        console.log('[httpClient] API_BASE_URL:', API_BASE_URL);
+      }
+      
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        body: requestBody,
         ...restOptions,
       });
+      
+      if (import.meta.env.DEV) {
+        console.log('[httpClient] 응답 받음');
+        console.log('[httpClient] 응답 상태:', response.status, response.statusText);
+        console.log('[httpClient] 응답 OK:', response.ok);
+      }
+      
       return this.handleResponse(response);
     } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[httpClient] POST 요청 중 네트워크 에러:', error);
+      }
       handleNetworkError(error);
     }
   },
@@ -107,13 +128,40 @@ const httpClient = {
   },
 
   async handleResponse(response) {
+    if (import.meta.env.DEV) {
+      console.log('[httpClient] handleResponse 시작');
+      console.log('[httpClient] 응답 상태 코드:', response.status);
+      console.log('[httpClient] 응답 Content-Type:', response.headers.get('Content-Type'));
+    }
+    
     // 모든 응답을 JSON으로 파싱 (404도 포함)
-    const data = await response.json().catch(() => ({ message: response.statusText }));
+    let data;
+    try {
+      const text = await response.text();
+      if (import.meta.env.DEV) {
+        console.log('[httpClient] 응답 원본 텍스트:', text);
+      }
+      data = text ? JSON.parse(text) : { message: response.statusText };
+    } catch (parseError) {
+      if (import.meta.env.DEV) {
+        console.error('[httpClient] JSON 파싱 에러:', parseError);
+      }
+      data = { message: response.statusText };
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log('[httpClient] 파싱된 응답 데이터:', data);
+      console.log('[httpClient] response.ok:', response.ok);
+      console.log('[httpClient] data.success:', data.success);
+    }
     
     // response.ok가 false이고, 응답 데이터에 success가 false이거나 없으면 에러로 처리
     if (!response.ok) {
       // 백엔드가 success: true로 응답하는 경우 (404도 정상 응답으로 처리)
       if (data.success === true) {
+        if (import.meta.env.DEV) {
+          console.log('[httpClient] success: true이므로 정상 응답으로 처리');
+        }
         return data;
       }
       
@@ -126,10 +174,18 @@ const httpClient = {
           data: data,
         },
       };
+      
+      if (import.meta.env.DEV) {
+        console.error('[httpClient] 에러로 처리됨:', error);
+      }
+      
       throw error;
     }
     
     // 200 응답인 경우
+    if (import.meta.env.DEV) {
+      console.log('[httpClient] 정상 응답 반환');
+    }
     return data;
   },
 };

@@ -62,6 +62,11 @@ export default function KakaoRedirect() {
             console.log('기존 회원 로그인 성공');
           }
           
+          // 액세스 토큰, userId, workerCode 출력
+          console.log('액세스 토큰:', loginResponse.data.accessToken);
+          console.log('userId:', loginResponse.data.userId);
+          console.log('workerCode:', loginResponse.data.workerCode);
+          
           // accessToken을 localStorage에 저장
           localStorage.setItem('token', loginResponse.data.accessToken);
           
@@ -106,11 +111,21 @@ export default function KakaoRedirect() {
           });
         } else {
           // 400, 500 등 다른 에러
-          console.error('로그인 API 에러:', error);
+          console.error('[KakaoRedirect] 로그인 API 에러 발생');
+          console.error('[KakaoRedirect] 에러 객체:', error);
+          console.error('[KakaoRedirect] 에러 타입:', typeof error);
+          console.error('[KakaoRedirect] 에러 메시지:', error.message);
+          console.error('[KakaoRedirect] 에러 상태 코드:', error.status);
+          console.error('[KakaoRedirect] 에러 response:', error.response);
+          console.error('[KakaoRedirect] 에러 response.data:', error.response?.data);
+          console.error('[KakaoRedirect] 에러 error.error:', error.error);
+          console.error('[KakaoRedirect] 에러 스택:', error.stack);
+          console.error('[KakaoRedirect] 전체 에러 정보 (JSON):', JSON.stringify(error, null, 2));
+          
           Swal.fire({
             icon: 'error',
             title: '로그인 실패',
-            text: error.error?.message || error.message || '로그인 처리 중 오류가 발생했습니다.',
+            text: error.error?.message || error.message || error.response?.data?.message || '로그인 처리 중 오류가 발생했습니다.',
             confirmButtonColor: '#769fcd',
           }).then(() => {
             navigate('/');
@@ -119,12 +134,18 @@ export default function KakaoRedirect() {
       }
 
     } catch (error) {
-      console.error('카카오 인증 처리 과정 실패:', error);
+      console.error('[KakaoRedirect] 카카오 인증 처리 과정 실패');
+      console.error('[KakaoRedirect] 외부 catch 에러 객체:', error);
+      console.error('[KakaoRedirect] 외부 catch 에러 타입:', typeof error);
+      console.error('[KakaoRedirect] 외부 catch 에러 메시지:', error.message);
+      console.error('[KakaoRedirect] 외부 catch 에러 스택:', error.stack);
+      console.error('[KakaoRedirect] 외부 catch 전체 에러 정보 (JSON):', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      
       setStatus('인증 처리에 실패했습니다.');
       Swal.fire({
         icon: 'error',
         title: '인증 실패',
-        text: '로그인 처리 중 오류가 발생했습니다.',
+        text: error.message || '로그인 처리 중 오류가 발생했습니다.',
         confirmButtonColor: '#769fcd',
       }).then(() => {
         navigate('/');

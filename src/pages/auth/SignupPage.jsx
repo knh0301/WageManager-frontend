@@ -161,6 +161,11 @@ export default function SignupPage() {
         throw new Error(loginResponse.error?.message || '로그인 실패');
       }
 
+      // 액세스 토큰, userId, workerCode 출력
+      console.log('액세스 토큰:', loginResponse.data.accessToken);
+      console.log('userId:', registerResponse.data.userId);
+      console.log('workerCode:', registerResponse.data.workerCode);
+
       // accessToken을 localStorage에 저장
       localStorage.setItem('token', loginResponse.data.accessToken);
 
