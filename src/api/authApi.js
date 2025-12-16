@@ -38,9 +38,15 @@ export const kakaoLoginWithToken = async (kakaoAccessToken) => {
 };
 
 // 카카오 액세스 토큰으로 회원가입
-export const kakaoRegister = async (kakaoAccessToken, userType) => {
+export const kakaoRegister = async (kakaoAccessToken, userType, phone, kakaoPayLink, profileImageUrl) => {
   // 카카오 회원가입 API는 인증이 필요 없으므로 Authorization 헤더 제거
-  return httpClient.post('/api/auth/kakao/register', { kakaoAccessToken, userType }, {
+  return httpClient.post('/api/auth/kakao/register', { 
+    kakaoAccessToken, 
+    userType, 
+    phone, 
+    kakaoPayLink, 
+    profileImageUrl 
+  }, {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

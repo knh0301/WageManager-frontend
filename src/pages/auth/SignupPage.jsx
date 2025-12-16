@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { registerUser, kakaoLoginWithToken } from '../../api/authApi';
+import { kakaoRegister, kakaoLoginWithToken } from '../../api/authApi';
 import { setAuthToken, setUserDetails } from '../../features/auth/authSlice';
 import Swal from 'sweetalert2';
 import { FaUser, FaTimes } from 'react-icons/fa';
@@ -16,6 +16,7 @@ export default function SignupPage() {
 
   const [userType, setUserType] = useState('');
   const [phone, setPhone] = useState('');
+  const [kakaoPayLink, setKakaoPayLink] = useState('');
   const [kakaoId, setKakaoId] = useState(null);
   const [kakaoName, setKakaoName] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
@@ -106,7 +107,7 @@ export default function SignupPage() {
   };
 
   // 회원가입 버튼 활성화 조건
-  const isSignupButtonDisabled = !userType || !phone || phone.length < 10 || phone.length > 11;
+  const isSignupButtonDisabled = !userType || !phone || phone.length < 10 || phone.length > 11 || !kakaoPayLink;
 
   const handleSignup = async () => {
     if (!userType) {
@@ -129,60 +130,43 @@ export default function SignupPage() {
       return;
     }
 
-    let registrationSuccessful = false;
-    
+    if (!kakaoPayLink) {
+      Swal.fire({
+        icon: 'warning',
+        title: '카카오페이 링크를 입력해주세요.',
+        text: '카카오페이 링크는 필수 입력 항목입니다.',
+        confirmButtonColor: '#769fcd',
+      });
+      return;
+    }
+
     try {
-      // 1. 회원 정보 등록
-      const registerData = {
-        kakaoId: kakaoId,
-        name: kakaoName || '',
-        phone: phone,
-        userType: userType,
-        profileImageUrl: profileImageUrl || '',
-      };
+      // 카카오 회원가입 API 호출 (회원가입 + 로그인 동시 처리)
+      console.log('카카오 회원가입 요청 중...');
+      const registerResponse = await kakaoRegister(
+        kakaoAccessToken,
+        userType,
+        phone,
+        kakaoPayLink,
+        profileImageUrl || ''
+      );
+      console.log('카카오 회원가입 응답:', registerResponse);
 
-      console.log('회원 정보 등록 요청 데이터:', registerData);
-      const registerResponse = await registerUser(registerData);
-      console.log('회원 정보 등록 응답:', registerResponse);
-
-      if (!registerResponse.success || !registerResponse.data.userId) {
-        throw new Error(registerResponse.error?.message || '회원 정보 등록 실패');
+      if (!registerResponse.success || !registerResponse.data?.accessToken) {
+        throw new Error(registerResponse.error?.message || '회원가입 실패');
       }
 
-      // 회원가입 성공 표시
-      registrationSuccessful = true;
-
-      // 2. 회원가입 성공 후 로그인 처리
-      console.log('카카오 로그인 요청 중...');
-      const loginResponse = await kakaoLoginWithToken(kakaoAccessToken);
-      console.log('카카오 로그인 응답:', loginResponse);
-
-      if (!loginResponse.success || !loginResponse.data.accessToken) {
-        throw new Error(loginResponse.error?.message || '로그인 실패');
-      }
-
-      // 액세스 토큰, userId, workerCode 출력
-      console.log('액세스 토큰:', loginResponse.data.accessToken);
+      // 액세스 토큰, userId 출력
+      console.log('액세스 토큰:', registerResponse.data.accessToken);
       console.log('userId:', registerResponse.data.userId);
-      console.log('workerCode:', registerResponse.data.workerCode);
+      console.log('userType:', registerResponse.data.userType);
 
       // accessToken을 localStorage에 저장
-      localStorage.setItem('token', loginResponse.data.accessToken);
+      localStorage.setItem('token', registerResponse.data.accessToken);
 
       // Redux에 모든 정보 저장
-      dispatch(setUserDetails({
-        kakaoId: kakaoId,
-        name: registerResponse.data.name || kakaoName,
-        phone: phone,
-        userType: registerResponse.data.userType,
-        profileImageUrl: profileImageUrl || '',
-        userId: registerResponse.data.userId,
-        workerCode: registerResponse.data.workerCode,
-      }));
-
-      // accessToken도 Redux에 저장
       dispatch(setAuthToken({
-        accessToken: loginResponse.data.accessToken,
+        accessToken: registerResponse.data.accessToken,
         userId: registerResponse.data.userId,
         name: registerResponse.data.name || kakaoName,
         userType: registerResponse.data.userType,
@@ -212,12 +196,7 @@ export default function SignupPage() {
       let shouldRedirect = false;
       let redirectPath = '/';
       
-      if (registrationSuccessful) {
-        // 회원가입은 성공했지만 로그인 실패한 경우
-        errorTitle = '로그인 실패';
-        redirectPath = '/'; // 로그인 페이지로 이동
-        shouldRedirect = true;
-      } else if (statusCode === 0) {
+      if (statusCode === 0) {
         // 네트워크 오류: 현재 페이지 유지하여 재시도 가능하게
         errorTitle = '네트워크 오류';
         shouldRedirect = false;
@@ -276,6 +255,24 @@ export default function SignupPage() {
             {phone && (phone.length < 10 || phone.length > 11) && (
               <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                 전화번호는 10자리 또는 11자리 숫자여야 합니다.
+              </p>
+            )}
+          </div>
+          {/* 카카오페이 링크 입력 */}
+          <div className="form-group">
+            <label className="form-label">
+              카카오페이 링크 <span className="required-star">*</span>
+            </label>
+            <input 
+              type="url" 
+              value={kakaoPayLink}
+              onChange={(e) => setKakaoPayLink(e.target.value)}
+              placeholder="https://qr.kakaopay.com/..."
+              className="form-input"
+            />
+            {!kakaoPayLink && (
+              <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                카카오페이 링크를 입력해주세요.
               </p>
             )}
           </div>

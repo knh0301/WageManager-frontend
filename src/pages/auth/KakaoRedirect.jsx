@@ -122,6 +122,17 @@ export default function KakaoRedirect() {
           console.error('[KakaoRedirect] 에러 스택:', error.stack);
           console.error('[KakaoRedirect] 전체 에러 정보 (JSON):', JSON.stringify(error, null, 2));
           
+          // 500 에러인 경우 추가 디버깅 정보
+          if (statusCode === 500) {
+            console.error('[KakaoRedirect] ⚠️⚠️⚠️ 500 서버 에러 발생 ⚠️⚠️⚠️');
+            console.error('[KakaoRedirect] 백엔드 로그를 확인해야 합니다!');
+            console.error('[KakaoRedirect] 에러 코드:', error.errorCode || error.error?.code);
+            console.error('[KakaoRedirect] 에러 메시지:', error.errorMessage || error.error?.message);
+            console.error('[KakaoRedirect] 전체 에러 데이터:', error.fullErrorData || error.response?.data);
+            console.error('[KakaoRedirect] 요청한 카카오 액세스 토큰 길이:', access_token?.length);
+            console.error('[KakaoRedirect] 요청 URL: /api/auth/kakao/login');
+          }
+          
           // 에러 메시지 추출 (우선순위: error.error.message > error.message > error.response.data.message > 기본 메시지)
           const errorMessage = error.error?.message || error.message || error.response?.data?.message || error.response?.data?.error?.message || '로그인 처리 중 오류가 발생했습니다.';
           

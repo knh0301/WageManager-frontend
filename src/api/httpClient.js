@@ -131,52 +131,6 @@ const httpClient = {
     }
   },
 
-  // XML 응답을 JSON으로 변환하는 헬퍼 함수 (에러 응답용)
-  parseXmlResponse(xmlText) {
-    try {
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-      
-      const result = {};
-      
-      // success 태그 파싱
-      const successElement = xmlDoc.querySelector('success');
-      if (successElement) {
-        result.success = successElement.textContent === 'true';
-      }
-      
-      // data 태그 파싱
-      const dataElement = xmlDoc.querySelector('data');
-      if (dataElement && dataElement.textContent.trim()) {
-        try {
-          result.data = JSON.parse(dataElement.textContent);
-        } catch {
-          result.data = dataElement.textContent;
-        }
-      } else {
-        result.data = null;
-      }
-      
-      // error 태그 파싱
-      const errorElement = xmlDoc.querySelector('error');
-      if (errorElement) {
-        const codeElement = errorElement.querySelector('code');
-        const messageElement = errorElement.querySelector('message');
-        result.error = {
-          code: codeElement?.textContent || '',
-          message: messageElement?.textContent || '',
-        };
-      }
-      
-      return result;
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('[httpClient] XML 파싱 에러:', error);
-      }
-      return { message: 'XML 파싱 실패' };
-    }
-  },
-
   async handleResponse(response) {
     if (import.meta.env.DEV) {
       console.log('[httpClient] handleResponse 시작');
@@ -185,12 +139,9 @@ const httpClient = {
     }
     
     const text = await response.text();
-    const contentType = response.headers.get('Content-Type') || '';
-    const isErrorResponse = !response.ok; // 200이 아닌 경우
     
     if (import.meta.env.DEV) {
       console.log('[httpClient] 응답 원본 텍스트:', text);
-      console.log('[httpClient] 에러 응답 여부:', isErrorResponse);
     }
     
     // 응답 데이터 파싱
@@ -198,38 +149,13 @@ const httpClient = {
     if (!text) {
       data = { message: response.statusText };
     } else {
-      // 정상 응답(200): JSON만 처리
-      if (!isErrorResponse) {
-        try {
-          data = JSON.parse(text);
-        } catch (parseError) {
-          if (import.meta.env.DEV) {
-            console.error('[httpClient] 정상 응답 JSON 파싱 에러:', parseError);
-          }
-          data = { message: response.statusText };
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        if (import.meta.env.DEV) {
+          console.error('[httpClient] JSON 파싱 에러:', parseError);
         }
-      } else {
-        // 에러 응답(200이 아님): JSON 시도 후 XML 시도
-        try {
-          // 먼저 JSON 파싱 시도
-          data = JSON.parse(text);
-          if (import.meta.env.DEV) {
-            console.log('[httpClient] 에러 응답을 JSON으로 파싱 성공');
-          }
-        } catch (jsonParseError) {
-          // JSON 파싱 실패 시 XML인지 확인
-          if (contentType.includes('xml') || text.trim().startsWith('<')) {
-            if (import.meta.env.DEV) {
-              console.log('[httpClient] 에러 응답이 XML 형식으로 감지됨, XML 파싱 시작');
-            }
-            data = this.parseXmlResponse(text);
-          } else {
-            if (import.meta.env.DEV) {
-              console.error('[httpClient] 에러 응답 JSON 파싱 실패:', jsonParseError);
-            }
-            data = { message: response.statusText };
-          }
-        }
+        data = { message: response.statusText };
       }
     }
     
@@ -258,10 +184,22 @@ const httpClient = {
           data: data,
         },
         message: data.error?.message || data.message || '서버 오류가 발생했습니다.',
+        // 500 에러 디버깅을 위한 추가 정보
+        errorCode: data.error?.code,
+        errorMessage: data.error?.message,
+        fullErrorData: data,
       };
       
       if (import.meta.env.DEV) {
         console.error('[httpClient] 에러로 처리됨:', error);
+        if (response.status === 500) {
+          console.error('[httpClient] ⚠️ 500 서버 에러 상세 정보:');
+          console.error('[httpClient] - 에러 코드:', data.error?.code);
+          console.error('[httpClient] - 에러 메시지:', data.error?.message);
+          console.error('[httpClient] - 전체 응답 데이터:', data);
+          console.error('[httpClient] - 원본 응답 텍스트:', text);
+          console.error('[httpClient] 💡 백엔드 로그를 확인하세요!');
+        }
       }
       
       throw error;
