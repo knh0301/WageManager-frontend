@@ -107,9 +107,15 @@ const httpClient = {
         throw error;
       }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
       if (error.shouldRetry) {
         throw error;
       }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },
@@ -180,9 +186,15 @@ const httpClient = {
         throw error;
       }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
       if (error.shouldRetry) {
         throw error;
       }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       if (import.meta.env.DEV) {
         console.error('[httpClient] POST 요청 중 네트워크 에러:', error);
       }
@@ -224,9 +236,15 @@ const httpClient = {
         throw error;
       }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
       if (error.shouldRetry) {
         throw error;
       }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },
@@ -263,9 +281,15 @@ const httpClient = {
         throw error;
       }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
       if (error.shouldRetry) {
         throw error;
       }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },

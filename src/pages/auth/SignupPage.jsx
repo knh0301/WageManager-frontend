@@ -16,6 +16,7 @@ export default function SignupPage() {
 
   const [userType, setUserType] = useState('');
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState(''); // 이름 입력 필드 추가
   const [kakaoPayLink, setKakaoPayLink] = useState('');
   const [kakaoId, setKakaoId] = useState(null);
   const [kakaoName, setKakaoName] = useState(null);
@@ -44,17 +45,24 @@ export default function SignupPage() {
         const kakaoIdFromResponse = userResponse.data.id;
         const kakaoAccount = userResponse.data.kakao_account;
         const profile = kakaoAccount?.profile;
-        const name = profile?.nickname;
+        // 카카오 이름 정보 가져오기 (우선순위: profile.nickname > kakao_account.name > properties.nickname)
+        const name = profile?.nickname || kakaoAccount?.name || userResponse.data.properties?.nickname || '카카오사용자';
         const profileImageUrlFromResponse = profile?.profile_image_url;
         
         console.log('카카오 ID:', kakaoIdFromResponse);
         console.log('카카오 이름:', name);
         console.log('카카오 프로필 이미지 URL:', profileImageUrlFromResponse);
         console.log('카카오 사용자 전체 데이터:', userResponse.data);
+        console.log('카카오 계정 정보:', kakaoAccount);
+        console.log('카카오 프로필 정보:', profile);
         
         setKakaoId(String(kakaoIdFromResponse));
-        setKakaoName(name || '');
+        setKakaoName(name || '카카오사용자');
         setProfileImageUrl(profileImageUrlFromResponse || '');
+        // 카카오에서 가져온 이름을 기본값으로 설정 (사용자가 수정 가능)
+        if (name) {
+          setName(name);
+        }
       } catch (error) {
         console.error('카카오 사용자 정보 가져오기 실패:', error);
         Swal.fire({
@@ -98,16 +106,33 @@ export default function SignupPage() {
     );
   }
 
-  // 전화번호 입력 핸들러 (숫자만 허용)
+  // 전화번호 입력 핸들러 (하이픈 자동 추가)
   const handlePhoneChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
-    if (value.length <= 11) { // 최대 11자리
+    let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+    
+    // 하이픈 자동 추가: 010-1234-5678 형식
+    if (value.length > 3 && value.length <= 7) {
+      value = value.slice(0, 3) + '-' + value.slice(3);
+    } else if (value.length > 7) {
+      value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+    }
+    
+    if (value.length <= 13) { // 최대 13자리 (하이픈 포함)
       setPhone(value);
     }
   };
 
+  // 전화번호 형식 검증 (하이픈 포함: 010-1234-5678)
+  const isValidPhone = phone && /^01[0-9]-\d{4}-\d{4}$/.test(phone);
+  
+  // 이름 검증 (2자 이상, 한글/영문/숫자 허용)
+  const isValidName = name && name.trim().length >= 2;
+  
+  // 카카오페이 링크 형식 검증 (https://qr.kakaopay.com/로 시작)
+  const isValidKakaoPayLink = kakaoPayLink && /^https:\/\/qr\.kakaopay\.com\/.*$/.test(kakaoPayLink);
+  
   // 회원가입 버튼 활성화 조건
-  const isSignupButtonDisabled = !userType || !phone || phone.length < 10 || phone.length > 11 || !kakaoPayLink;
+  const isSignupButtonDisabled = !userType || !isValidPhone || !isValidName || !isValidKakaoPayLink;
 
   const handleSignup = async () => {
     if (!userType) {
@@ -120,21 +145,23 @@ export default function SignupPage() {
       return;
     }
 
-    if (!phone || phone.length < 10 || phone.length > 11) {
+    // 전화번호 형식 검증
+    if (!isValidPhone) {
       Swal.fire({
         icon: 'warning',
         title: '전화번호를 올바르게 입력해주세요.',
-        text: '전화번호는 10자리 또는 11자리 숫자여야 합니다.',
+        text: '전화번호는 010-1234-5678 형식으로 입력해주세요.',
         confirmButtonColor: '#769fcd',
       });
       return;
     }
 
-    if (!kakaoPayLink) {
+    // 카카오페이 링크 형식 검증
+    if (!isValidKakaoPayLink) {
       Swal.fire({
         icon: 'warning',
-        title: '카카오페이 링크를 입력해주세요.',
-        text: '카카오페이 링크는 필수 입력 항목입니다.',
+        title: '카카오페이 링크를 올바르게 입력해주세요.',
+        text: '카카오페이 링크는 https://qr.kakaopay.com/로 시작해야 합니다.',
         confirmButtonColor: '#769fcd',
       });
       return;
@@ -143,12 +170,14 @@ export default function SignupPage() {
     try {
       // 카카오 회원가입 API 호출 (회원가입 + 로그인 동시 처리)
       console.log('카카오 회원가입 요청 중...');
+      console.log('전송할 카카오 이름:', kakaoName);
       const registerResponse = await kakaoRegister(
         kakaoAccessToken,
         userType,
         phone,
         kakaoPayLink,
-        profileImageUrl || ''
+        profileImageUrl || '',
+        kakaoName || '카카오사용자' // 이름 정보도 함께 전달
       );
       console.log('카카오 회원가입 응답:', registerResponse);
 
@@ -251,13 +280,13 @@ export default function SignupPage() {
               type="tel" 
               value={phone}
               onChange={handlePhoneChange}
-              placeholder="01012345678"
-              maxLength={11}
+              placeholder="010-1234-5678"
+              maxLength={13}
               className="form-input"
             />
-            {phone && (phone.length < 10 || phone.length > 11) && (
+            {phone && !isValidPhone && (
               <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                전화번호는 10자리 또는 11자리 숫자여야 합니다.
+                전화번호는 010-1234-5678 형식으로 입력해주세요.
               </p>
             )}
           </div>
@@ -273,6 +302,14 @@ export default function SignupPage() {
               placeholder="https://qr.kakaopay.com/..."
               className="form-input"
             />
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+              💡 카카오페이 앱에서 "송금" → "QR코드 보기" → 링크 복사
+            </p>
+            {kakaoPayLink && !isValidKakaoPayLink && (
+              <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                카카오페이 링크는 https://qr.kakaopay.com/로 시작해야 합니다.
+              </p>
+            )}
             {!kakaoPayLink && (
               <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                 카카오페이 링크를 입력해주세요.

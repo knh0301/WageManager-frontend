@@ -38,15 +38,25 @@ export const kakaoLoginWithToken = async (kakaoAccessToken) => {
 };
 
 // 카카오 액세스 토큰으로 회원가입
-export const kakaoRegister = async (kakaoAccessToken, userType, phone, kakaoPayLink, profileImageUrl) => {
+export const kakaoRegister = async (kakaoAccessToken, userType, phone, kakaoPayLink, profileImageUrl, name) => {
   // 카카오 회원가입 API는 인증이 필요 없으므로 Authorization 헤더 제거
-  return httpClient.post('/api/auth/kakao/register', { 
-    kakaoAccessToken, 
-    userType, 
-    phone, 
-    kakaoPayLink, 
-    profileImageUrl 
-  }, {
+  // 백엔드 요구사항에 맞춰 필드 순서를 명시적으로 지정
+  const requestBody = {
+    kakaoAccessToken: kakaoAccessToken,
+    userType: userType,
+    phone: phone,
+    kakaoPayLink: kakaoPayLink,
+    profileImageUrl: profileImageUrl || '',
+    name: name || '', // 이름 정보 추가 (백엔드가 카카오 API에서 가져오지 못할 경우 대비)
+  };
+  
+  if (import.meta.env.DEV) {
+    console.log('[authApi] kakaoRegister 요청 본문:', requestBody);
+    console.log('[authApi] 필드 순서 확인:', Object.keys(requestBody));
+    console.log('[authApi] 전달할 이름:', name);
+  }
+  
+  return httpClient.post('/api/auth/kakao/register', requestBody, {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
