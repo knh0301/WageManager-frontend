@@ -60,6 +60,21 @@ export const registerUser = async (userData) => {
   return httpClient.post('/api/users/register', userData);
 };
 
+// 개발자용 임시 로그인
+export const devLogin = async (userId, name, userType) => {
+  return httpClient.post('/api/auth/dev/login', { 
+    userId, 
+    name, 
+    userType 
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      Authorization: undefined, // Authorization 헤더 제거
+    },
+  });
+};
+
 // 로그아웃
 export const logout = async (accessToken) => {
   const headers = {};
