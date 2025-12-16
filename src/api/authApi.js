@@ -75,6 +75,74 @@ export const devLogin = async (userId, name, userType) => {
   });
 };
 
+// Refresh Token을 사용하여 새로운 Access Token 발급
+export const refreshAccessToken = async () => {
+  const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER || 'http://localhost:8080';
+  
+  if (import.meta.env.DEV) {
+    console.log('[authApi] refreshAccessToken 호출 시작');
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include', // ⚠️ 중요! 쿠키 자동 포함
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (import.meta.env.DEV) {
+      console.log('[authApi] refreshAccessToken 응답 상태:', response.status);
+    }
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: response.statusText };
+      }
+      
+      if (import.meta.env.DEV) {
+        console.error('[authApi] refreshAccessToken 실패:', errorData);
+      }
+      
+      throw {
+        status: response.status,
+        message: errorData.error?.message || errorData.message || '토큰 갱신 실패',
+        error: errorData.error,
+        response: {
+          status: response.status,
+          data: errorData,
+        },
+      };
+    }
+    
+    const data = await response.json();
+    
+    if (import.meta.env.DEV) {
+      console.log('[authApi] refreshAccessToken 성공:', {
+        success: data.success,
+        hasAccessToken: !!data.data?.accessToken,
+      });
+    }
+    
+    if (data.success && data.data?.accessToken) {
+      return data.data.accessToken;
+    }
+    
+    throw new Error(data.error?.message || '토큰 갱신 실패');
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[authApi] refreshAccessToken 에러:', error);
+    }
+    throw error;
+  }
+};
+
 // 로그아웃
 export const logout = async (accessToken) => {
   // 액세스 토큰을 헤더에 포함
