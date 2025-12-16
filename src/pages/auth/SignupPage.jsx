@@ -161,8 +161,11 @@ export default function SignupPage() {
       console.log('userId:', registerResponse.data.userId);
       console.log('userType:', registerResponse.data.userType);
 
-      // accessToken을 localStorage에 저장
+      // localStorage에 모든 데이터 저장
       localStorage.setItem('token', registerResponse.data.accessToken);
+      localStorage.setItem('userId', String(registerResponse.data.userId));
+      localStorage.setItem('name', registerResponse.data.name || kakaoName || '');
+      localStorage.setItem('userType', registerResponse.data.userType || '');
 
       // Redux에 모든 정보 저장
       dispatch(setAuthToken({

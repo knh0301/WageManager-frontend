@@ -45,10 +45,13 @@ export default function LoginPage() {
       const response = await devLogin('1', '테스트 사용자', 'WORKER');
       
       if (response.success && response.data?.accessToken) {
-        // accessToken을 localStorage에 저장
+        // localStorage에 모든 데이터 저장
         localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('userId', String(response.data.userId));
+        localStorage.setItem('name', response.data.name || '');
+        localStorage.setItem('userType', response.data.userType || '');
         
-        // Redux에 저장
+        // Redux에 모든 데이터 저장
         dispatch(setAuthToken({
           accessToken: response.data.accessToken,
           userId: response.data.userId,

@@ -67,8 +67,11 @@ export default function KakaoRedirect() {
           console.log('userId:', loginResponse.data.userId);
           console.log('workerCode:', loginResponse.data.workerCode);
           
-          // accessToken을 localStorage에 저장
+          // localStorage에 모든 데이터 저장
           localStorage.setItem('token', loginResponse.data.accessToken);
+          localStorage.setItem('userId', String(loginResponse.data.userId));
+          localStorage.setItem('name', loginResponse.data.name || '');
+          localStorage.setItem('userType', loginResponse.data.userType || '');
           
           // Redux에 저장
           dispatch(setAuthToken({

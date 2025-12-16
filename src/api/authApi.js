@@ -77,10 +77,16 @@ export const devLogin = async (userId, name, userType) => {
 
 // 로그아웃
 export const logout = async (accessToken) => {
-  const headers = {};
+  // 액세스 토큰을 헤더에 포함
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
+  
   return httpClient.post('/api/auth/logout', {}, {
     headers,
   });
