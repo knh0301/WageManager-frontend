@@ -556,17 +556,17 @@
 }
 
 .worker-mypage-request-status-pending {
-  background-color: #fff3cd;
-  color: #856404;
+  background-color: var(--color-grey);
+  color: #333;
 }
 
 .worker-mypage-request-status-approved {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: var(--color-green);
+  color: #fff;
 }
 
 .worker-mypage-request-status-rejected {
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: var(--color-red);
+  color: #fff;
 }
 

@@ -20,11 +20,29 @@ export const formatDateToMonthDay = (dateString) => {
   }
 };
 
-// 시간 형식 변환 함수 ({hour, minute} -> "HH:MM")
+// 시간 형식 변환 함수 ({hour, minute} 또는 "HH:mm:ss" -> "HH:MM")
 export const formatTime = (timeObj) => {
-  if (!timeObj || timeObj.hour === undefined || timeObj.minute === undefined) return "";
-  const hour = String(timeObj.hour).padStart(2, "0");
-  const minute = String(timeObj.minute).padStart(2, "0");
-  return `${hour}:${minute}`;
+  if (!timeObj) return "";
+  
+  // 문자열 형식인 경우 ("HH:mm:ss" -> "HH:mm")
+  if (typeof timeObj === "string") {
+    try {
+      const [hour, minute] = timeObj.split(":");
+      if (hour && minute) {
+        return `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+      }
+    } catch {
+      return "";
+    }
+  }
+  
+  // 객체 형식인 경우 ({hour, minute} -> "HH:mm")
+  if (timeObj.hour !== undefined && timeObj.minute !== undefined) {
+    const hour = String(timeObj.hour).padStart(2, "0");
+    const minute = String(timeObj.minute).padStart(2, "0");
+    return `${hour}:${minute}`;
+  }
+  
+  return "";
 };
 

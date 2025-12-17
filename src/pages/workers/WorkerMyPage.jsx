@@ -222,10 +222,10 @@ export default function WorkerMyPage() {
         const response = await getCorrectionRequests();
         
         if (response.success && response.data && Array.isArray(response.data)) {
-          // workDate 기준 내림차순 정렬 (최신이 위로)
+          // createdAt 기준 내림차순 정렬 (날짜가 높은게 = 최신이 위로)
           const sortedData = [...response.data].sort((a, b) => {
-            const dateA = a.workDate || "";
-            const dateB = b.workDate || "";
+            const dateA = a.createdAt || "";
+            const dateB = b.createdAt || "";
             return dateB.localeCompare(dateA); // 내림차순
           });
           

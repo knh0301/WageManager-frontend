@@ -67,9 +67,13 @@ export const getContractDetail = async (contractId) => {
 };
 
 // 정정 요청 목록 조회
-export const getCorrectionRequests = async () => {
+export const getCorrectionRequests = async (status) => {
   try {
-    const response = await httpClient.get('/api/worker/correction-requests');
+    let url = '/api/worker/correction-requests';
+    if (status) {
+      url += `?status=${status}`;
+    }
+    const response = await httpClient.get(url);
     return response;
   } catch (error) {
     console.error('[workerApi] getCorrectionRequests 에러:', error);
