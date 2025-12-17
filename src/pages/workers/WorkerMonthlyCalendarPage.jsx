@@ -10,7 +10,11 @@ const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 
-const workLabelColorByPlace = (place) => { // 근무지에 따른 라벨 색상 클래스명 반환
+const workLabelColor = (place, status) => { // 근무지와 상태에 따른 라벨 색상 클래스명 반환
+  // PENDING_APPROVAL 상태인 경우 회색으로 표시
+  if (status === "PENDING_APPROVAL") return "pending";
+  
+  // 근무지에 따른 색상
   if (place.includes("버거킹")) return "burger";
   if (place.includes("맥도날드")) return "mcdonald";
   return "default";
@@ -563,7 +567,7 @@ function WorkerMonthlyCalendarPage() {
           workRecords={workRecords}
           onSelectDay={handleDateClick}
           makeDateKey={makeDateKey}
-          workLabelColorByPlace={workLabelColorByPlace}
+          workLabelColor={workLabelColor}
           todayKey={todayKey}
         />
 

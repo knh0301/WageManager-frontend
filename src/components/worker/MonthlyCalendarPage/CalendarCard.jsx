@@ -11,7 +11,7 @@ function CalendarCard({
   workRecords,
   onSelectDay,
   makeDateKey,
-  workLabelColorByPlace,
+  workLabelColor,
   todayKey,
 }) {
   return (
@@ -55,8 +55,9 @@ function CalendarCard({
                 {labels.map((w) => (
                   <span
                     key={w.id}
-                    className={`work-label work-label-${workLabelColorByPlace(
-                      w.place
+                    className={`work-label work-label-${workLabelColor(
+                      w.place,
+                      w.status
                     )}`}
                   >
                     {w.place}
@@ -81,7 +82,7 @@ CalendarCard.propTypes = {
   workRecords: PropTypes.object.isRequired,
   onSelectDay: PropTypes.func.isRequired,
   makeDateKey: PropTypes.func.isRequired,
-  workLabelColorByPlace: PropTypes.func.isRequired,
+  workLabelColor: PropTypes.func.isRequired,
   todayKey: PropTypes.string.isRequired,
 };
 

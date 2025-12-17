@@ -158,6 +158,11 @@
   color: #1b2a6d;
 }
 
+.work-label-pending {
+  background-color: #e5e5e5;
+  color: #666666;
+}
+
 /* 우측 패널 */
 .right-panel {
   flex: 0 0 500px;
