@@ -44,6 +44,16 @@ export default function ProfileEdit({ user, onUserUpdate }) {
         }
         break;
       }
+      case "kakaoPay": {
+        const kakaoPayLinkRegex = /^https:\/\/qr\.kakaopay\.com\/.*$/;
+        if (!kakaoPayLinkRegex.test(value)) {
+          return {
+            isValid: false,
+            message: "카카오페이 링크는 https://qr.kakaopay.com/로 시작해야 합니다.",
+          };
+        }
+        break;
+      }
       default:
         break;
     }
@@ -69,6 +79,13 @@ export default function ProfileEdit({ user, onUserUpdate }) {
         const validation = validateField("name", localUser.name);
         if (!validation.isValid) {
           setErrors({ basic: validation.message });
+          return;
+        }
+      } else if (section === "kakaoPay") {
+        // kakaoPay 섹션의 경우 kakaoPayLink 검증
+        const validation = validateField("kakaoPay", localUser.kakaoPayLink);
+        if (!validation.isValid) {
+          setErrors({ kakaoPay: validation.message });
           return;
         }
       } else {
@@ -105,6 +122,31 @@ export default function ProfileEdit({ user, onUserUpdate }) {
       ...prev,
       [field]: value,
     }));
+    
+    // 카카오페이 링크 입력 시 실시간 검증
+    if (field === "kakaoPayLink" && editableSections.kakaoPay) {
+      if (value && value.trim() !== "") {
+        const kakaoPayLinkRegex = /^https:\/\/qr\.kakaopay\.com\/.*$/;
+        if (!kakaoPayLinkRegex.test(value)) {
+          setErrors((prev) => ({
+            ...prev,
+            kakaoPay: "카카오페이 링크는 https://qr.kakaopay.com/로 시작해야 합니다.",
+          }));
+        } else {
+          setErrors((prev) => {
+            const newErrors = { ...prev };
+            delete newErrors.kakaoPay;
+            return newErrors;
+          });
+        }
+      } else {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.kakaoPay;
+          return newErrors;
+        });
+      }
+    }
   };
 
   // 전화번호 입력 핸들러 (하이픈 자동 추가)
@@ -207,12 +249,19 @@ export default function ProfileEdit({ user, onUserUpdate }) {
       {/* 카카오페이 송금 링크 */}
       <div className="worker-mypage-field">
         <span className="worker-mypage-label">카카오페이 송금 링크</span>
-        <input
-          type="text"
-          value={localUser.kakaoPayLink || ""}
-          disabled={!editableSections.kakaoPay}
-          onChange={(e) => handleChange("kakaoPayLink", e.target.value)}
-        />
+        <div className="worker-mypage-input-wrapper">
+          <input
+            type="text"
+            value={localUser.kakaoPayLink || ""}
+            disabled={!editableSections.kakaoPay}
+            onChange={(e) => handleChange("kakaoPayLink", e.target.value)}
+            placeholder="https://qr.kakaopay.com/..."
+            className={errors.kakaoPay ? "worker-mypage-input-error" : ""}
+          />
+          {errors.kakaoPay && (
+            <span className="worker-mypage-error-message">{errors.kakaoPay}</span>
+          )}
+        </div>
         <button
           className="worker-mypage-edit-button"
           onClick={() => toggleEdit("kakaoPay")}

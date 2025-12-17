@@ -33,3 +33,14 @@ export const updateUserProfile = async (userData) => {
   }
 };
 
+// 계좌 정보 수정 (카카오페이 링크)
+export const updateAccountInfo = async (accountData) => {
+  try {
+    const response = await httpClient.put('/api/users/me/account', accountData);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] updateAccountInfo 에러:', error);
+    throw error;
+  }
+};
+

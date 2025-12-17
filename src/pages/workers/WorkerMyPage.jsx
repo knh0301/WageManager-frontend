@@ -4,7 +4,7 @@ import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import { getUserProfile, getWorkerInfo, updateUserProfile } from "../../api/workerApi";
+import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo } from "../../api/workerApi";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -172,51 +172,75 @@ export default function WorkerMyPage() {
 
   const handleUserUpdate = async (updatedUser, section) => {
     try {
-      // 수정한 필드만 request body에 포함
-      const requestBody = {};
+      let response;
       
-      if (section === "basic" && updatedUser.name !== undefined) {
-        requestBody.name = updatedUser.name || "";
-      }
-      
-      if (section === "phone" && updatedUser.phone !== undefined) {
-        requestBody.phone = updatedUser.phone || "";
-      }
-      
-      // API 호출
-      const response = await updateUserProfile(requestBody);
-      
-      if (response.success && response.data) {
-        const userData = response.data;
-        // API 응답 데이터로 화면 업데이트
-        setUser((prev) => ({
-          ...prev,
-          name: userData.name || prev.name,
-          phone: userData.phone || prev.phone,
-          profileImageUrl: userData.profileImageUrl || prev.profileImageUrl,
-        }));
+      if (section === "kakaoPay") {
+        // 카카오페이 링크 수정은 별도 API 사용
+        const requestBody = {
+          kakaoPayLink: updatedUser.kakaoPayLink || "",
+        };
         
-        if (userData.profileImageUrl) {
-          setProfileImage(userData.profileImageUrl);
+        response = await updateAccountInfo(requestBody);
+        
+        if (response.success && response.data) {
+          const accountData = response.data;
+          // API 응답 데이터로 화면 업데이트
+          setUser((prev) => ({
+            ...prev,
+            kakaoPayLink: accountData.kakaoPayLink || prev.kakaoPayLink,
+          }));
+          
+          toast.success("카카오페이 링크가 성공적으로 수정되었습니다.", {
+            position: "top-right",
+            autoClose: 2000,
+          });
+        }
+      } else {
+        // 이름, 전화번호 수정은 기존 API 사용
+        const requestBody = {};
+        
+        if (section === "basic" && updatedUser.name !== undefined) {
+          requestBody.name = updatedUser.name || "";
         }
         
-        // 성공 메시지 표시
-        const successMessage = section === "basic" 
-          ? "이름이 성공적으로 수정되었습니다." 
-          : section === "phone"
-          ? "전화번호가 성공적으로 수정되었습니다."
-          : "프로필이 성공적으로 수정되었습니다.";
+        if (section === "phone" && updatedUser.phone !== undefined) {
+          requestBody.phone = updatedUser.phone || "";
+        }
         
-        toast.success(successMessage, {
-          position: "top-right",
-          autoClose: 2000,
-        });
+        response = await updateUserProfile(requestBody);
+        
+        if (response.success && response.data) {
+          const userData = response.data;
+          // API 응답 데이터로 화면 업데이트
+          setUser((prev) => ({
+            ...prev,
+            name: userData.name || prev.name,
+            phone: userData.phone || prev.phone,
+            profileImageUrl: userData.profileImageUrl || prev.profileImageUrl,
+          }));
+          
+          if (userData.profileImageUrl) {
+            setProfileImage(userData.profileImageUrl);
+          }
+          
+          // 성공 메시지 표시
+          const successMessage = section === "basic" 
+            ? "이름이 성공적으로 수정되었습니다." 
+            : section === "phone"
+            ? "전화번호가 성공적으로 수정되었습니다."
+            : "프로필이 성공적으로 수정되었습니다.";
+          
+          toast.success(successMessage, {
+            position: "top-right",
+            autoClose: 2000,
+          });
+        }
       }
     } catch (error) {
-      console.error('사용자 프로필 수정 실패:', error);
+      console.error('사용자 정보 수정 실패:', error);
       // 에러 메시지 추출
       const errorStatus = error.status || error.response?.status || '알 수 없음';
-      const errorMessage = error.error?.message || error.message || '프로필 수정에 실패했습니다.';
+      const errorMessage = error.error?.message || error.message || '정보 수정에 실패했습니다.';
       
       // react-toastify로 에러 메시지 표시
       toast.error(`[${errorStatus}] ${errorMessage}`, {
