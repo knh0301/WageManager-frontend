@@ -46,22 +46,22 @@ export default function SignupPage() {
         const kakaoAccount = userResponse.data.kakao_account;
         const profile = kakaoAccount?.profile;
         // 카카오 이름 정보 가져오기 (우선순위: profile.nickname > kakao_account.name > properties.nickname)
-        const name = profile?.nickname || kakaoAccount?.name || userResponse.data.properties?.nickname || '카카오사용자';
+        const kakaoNameFromResponse = profile?.nickname || kakaoAccount?.name || userResponse.data.properties?.nickname || '카카오사용자';
         const profileImageUrlFromResponse = profile?.profile_image_url;
         
         console.log('카카오 ID:', kakaoIdFromResponse);
-        console.log('카카오 이름:', name);
+        console.log('카카오 이름:', kakaoNameFromResponse);
         console.log('카카오 프로필 이미지 URL:', profileImageUrlFromResponse);
         console.log('카카오 사용자 전체 데이터:', userResponse.data);
         console.log('카카오 계정 정보:', kakaoAccount);
         console.log('카카오 프로필 정보:', profile);
         
         setKakaoId(String(kakaoIdFromResponse));
-        setKakaoName(name || '카카오사용자');
+        setKakaoName(kakaoNameFromResponse || '카카오사용자');
         setProfileImageUrl(profileImageUrlFromResponse || '');
         // 카카오에서 가져온 이름을 기본값으로 설정 (사용자가 수정 가능)
-        if (name) {
-          setName(name);
+        if (kakaoNameFromResponse) {
+          setName(kakaoNameFromResponse);
         }
       } catch (error) {
         console.error('카카오 사용자 정보 가져오기 실패:', error);
