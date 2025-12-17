@@ -74,13 +74,12 @@ export default function EmployerMyPageReceive() {
               });
             }
           } catch (error) {
-            console.error(`근무지 ${workplace.id} 요청 조회 실패:`, error);
+            // 개별 근무지 요청 조회 실패 무시
           }
         }
 
         setRequests(allRequests);
       } catch (error) {
-        console.error("데이터 로드 실패:", error);
         Swal.fire("오류", "데이터를 불러오는데 실패했습니다.", "error");
       } finally {
         setLoading(false);
@@ -139,7 +138,6 @@ export default function EmployerMyPageReceive() {
 
         Swal.fire("승인 완료", `${request.type === 'correction' ? '정정' : '근무'} 요청이 승인되었습니다.`, "success");
       } catch (error) {
-        console.error("승인 실패:", error);
         Swal.fire("승인 실패", error.message || "승인 처리 중 오류가 발생했습니다.", "error");
       }
     }
@@ -172,7 +170,6 @@ export default function EmployerMyPageReceive() {
 
         Swal.fire("거절 완료", `${request.type === 'correction' ? '정정' : '근무'} 요청이 거절되었습니다.`, "success");
       } catch (error) {
-        console.error("거절 실패:", error);
         Swal.fire("거절 실패", error.message || "거절 처리 중 오류가 발생했습니다.", "error");
       }
     }

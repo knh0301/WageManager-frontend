@@ -26,7 +26,6 @@ export default function EmployerMyPage() {
         setUser(data);
         setProfileImage(data.profileImageUrl);
       } catch (error) {
-        console.error("사용자 정보 조회 실패:", error);
         Swal.fire("오류", "사용자 정보를 불러오는데 실패했습니다.", "error");
       } finally {
         setLoading(false);
@@ -58,7 +57,6 @@ export default function EmployerMyPage() {
         await userService.updateMyInfo(updateData);
         Swal.fire("저장 완료", "정보가 수정되었습니다.", "success");
       } catch (error) {
-        console.error("정보 수정 실패:", error);
         Swal.fire("수정 실패", error.message || "정보 수정 중 오류가 발생했습니다.", "error");
         return;
       }
@@ -115,7 +113,6 @@ export default function EmployerMyPage() {
         localStorage.clear();
         navigate("/");
       } catch (error) {
-        console.error("회원 탈퇴 실패:", error);
         Swal.fire("탈퇴 실패", error.message || "회원 탈퇴 중 오류가 발생했습니다.", "error");
       }
     }

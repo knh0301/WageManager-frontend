@@ -53,7 +53,6 @@ export default function AddWorkplacePage() {
     }
 
     // TODO: 백엔드 API 연동
-    console.log("근무지 추가:", formData);
 
     Swal.fire({
       title: "추가 완료",

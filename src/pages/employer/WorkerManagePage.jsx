@@ -63,7 +63,6 @@ export default function WorkerManagePage() {
           setSelectedWorkplaceId(data[0].id);
         }
       } catch (error) {
-        console.error("근무지 조회 실패:", error);
         // 에러 시 더미 데이터 사용
         setWorkplaces(initialWorkplaces);
         if (!selectedWorkplaceId) {
@@ -80,13 +79,11 @@ export default function WorkerManagePage() {
 
     try {
       const contracts = await contractService.getContractsByWorkplace(workplaceId);
-      console.log('WorkerManagePage - Fetched contracts:', contracts);
       setWorkersList((prev) => ({
         ...prev,
         [workplaceId]: contracts,
       }));
     } catch (error) {
-      console.error("근로자 목록 조회 실패:", error);
       // 에러 시 빈 배열 사용
       setWorkersList((prev) => ({
         ...prev,
@@ -138,10 +135,8 @@ export default function WorkerManagePage() {
 
       try {
         const fullContract = await contractService.getContract(currentWorker.id);
-        console.log('WorkerManagePage - Full contract:', fullContract);
         setFullContractData(fullContract);
       } catch (error) {
-        console.error('전체 계약 정보 조회 실패:', error);
         setFullContractData(null);
       }
     };
@@ -176,7 +171,6 @@ export default function WorkerManagePage() {
           7: '일'
         };
 
-        console.log('WorkerManagePage - Parsing workSchedules:', schedules);
         schedules.forEach(schedule => {
           const dayName = dayMapping[schedule.dayOfWeek];
           if (dayName) {
@@ -186,10 +180,9 @@ export default function WorkerManagePage() {
             };
           }
         });
-        console.log('WorkerManagePage - Parsed weeklySchedule:', weeklySchedule);
       }
     } catch (error) {
-      console.error('workSchedules 파싱 실패:', error);
+      // workSchedules 파싱 실패 무시
     }
 
     // payrollDeductionType에서 보험/세금 정보 추출
@@ -343,7 +336,6 @@ export default function WorkerManagePage() {
         setIsEditingWork(false);
         setEditedWorkInfo(null);
       } catch (error) {
-        console.error("근무 정보 수정 실패:", error);
         Swal.fire("수정 실패", error.message || "근무 정보 수정 중 오류가 발생했습니다.", "error");
       }
     }
@@ -440,7 +432,6 @@ export default function WorkerManagePage() {
         "success"
       );
     } catch (error) {
-      console.error("근무지 추가 실패:", error);
       Swal.fire("추가 실패", error.message || "근무지 추가 중 오류가 발생했습니다.", "error");
     }
   };
@@ -537,7 +528,6 @@ export default function WorkerManagePage() {
             "success"
           );
         } catch (error) {
-          console.error("근무지 삭제 실패:", error);
           Swal.fire("삭제 실패", error.message || "근무지 삭제 중 오류가 발생했습니다.", "error");
         }
       }
@@ -642,7 +632,6 @@ export default function WorkerManagePage() {
 
       Swal.fire("수정 완료", "근무지 정보가 수정되었습니다.", "success");
     } catch (error) {
-      console.error("근무지 수정 실패:", error);
       Swal.fire("수정 실패", error.message || "근무지 수정 중 오류가 발생했습니다.", "error");
     }
   };
@@ -712,7 +701,6 @@ export default function WorkerManagePage() {
           "success"
         );
       } catch (error) {
-        console.error("퇴사 처리 실패:", error);
         Swal.fire("퇴사 처리 실패", error.message || "퇴사 처리 중 오류가 발생했습니다.", "error");
       }
     }
@@ -744,7 +732,6 @@ export default function WorkerManagePage() {
       }
     } catch (error) {
       setIsSearching(false);
-      console.error("근무자 코드 검색 실패:", error);
       Swal.fire(
         "검색 실패",
         error.error?.message || "해당 근무자 코드를 찾을 수 없습니다.",
@@ -887,7 +874,6 @@ export default function WorkerManagePage() {
       // 추가된 근무자 선택 (response는 생성된 계약 객체)
       setSelectedWorker(response);
     } catch (error) {
-      console.error("근무자 추가 실패:", error);
       Swal.fire(
         "추가 실패",
         error.error?.message || "근무자 추가 중 오류가 발생했습니다.",

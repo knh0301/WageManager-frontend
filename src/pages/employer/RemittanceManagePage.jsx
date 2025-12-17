@@ -30,7 +30,6 @@ export default function RemittanceManagePage() {
           setSelectedWorkplaceId(data[0].id);
         }
       } catch (error) {
-        console.error("근무지 조회 실패:", error);
         // 에러 시 더미 데이터 사용
         setWorkplaces(initialWorkplaces);
         if (!selectedWorkplaceId) {
@@ -48,14 +47,11 @@ export default function RemittanceManagePage() {
     const fetchWorkers = async () => {
       try {
         const workers = await contractService.getContractsByWorkplace(selectedWorkplaceId);
-        console.log('RemittancePage - Fetched workers from API:', workers);
         setWorkersList((prev) => ({
           ...prev,
           [selectedWorkplaceId]: workers,
         }));
       } catch (error) {
-        console.error("근로자 목록 조회 실패:", error);
-        console.log('RemittancePage - Using dummy data:', workplaceWorkers[selectedWorkplaceId]);
         // 에러 시 더미 데이터 사용
         setWorkersList((prev) => ({
           ...prev,
@@ -84,7 +80,6 @@ export default function RemittanceManagePage() {
 
         setWorkRecords(data);
       } catch (error) {
-        console.error("근무 기록 조회 실패:", error);
         setWorkRecords([]);
       }
     };
@@ -97,9 +92,6 @@ export default function RemittanceManagePage() {
 
   const workers = useMemo(() => {
     const result = workersList[selectedWorkplaceId] || [];
-    console.log('RemittancePage - workers:', result);
-    console.log('RemittancePage - selectedWorkplaceId:', selectedWorkplaceId);
-    console.log('RemittancePage - workersList:', workersList);
     return result;
   }, [selectedWorkplaceId, workersList]);
 
@@ -125,20 +117,15 @@ export default function RemittanceManagePage() {
 
   // 근무 기록을 표시용 데이터로 변환
   const workerData = useMemo(() => {
-    console.log('RemittancePage - currentSelectedWorker:', currentSelectedWorker);
-    console.log('RemittancePage - workRecords:', workRecords);
 
     if (!currentSelectedWorker || !workRecords.length) {
-      console.log('RemittancePage - No worker or no records');
       return [];
     }
 
     // 선택된 근로자의 근무 기록만 필터링
     const filtered = workRecords.filter(record => {
-      console.log('RemittancePage - Comparing:', record.workerName, '===', currentSelectedWorker.workerName);
       return record.workerName === currentSelectedWorker.workerName;
     });
-    console.log('RemittancePage - Filtered records:', filtered);
 
     return filtered
       .map(record => {

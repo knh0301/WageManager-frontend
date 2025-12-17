@@ -46,7 +46,6 @@ export default function DailyCalendarPage() {
           setSelectedWorkplaceId(data[0].id);
         }
       } catch (error) {
-        console.error("근무지 조회 실패:", error);
         // 에러 시 더미 데이터 사용
         setWorkplaces(initialWorkplaces);
         setSelectedWorkplaceId(1);
@@ -87,7 +86,6 @@ export default function DailyCalendarPage() {
         const transformedData = transformWorkRecordsToScheduleData(data);
         setScheduleData(transformedData);
       } catch (error) {
-        console.error("근무 기록 조회 실패:", error);
         // 에러 시 더미 데이터 사용
         setScheduleData(initialScheduleData);
       }
@@ -306,7 +304,6 @@ export default function DailyCalendarPage() {
         const workers = await contractService.getWorkersByWorkplace(selectedWorkplaceId);
         setWorkersInWorkplace(workers);
       } catch (error) {
-        console.error("근로자 목록 조회 실패:", error);
         // 에러 시 더미 데이터 사용
         setWorkersInWorkplace(workplaceWorkers[selectedWorkplaceId] || []);
       }
@@ -385,7 +382,6 @@ export default function DailyCalendarPage() {
       const contractId = await contractService.getContractIdByWorkerName(selectedWorkplaceId, workerName);
 
       if (!contractId) {
-        console.error("근로자의 계약 정보를 찾을 수 없습니다.");
         return;
       }
 
@@ -421,7 +417,6 @@ export default function DailyCalendarPage() {
       // activeShiftId도 업데이트
       setActiveShiftId(`shift-${createdRecord.id}`);
     } catch (error) {
-      console.error("근무 기록 생성 실패:", error);
       // 실패 시 임시 데이터 유지 (사용자는 계속 편집 가능)
     }
   };
@@ -520,7 +515,6 @@ export default function DailyCalendarPage() {
               "success"
             );
           } catch (error) {
-            console.error("근무 기록 삭제 실패:", error);
             Swal.fire(
               "삭제 실패",
               "근무 기록 삭제 중 오류가 발생했습니다.",
@@ -706,7 +700,6 @@ export default function DailyCalendarPage() {
 
         await workRecordService.updateWorkRecord(shiftToUpdate.workRecordId, updateData);
       } catch (error) {
-        console.error("근무 기록 수정 실패:", error);
         // 실패 시에도 UI는 이미 업데이트된 상태 유지 (낙관적 업데이트)
       }
     }
