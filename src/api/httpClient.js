@@ -302,9 +302,9 @@ const httpClient = {
     console.log('[httpClient] response.ok:', response.ok);
     console.log('[httpClient] data.success:', data.success);
     
-    // 401 에러 처리: Refresh token으로 토큰 갱신 후 재시도
-    if (response.status === 401 && !originalRequest) {
-      console.log('[httpClient] 401 에러 감지 - 토큰 갱신 시도');
+    // 401, 403 에러 처리: Refresh token으로 토큰 갱신 후 재시도
+    if ((response.status === 401 || response.status === 403) && !originalRequest) {
+      console.log(`[httpClient] ${response.status} 에러 감지 - 토큰 갱신 시도`);
       
       // 이미 refresh token 요청 중이면 대기
       if (isRefreshing && refreshPromise) {
