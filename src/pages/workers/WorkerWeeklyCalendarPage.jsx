@@ -210,6 +210,9 @@ export default function WorkerWeeklyCalendarPage() {
         position: "top-right",
         autoClose: 3000,
       });
+      
+      // 에러를 다시 throw하여 WeeklyCalendar의 catch에서 처리되도록 함
+      throw error;
     }
   };
 
