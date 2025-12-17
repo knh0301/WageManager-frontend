@@ -145,6 +145,17 @@ export default function SignupPage() {
       return;
     }
 
+    // 이름 검증
+    if (!isValidName) {
+      Swal.fire({
+        icon: 'warning',
+        title: '이름을 올바르게 입력해주세요.',
+        text: '이름은 2자 이상 입력해주세요.',
+        confirmButtonColor: '#769fcd',
+      });
+      return;
+    }
+
     // 전화번호 형식 검증
     if (!isValidPhone) {
       Swal.fire({
@@ -170,14 +181,12 @@ export default function SignupPage() {
     try {
       // 카카오 회원가입 API 호출 (회원가입 + 로그인 동시 처리)
       console.log('카카오 회원가입 요청 중...');
-      console.log('전송할 카카오 이름:', kakaoName);
       const registerResponse = await kakaoRegister(
         kakaoAccessToken,
         userType,
         phone,
         kakaoPayLink,
-        profileImageUrl || '',
-        kakaoName || '카카오사용자' // 이름 정보도 함께 전달
+        profileImageUrl || ''
       );
       console.log('카카오 회원가입 응답:', registerResponse);
 
@@ -271,6 +280,25 @@ export default function SignupPage() {
         </div>
         {/* 내용 영역 */}
         <div className="signup-content">
+          {/* 이름 입력 */}
+          <div className="form-group">
+            <label className="form-label">
+              이름 <span className="required-star">*</span>
+            </label>
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="이름을 입력해주세요"
+              maxLength={20}
+              className="form-input"
+            />
+            {name && !isValidName && (
+              <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                이름은 2자 이상 입력해주세요.
+              </p>
+            )}
+          </div>
           {/* 전화번호 입력 */}
           <div className="form-group">
             <label className="form-label">
