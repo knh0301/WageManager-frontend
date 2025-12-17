@@ -199,6 +199,18 @@ export default function WorkerMyPage() {
         if (userData.profileImageUrl) {
           setProfileImage(userData.profileImageUrl);
         }
+        
+        // 성공 메시지 표시
+        const successMessage = section === "basic" 
+          ? "이름이 성공적으로 수정되었습니다." 
+          : section === "phone"
+          ? "전화번호가 성공적으로 수정되었습니다."
+          : "프로필이 성공적으로 수정되었습니다.";
+        
+        toast.success(successMessage, {
+          position: "top-right",
+          autoClose: 2000,
+        });
       }
     } catch (error) {
       console.error('사용자 프로필 수정 실패:', error);
