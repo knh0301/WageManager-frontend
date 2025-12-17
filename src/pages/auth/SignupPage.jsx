@@ -183,27 +183,10 @@ export default function SignupPage() {
       }
 
       // localStorage에 모든 데이터 저장
-      console.log('[SignupPage] 회원가입 성공 - localStorage 저장 시작');
-      console.log('[SignupPage] 저장할 데이터:', {
-        token: registerResponse.data.accessToken,
-        userId: registerResponse.data.userId,
-        name: registerResponse.data.name || kakaoName,
-        userType: registerResponse.data.userType,
-      });
-      
       localStorage.setItem('token', registerResponse.data.accessToken);
       localStorage.setItem('userId', String(registerResponse.data.userId));
       localStorage.setItem('name', registerResponse.data.name || kakaoName || '');
       localStorage.setItem('userType', registerResponse.data.userType || '');
-      
-      // 저장 확인
-      console.log('[SignupPage] localStorage 저장 후 확인:', {
-        token: localStorage.getItem('token'),
-        userId: localStorage.getItem('userId'),
-        name: localStorage.getItem('name'),
-        userType: localStorage.getItem('userType'),
-        allKeys: Object.keys(localStorage),
-      });
 
       // Redux에 모든 정보 저장
       dispatch(setAuthToken({

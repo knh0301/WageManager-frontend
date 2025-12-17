@@ -19,15 +19,6 @@ const getAuthHeaders = () => {
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.warn('[httpClient] localStorage에 token이 없습니다.');
-    console.warn('[httpClient] localStorage 전체 내용:', {
-      token: localStorage.getItem('token'),
-      userId: localStorage.getItem('userId'),
-      name: localStorage.getItem('name'),
-      userType: localStorage.getItem('userType'),
-      allKeys: Object.keys(localStorage),
-    });
   }
   return headers;
 };
@@ -148,16 +139,6 @@ const httpClient = {
       // Content-Type이 명시적으로 설정되지 않았으면 application/json으로 설정
       if (!headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
-      }
-      
-      // 디버깅: Authorization 헤더 확인
-      if (url.includes('correction-requests') || url.includes('work-records')) {
-        console.log('[httpClient] POST 요청 헤더 확인:', {
-          url,
-          hasAuthorization: !!headers.Authorization,
-          authorizationHeader: headers.Authorization ? `${headers.Authorization.substring(0, 20)}...` : '없음',
-          allHeaders: headers,
-        });
       }
       
       // options에서 headers를 제외한 나머지만 사용
@@ -408,7 +389,6 @@ const httpClient = {
     }
     
     // 200 응답인 경우
-    console.log('[httpClient] 정상 응답 반환');
     return data;
   },
 };
