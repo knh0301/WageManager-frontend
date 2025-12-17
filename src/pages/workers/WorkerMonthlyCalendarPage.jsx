@@ -112,7 +112,15 @@ function WorkerMonthlyCalendarPage() {
       try {
         // 1. 계약 목록 가져오기
         const contractsResponse = await getContracts();
-        const contractIds = contractsResponse.data || [];
+        
+        // 응답이 배열인지 확인
+        let contractIds = [];
+        if (Array.isArray(contractsResponse.data)) {
+          contractIds = contractsResponse.data;
+        } else if (contractsResponse.data) {
+          // 배열이 아닌 경우, 객체의 값들을 배열로 변환하거나 직접 사용
+          contractIds = [contractsResponse.data];
+        }
         
         if (contractIds.length === 0) {
           setWorkRecords({});
@@ -125,9 +133,13 @@ function WorkerMonthlyCalendarPage() {
         await Promise.all(
           contractIds.map(async (contractId) => {
             try {
-              const contractDetail = await getContractDetail(contractId);
+              // contractId가 객체인 경우 id 필드 추출
+              const id = typeof contractId === 'object' ? contractId.id : contractId;
+              
+              const contractDetail = await getContractDetail(id);
+              
               if (contractDetail.data?.hourlyWage !== undefined) {
-                hourlyWageMap[contractId] = contractDetail.data.hourlyWage;
+                hourlyWageMap[id] = contractDetail.data.hourlyWage;
               }
             } catch (error) {
               console.error(`[WorkerMonthlyCalendarPage] 계약 ${contractId} 상세 정보 조회 실패:`, error);
