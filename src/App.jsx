@@ -1,4 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setAuthToken } from "./features/auth/authSlice";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import WorkerLayout from "./layouts/WorkerLayout.jsx";
 import EmployerLayout from "./layouts/EmployerLayout.jsx";
@@ -16,6 +19,25 @@ import KakaoRedirect from "./pages/auth/KakaoRedirect.jsx";
 import SignupPage from "./pages/auth/SignupPage.jsx";
 
 function App() {
+  const dispatch = useDispatch();
+
+  // 새로고침 시 localStorage의 정보를 Redux에 복원
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    const name = localStorage.getItem('name');
+    const userType = localStorage.getItem('userType');
+
+    if (token && userId && name && userType) {
+      dispatch(setAuthToken({
+        accessToken: token,
+        userId: Number(userId),
+        name: name,
+        userType: userType,
+      }));
+    }
+  }, [dispatch]);
+
   return (
     <>
       <Routes>

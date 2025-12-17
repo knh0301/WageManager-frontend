@@ -77,3 +77,41 @@ export const getCorrectionRequests = async () => {
   }
 };
 
+// 근무 기록 정정 요청 생성
+export const createCorrectionRequest = async (payload) => {
+  try {
+    const response = await httpClient.post('/api/worker/correction-requests', payload);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] createCorrectionRequest 에러:', error);
+    throw error;
+  }
+};
+
+// 근로자 근무 기록 조회
+export const getWorkRecords = async (startDate, endDate) => {
+  try {
+    const url = `/api/worker/work-records?startDate=${startDate}&endDate=${endDate}`;
+    const response = await httpClient.get(url);
+    return response;
+  } catch (error) {
+    // 404 에러는 빈 배열로 처리
+    if (error.status === 404) {
+      return { success: true, data: [] };
+    }
+    console.error('[workerApi] getWorkRecords 에러:', error);
+    throw error;
+  }
+};
+
+// 근무 기록 생성 요청
+export const createWorkRecord = async (payload) => {
+  try {
+    const response = await httpClient.post('/api/worker/work-records', payload);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] createWorkRecord 에러:', error);
+    throw error;
+  }
+};
+

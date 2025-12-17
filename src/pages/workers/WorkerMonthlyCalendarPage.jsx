@@ -1,44 +1,25 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import "./WorkerMonthlyCalendarPage.css";
 import WorkEditRequestBox from "../../components/worker/MonthlyCalendarPage/WorkEditRequestBox";
 import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkModal";
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
+import { toast } from "react-toastify";
+import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest, createWorkRecord } from "../../api/workerApi";
 
 const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
-const initialWorkRecords = {
-  "2025-10-06": [
-    { id: 1, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-08": [
-    { id: 2, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-  "2025-10-13": [
-    { id: 3, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-15": [
-    { id: 4, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-    { id: 5, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-  "2025-10-20": [
-    { id: 6, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-27": [
-    { id: 7, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-22": [
-    { id: 8, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-};
 
-const workplaceOptions = ["맥도날드", "버거킹"];
-
-
-const workLabelColorByPlace = (place) => { // 근무지에 따른 라벨 색상 클래스명 반환
-  if (place.includes("버거킹")) return "burger";
-  if (place.includes("맥도날드")) return "mcdonald";
-  return "default";
+const workLabelColor = (contractId, status, contractColorMap) => { // contractId와 상태에 따른 라벨 색상 클래스명 반환
+  // PENDING_APPROVAL 상태인 경우 회색으로 표시
+  if (status === "PENDING_APPROVAL") return "pending";
+  
+  // contractId를 기반으로 색상 인덱스 가져오기
+  const colorIndex = contractColorMap[contractId] ?? 3; // 기본값은 3 (4번째 색상)
+  
+  // 색상 인덱스에 따라 클래스명 반환 (0: red, 1: yellow, 2: mint, 3: brown)
+  const colorClasses = ["red", "yellow", "mint", "brown"];
+  return colorClasses[colorIndex] || "brown";
 };
 
 const getKoreanDayLabel = (dayIndex) => { 
@@ -46,12 +27,80 @@ const getKoreanDayLabel = (dayIndex) => {
   return map[dayIndex] || "";
 };
 
+// 시간 객체를 "HH:mm" 형식으로 변환
+const formatTime = (timeObj) => {
+  if (!timeObj) return "00:00";
+  
+  // hour와 minute이 직접 있는 경우
+  if (typeof timeObj.hour !== 'undefined' && typeof timeObj.minute !== 'undefined') {
+    const hour = String(timeObj.hour || 0).padStart(2, "0");
+    const minute = String(timeObj.minute || 0).padStart(2, "0");
+    return `${hour}:${minute}`;
+  }
+  
+  // 문자열 형식인 경우 (예: "09:00" 또는 "09:00:00")
+  if (typeof timeObj === 'string') {
+    // "HH:mm:ss" 형식을 "HH:mm"으로 변환
+    const parts = timeObj.split(':');
+    if (parts.length >= 2) {
+      return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+    }
+    return timeObj;
+  }
+  
+  return "00:00";
+};
+
+// API 응답 데이터를 더미데이터 형식으로 매핑
+const mapWorkRecords = (apiData, hourlyWageMap) => {
+  const recordsByDate = {};
+  const memosByDate = {};
+
+  if (!apiData || !Array.isArray(apiData)) {
+    return { recordsByDate, memosByDate };
+  }
+
+  apiData.forEach((record) => {
+    const dateKey = record.workDate;
+    const contractId = record.contractId;
+    const hourlyWage = hourlyWageMap[contractId] || 0;
+    
+    // totalWorkMinutes를 사용하여 급여 계산 (분 단위를 시간으로 변환)
+    const wage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
+
+    const mappedRecord = {
+      id: record.id,
+      contractId: record.contractId,
+      start: formatTime(record.startTime),
+      end: formatTime(record.endTime),
+      wage: wage,
+      place: record.workplaceName,
+      breakMinutes: record.breakMinutes || 0,
+      totalWorkMinutes: record.totalWorkMinutes || 0,
+      status: record.status,
+      isModified: record.isModified,
+    };
+
+    if (!recordsByDate[dateKey]) {
+      recordsByDate[dateKey] = [];
+    }
+    recordsByDate[dateKey].push(mappedRecord);
+
+    // memo 저장 (빈 문자열이어도 저장)
+    if (record.memo !== undefined) {
+      memosByDate[dateKey] = record.memo || "";
+    }
+  });
+
+  return { recordsByDate, memosByDate };
+};
+
 function WorkerMonthlyCalendarPage() {
   const today = new Date();
 
   const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => today.getMonth());
-  const [workRecords] = useState(initialWorkRecords);
+  const [workRecords, setWorkRecords] = useState({});
   const [memos, setMemos] = useState({});
 
   const [selectedDateKey, setSelectedDateKey] = useState(() =>
@@ -61,6 +110,133 @@ function WorkerMonthlyCalendarPage() {
   const [editForm, setEditForm] = useState(null); // 수정 요청 폼 상태
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); 
   const [addForm, setAddForm] = useState(null);
+  const [workplaceOptions, setWorkplaceOptions] = useState([]); // 근무지 목록
+  const [contractColorMap, setContractColorMap] = useState({}); // contractId -> 색상 인덱스 맵
+
+  // 근무 기록 가져오기 함수 (재사용 가능하도록 분리)
+  const fetchWorkRecords = useCallback(async () => {
+    try {
+      // 1. 계약 목록 가져오기
+      const contractsResponse = await getContracts();
+      
+      // 응답이 배열인지 확인
+      let contractIds = [];
+      if (Array.isArray(contractsResponse.data)) {
+        contractIds = contractsResponse.data;
+      } else if (contractsResponse.data) {
+        // 배열이 아닌 경우, 객체의 값들을 배열로 변환하거나 직접 사용
+        contractIds = [contractsResponse.data];
+      }
+      
+      if (contractIds.length === 0) {
+        setWorkRecords({});
+        setMemos({});
+        return;
+      }
+
+      // 2. 각 계약의 시급 정보 가져오기
+      const hourlyWageMap = {};
+      await Promise.all(
+        contractIds.map(async (contractId) => {
+          try {
+            // contractId가 객체인 경우 id 필드 추출
+            const id = typeof contractId === 'object' ? contractId.id : contractId;
+            
+            const contractDetail = await getContractDetail(id);
+            
+            if (contractDetail.data?.hourlyWage !== undefined) {
+              hourlyWageMap[id] = contractDetail.data.hourlyWage;
+            }
+          } catch (error) {
+            console.error(`[WorkerMonthlyCalendarPage] 계약 ${contractId} 상세 정보 조회 실패:`, error);
+          }
+        })
+      );
+
+      // 3. 현재 월의 시작일과 종료일 계산
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const startDate = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(1)}`;
+      const endDate = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(lastDay.getDate())}`;
+
+      // 4. 근무 기록 가져오기
+      const workRecordsResponse = await getWorkRecords(startDate, endDate);
+      const workRecordsData = workRecordsResponse.data || [];
+
+      // 5. 데이터 매핑
+      const { recordsByDate, memosByDate } = mapWorkRecords(workRecordsData, hourlyWageMap);
+      setWorkRecords(recordsByDate);
+      setMemos((prev) => ({ ...prev, ...memosByDate }));
+    } catch (error) {
+      console.error("[WorkerMonthlyCalendarPage] 근무 기록 조회 실패:", error);
+      setWorkRecords({});
+      setMemos({});
+    }
+  }, [currentYear, currentMonth]);
+
+  // 근무지 목록 가져오기
+  useEffect(() => {
+    const fetchWorkplaces = async () => {
+      try {
+        // 1. 계약 목록 가져오기
+        const contractsResponse = await getContracts();
+        
+        // 응답이 배열인지 확인
+        let contracts = [];
+        if (Array.isArray(contractsResponse.data)) {
+          contracts = contractsResponse.data;
+        } else if (contractsResponse.data) {
+          contracts = [contractsResponse.data];
+        }
+        
+        // 2. 각 계약의 상세 정보를 가져와서 workplaceName 포함
+        const workplaces = await Promise.all(
+          contracts.map(async (contract) => {
+            const contractId = typeof contract === 'object' ? contract.id : contract;
+            
+            try {
+              const contractDetail = await getContractDetail(contractId);
+              return {
+                id: contractId,
+                workerName: contractDetail.data?.workerName || contract.workerName || '',
+                workplaceName: contractDetail.data?.workplaceName || '',
+              };
+            } catch (error) {
+              console.error(`[WorkerMonthlyCalendarPage] 계약 ${contractId} 상세 정보 조회 실패:`, error);
+              return {
+                id: contractId,
+                workerName: contract.workerName || '',
+                workplaceName: '',
+              };
+            }
+          })
+        );
+        
+        setWorkplaceOptions(workplaces);
+        
+        // contractId -> 색상 인덱스 맵 생성 (순서대로 0, 1, 2, 3, 3, 3...)
+        const colorMap = {};
+        workplaces.forEach((workplace, index) => {
+          // 0: red, 1: yellow, 2: mint, 3: brown (4번째부터는 모두 brown)
+          colorMap[workplace.id] = Math.min(index, 3);
+        });
+        setContractColorMap(colorMap);
+      } catch (error) {
+        console.error("[WorkerMonthlyCalendarPage] 근무지 목록 조회 실패:", error);
+        setWorkplaceOptions([]);
+        setContractColorMap({});
+      }
+    };
+    
+    fetchWorkplaces();
+  }, []);
+
+  // API에서 근무 기록 가져오기
+  useEffect(() => {
+    const loadWorkRecords = async () => {
+      await fetchWorkRecords();
+    };
+    loadWorkRecords();
+  }, [fetchWorkRecords]);
 
   const handlePrevMonth = () => { // 이전 달로 이동
     setCurrentMonth((prev) => {
@@ -109,11 +285,9 @@ function WorkerMonthlyCalendarPage() {
       const [y, m] = key.split("-").map(Number);
       if (y === currentYear && m === currentMonth + 1) {
         list.forEach((record) => {
-          const [sh, sm] = record.start.split(":").map(Number);
-          const [eh, em] = record.end.split(":").map(Number);
-          const diff = eh * 60 + em - (sh * 60 + sm);
-          minutes += diff;
-          wage += record.wage;
+          // totalWorkMinutes 사용 (API에서 제공)
+          minutes += record.totalWorkMinutes || 0;
+          wage += record.wage || 0;
         });
       }
     });
@@ -161,6 +335,7 @@ function WorkerMonthlyCalendarPage() {
 
     const formData = {
       recordId: record.id,
+      contractId: record.contractId,
       originalDateKey: dateKey,
       place: record.place,
       wage: record.wage,
@@ -191,21 +366,97 @@ function WorkerMonthlyCalendarPage() {
     setEditForm(null);
   };
 
-  const handleConfirmEdit = (form) => { // 수정 요청 확인 핸들러
-    // TODO: 백엔드로 수정 요청 보내기
-    console.log("edit request payload:", form);
-    setEditForm(null);
+  const handleConfirmEdit = async (form) => { // 수정 요청 확인 핸들러
+    try {
+      // 1. 해당 workRecordId가 현재 로그인한 근로자의 근무 기록인지 확인
+      const [year, month, day] = form.date.split("-").map(Number);
+      const targetDate = new Date(year, month - 1, day);
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth();
+      
+      // 해당 날짜가 포함된 월의 시작일과 종료일 계산
+      const lastDay = new Date(targetYear, targetMonth + 1, 0);
+      const startDate = `${targetYear}-${pad2(targetMonth + 1)}-${pad2(1)}`;
+      const endDate = `${targetYear}-${pad2(targetMonth + 1)}-${pad2(lastDay.getDate())}`;
+      
+      // 해당 월의 근무 기록 가져오기
+      const workRecordsResponse = await getWorkRecords(startDate, endDate);
+      const workRecordsData = workRecordsResponse.data || [];
+      
+      // workRecordId가 현재 근로자의 근무 기록 목록에 있는지 확인
+      const workRecordId = Number(form.recordId);
+      const isValidWorkRecord = workRecordsData.some(
+        (record) => Number(record.id) === workRecordId
+      );
+      
+      if (!isValidWorkRecord) {
+        toast.error(
+          "[FORBIDDEN] 본인의 근무 기록만 정정 요청할 수 있습니다.",
+          {
+            position: "top-right",
+            autoClose: 3000,
+          }
+        );
+        return;
+      }
+
+      // 2. 정정 요청 보내기
+      // 시간을 "HH:mm:ss" 형식의 문자열로 변환
+      const startTimeStr = `${pad2(Number(form.startHour))}:${pad2(Number(form.startMinute))}:00`;
+      const endTimeStr = `${pad2(Number(form.endHour))}:${pad2(Number(form.endMinute))}:00`;
+      
+      const payload = {
+        workRecordId: workRecordId,
+        requestedWorkDate: form.date,
+        requestedStartTime: startTimeStr,
+        requestedEndTime: endTimeStr,
+      };
+
+      const response = await createCorrectionRequest(payload);
+
+      if (response?.success) {
+        toast.success("근무 기록 정정 요청이 접수되었습니다.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setEditForm(null);
+        return;
+      }
+
+      const errorMessage =
+        response?.error?.message || "근무 기록 정정 요청에 실패했습니다.";
+      const errorCode = response?.error?.code || "UNKNOWN";
+
+      toast.error(`[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      const status = error.status || error.response?.status || "";
+      const statusText = status ? `[${status}] ` : "";
+      const errorMessage =
+        error.error?.message ||
+        error.message ||
+        "근무 기록 정정 요청에 실패했습니다.";
+      const errorCode =
+        error.error?.code || error.errorCode || "UNKNOWN";
+
+      toast.error(`${statusText}[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
   };
 
-  const handleDeleteRequest = (form) => { // 삭제 요청 핸들러
+  const handleDeleteRequest = () => { // 삭제 요청 핸들러
     // TODO: 백엔드로 삭제 요청 보내기
-    console.log("delete request payload:", form);
     setEditForm(null);
   };
 
   const handleOpenAddModal = () => { // 근무 추가 모달 열기
+    const defaultContractId = workplaceOptions.length > 0 ? workplaceOptions[0].id : null;
     setAddForm({
-      place: workplaceOptions[0],
+      contractId: defaultContractId,
       date: selectedDateKey,
       startHour: "09",
       startMinute: "00",
@@ -221,10 +472,88 @@ function WorkerMonthlyCalendarPage() {
     setAddForm(null);
   };
 
-  const handleConfirmAddWork = (form) => { // 근무 추가 확인 핸들러
-    // TODO: 백엔드에 근무 추가 API 호출
-    console.log("add work payload:", form);
-    handleCloseAddModal();
+  const handleConfirmAddWork = async (form) => { // 근무 추가 확인 핸들러
+    try {
+      // 1. contractId가 현재 로그인한 근로자의 계약 목록에 있는지 확인
+      const contractsResponse = await getContracts();
+      
+      let contracts = [];
+      if (Array.isArray(contractsResponse.data)) {
+        contracts = contractsResponse.data;
+      } else if (contractsResponse.data) {
+        contracts = [contractsResponse.data];
+      }
+      
+      // contractId 추출 및 검증 (타입 정규화: 모두 숫자로 변환)
+      const contractIds = contracts.map((contract) => {
+        const id = typeof contract === 'object' ? contract.id : contract;
+        return Number(id);
+      });
+      
+      const contractId = Number(form.contractId);
+      
+      if (!contractIds.includes(contractId)) {
+        toast.error(
+          "[FORBIDDEN] 본인의 계약만 사용하여 근무를 추가할 수 있습니다.",
+          {
+            position: "top-right",
+            autoClose: 3000,
+          }
+        );
+        return;
+      }
+
+      // 2. 근무 추가 요청 보내기
+      // 시간을 "HH:mm:ss" 형식의 문자열로 변환
+      const startTimeStr = `${pad2(Number(form.startHour))}:${pad2(Number(form.startMinute))}:00`;
+      const endTimeStr = `${pad2(Number(form.endHour))}:${pad2(Number(form.endMinute))}:00`;
+      
+      const payload = {
+        contractId: contractId,
+        workDate: form.date,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+        breakMinutes: form.breakMinutes || 0,
+        memo: "",
+      };
+
+      const response = await createWorkRecord(payload);
+
+      if (response?.success) {
+        toast.success("근무 추가 요청이 접수되었습니다.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        
+        // 근무 기록 다시 불러오기
+        await fetchWorkRecords();
+        handleCloseAddModal();
+        return;
+      }
+
+      const errorMessage =
+        response?.error?.message || "근무 추가 요청에 실패했습니다.";
+      const errorCode = response?.error?.code || "UNKNOWN";
+
+      toast.error(`[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      const status = error.status || error.response?.status || "";
+      const statusText = status ? `[${status}] ` : "";
+      const errorMessage =
+        error.error?.message ||
+        error.message ||
+        "근무 추가 요청에 실패했습니다.";
+      const errorCode =
+        error.error?.code || error.errorCode || "UNKNOWN";
+
+      toast.error(`${statusText}[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
   };
 
   return (
@@ -251,7 +580,8 @@ function WorkerMonthlyCalendarPage() {
           workRecords={workRecords}
           onSelectDay={handleDateClick}
           makeDateKey={makeDateKey}
-          workLabelColorByPlace={workLabelColorByPlace}
+          workLabelColor={workLabelColor}
+          contractColorMap={contractColorMap}
           todayKey={todayKey}
         />
 

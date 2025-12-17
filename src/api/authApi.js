@@ -2,10 +2,6 @@ import httpClient from './httpClient';
 
 // 카카오 액세스 토큰으로 로그인
 export const kakaoLoginWithToken = async (kakaoAccessToken) => {
-  console.log('[authApi] kakaoLoginWithToken 호출 시작');
-  console.log('[authApi] kakaoAccessToken 존재 여부:', !!kakaoAccessToken);
-  console.log('[authApi] kakaoAccessToken 길이:', kakaoAccessToken?.length);
-  
   // 카카오 로그인 API는 인증이 필요 없으므로 Authorization 헤더 제거
   try {
     const result = await httpClient.post('/api/auth/kakao/login', { kakaoAccessToken }, {
@@ -15,18 +11,9 @@ export const kakaoLoginWithToken = async (kakaoAccessToken) => {
         Authorization: undefined, // Authorization 헤더 제거
       },
     });
-    
-    console.log('[authApi] kakaoLoginWithToken 성공:', result);
-    
+
     return result;
   } catch (error) {
-    console.error('[authApi] kakaoLoginWithToken 에러 발생:', error);
-    console.error('[authApi] 에러 상세 정보:', {
-      message: error.message,
-      status: error.status,
-      response: error.response,
-      data: error.response?.data,
-    });
     throw error;
   }
 };
@@ -42,9 +29,6 @@ export const kakaoRegister = async (kakaoAccessToken, userType, phone, kakaoPayL
     kakaoPayLink: kakaoPayLink,
     profileImageUrl: profileImageUrl || '',
   };
-  
-  console.log('[authApi] kakaoRegister 요청 본문:', requestBody);
-  console.log('[authApi] 필드 순서 확인:', Object.keys(requestBody));
   
   return httpClient.post('/api/auth/kakao/register', requestBody, {
     headers: {
@@ -79,8 +63,6 @@ export const devLogin = async (userId, name, userType) => {
 export const refreshAccessToken = async () => {
   const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER || 'http://localhost:8080';
   
-  console.log('[authApi] refreshAccessToken 호출 시작');
-  
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: 'POST',
@@ -90,9 +72,7 @@ export const refreshAccessToken = async () => {
         'Accept': 'application/json',
       },
     });
-    
-    console.log('[authApi] refreshAccessToken 응답 상태:', response.status);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       let errorData;
@@ -101,8 +81,6 @@ export const refreshAccessToken = async () => {
       } catch {
         errorData = { message: response.statusText };
       }
-      
-      console.error('[authApi] refreshAccessToken 실패:', errorData);
       
       throw {
         status: response.status,
@@ -117,18 +95,12 @@ export const refreshAccessToken = async () => {
     
     const data = await response.json();
     
-    console.log('[authApi] refreshAccessToken 성공:', {
-      success: data.success,
-      hasAccessToken: !!data.data?.accessToken,
-    });
-    
     if (data.success && data.data?.accessToken) {
       return data.data.accessToken;
     }
     
     throw new Error(data.error?.message || '토큰 갱신 실패');
   } catch (error) {
-    console.error('[authApi] refreshAccessToken 에러:', error);
     throw error;
   }
 };

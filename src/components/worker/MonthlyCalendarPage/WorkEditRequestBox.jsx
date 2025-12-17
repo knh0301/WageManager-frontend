@@ -31,8 +31,7 @@ function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel, vari
       original.startHour !== current.startHour ||
       original.startMinute !== current.startMinute ||
       original.endHour !== current.endHour ||
-      original.endMinute !== current.endMinute ||
-      (original.breakMinutes ?? 60) !== (current.breakMinutes ?? 60)
+      original.endMinute !== current.endMinute
     );
   }, [form]);
 
@@ -157,9 +156,7 @@ function WorkEditRequestBox({ form, setForm, onConfirm, onDelete, onCancel, vari
             <select
               className="work-edit-select"
               value={form.breakMinutes}
-              onChange={(e) =>
-                updateField("breakMinutes", Number(e.target.value))
-              }
+              disabled
             >
               {breakOptions.map((m) => (
                 <option key={m} value={m}>
