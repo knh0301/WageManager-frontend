@@ -4,8 +4,8 @@ import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo, getContracts, getContractDetail } from "../../api/workerApi";
-import { formatDateToKorean } from "../../utils/dateUtils";
+import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo, getContracts, getContractDetail, getCorrectionRequests } from "../../api/workerApi";
+import { formatDateToKorean, formatDateToMonthDay, formatTime } from "../../utils/dateUtils";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -203,30 +203,69 @@ export default function WorkerMyPage() {
     fetchWorkplaces();
   }, []);
 
-  // 임시 정정 요청 데이터
-  const [editRequests] = useState([
-    {
-      place: "맥도날드",
-      date: "2월 3일",
-      startTime: "15:00",
-      endTime: "21:00",
-      status: "approved",
-    },
-    {
-      place: "맥도날드",
-      date: "5월 27일",
-      startTime: "15:00",
-      endTime: "21:00",
-      status: "rejected",
-    },
-    {
-      place: "맥도날드",
-      date: "7월 14일",
-      startTime: "15:00",
-      endTime: "21:00",
-      status: "pending",
-    },
-  ]);
+  // 정정 요청 데이터
+  const [editRequests, setEditRequests] = useState([]);
+  const [isLoadingEditRequests, setIsLoadingEditRequests] = useState(false);
+
+  // 상태 변환 함수 (PENDING -> pending, APPROVED -> approved, REJECTED -> rejected)
+  const convertStatusToLowercase = (status) => {
+    if (!status) return "";
+    return status.toLowerCase();
+  };
+
+  // 정정 요청 목록 조회
+  useEffect(() => {
+    const fetchEditRequests = async () => {
+      try {
+        setIsLoadingEditRequests(true);
+        
+        const response = await getCorrectionRequests();
+        
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // workDate 기준 내림차순 정렬 (최신이 위로)
+          const sortedData = [...response.data].sort((a, b) => {
+            const dateA = a.workDate || "";
+            const dateB = b.workDate || "";
+            return dateB.localeCompare(dateA); // 내림차순
+          });
+          
+          // 데이터 매핑
+          const mappedRequests = sortedData
+            .map((request) => ({
+              place: request.workplaceName || "",
+              date: formatDateToMonthDay(request.workDate),
+              startTime: formatTime(request.requestedStartTime),
+              endTime: formatTime(request.requestedEndTime),
+              status: convertStatusToLowercase(request.status),
+            }))
+            .filter((request) => request.place && request.date && request.startTime && request.endTime); // 유효한 데이터만 필터링
+          
+          setEditRequests(mappedRequests);
+        } else {
+          // 에러 응답인 경우 빈 배열로 설정
+          setEditRequests([]);
+        }
+      } catch (error) {
+        console.error('정정 요청 목록 조회 실패:', error);
+        // 에러 메시지 추출
+        const errorStatus = error.status || error.response?.status || '알 수 없음';
+        const errorMessage = error.error?.message || error.message || '정정 요청 목록 조회에 실패했습니다.';
+        
+        // react-toastify로 에러 메시지 표시
+        toast.error(`[${errorStatus}] ${errorMessage}`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        
+        // 에러 시 빈 배열로 설정
+        setEditRequests([]);
+      } finally {
+        setIsLoadingEditRequests(false);
+      }
+    };
+
+    fetchEditRequests();
+  }, []);
 
   const handleUserUpdate = async (updatedUser, section) => {
     try {
@@ -327,7 +366,7 @@ export default function WorkerMyPage() {
           />
         );
       case "editRequest":
-        return <WorkEditRequestList requests={editRequests} />;
+        return <WorkEditRequestList requests={editRequests} isLoading={isLoadingEditRequests} />;
       default:
         return null;
     }

@@ -1,7 +1,16 @@
 import PropTypes from "prop-types";
 import "../../../pages/workers/WorkerMyPage.css";
 
-export default function WorkEditRequestList({ requests }) {
+export default function WorkEditRequestList({ requests, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="worker-mypage-container">
+        <h1 className="worker-mypage-title">보낸 근무 요청</h1>
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="worker-mypage-container">
       <h1 className="worker-mypage-title">보낸 근무 요청</h1>
@@ -63,5 +72,6 @@ WorkEditRequestList.propTypes = {
       status: PropTypes.string,
     })
   ),
+  isLoading: PropTypes.bool,
 };
 
