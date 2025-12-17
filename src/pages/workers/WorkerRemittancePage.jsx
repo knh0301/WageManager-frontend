@@ -156,27 +156,29 @@ export default function WorkerRemittancePage() {
           };
         });
 
-      // 날짜 기준으로 정렬
-      const sortedRecords = [...mappedRecords].sort((a, b) => {
-        if (sortOrder === "latest") {
-          return b.date - a.date; // 최신순 (큰 날짜가 먼저)
-        } else {
-          return a.date - b.date; // 과거순 (작은 날짜가 먼저)
-        }
-      });
-
-      setWorkRecords(sortedRecords);
+      setWorkRecords(mappedRecords);
     } catch (error) {
       console.error("[WorkerRemittancePage] 근무 기록 조회 실패:", error);
       setWorkRecords([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedWorkplaceId, currentYear, currentMonth, sortOrder]);
+  }, [selectedWorkplaceId, currentYear, currentMonth]);
 
   useEffect(() => {
     fetchWorkRecords();
   }, [fetchWorkRecords]);
+
+  // 근무 기록 정렬 (클라이언트 사이드)
+  const sortedWorkRecords = useMemo(() => {
+    return [...workRecords].sort((a, b) => {
+      if (sortOrder === "latest") {
+        return b.date - a.date; // 최신순 (큰 날짜가 먼저)
+      } else {
+        return a.date - b.date; // 과거순 (작은 날짜가 먼저)
+      }
+    });
+  }, [workRecords, sortOrder]);
 
   // 급여 계산 API 호출
   const fetchCalculatedSalary = useCallback(async () => {
@@ -421,7 +423,7 @@ export default function WorkerRemittancePage() {
 
         {/* 근무 상세 내역 */}
         <WorkDetailList
-          workRecords={workRecords}
+          workRecords={sortedWorkRecords}
           isLoading={isLoading}
           sortOrder={sortOrder}
           view={view}
