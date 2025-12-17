@@ -3,9 +3,9 @@ import "./WorkerRemittancePage.css";
 import {
   remittanceStatus,
 } from "./remittanceDummyData";
-import { formatCurrency, formatBreakTime } from "../employer/utils/formatUtils";
-import { allowanceDefinitions } from "../employer/utils/shiftUtils";
+import { formatCurrency } from "../employer/utils/formatUtils";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
+import WorkDetailList from "../../components/worker/RemittancePage/WorkDetailList";
 import { getContracts, getContractDetail, getWorkRecords, getSalaries, getSalaryDetail } from "../../api/workerApi";
 import { formatTime, parseWorkDate, pad2 } from "../../utils/dateUtils";
 
@@ -190,9 +190,9 @@ export default function WorkerRemittancePage() {
 
       // 날짜 기준으로 정렬
       const sortedRecords = [...mappedRecords].sort((a, b) => {
-        if (sortOrder === "latest") {
+      if (sortOrder === "latest") {
           return b.date - a.date; // 최신순 (큰 날짜가 먼저)
-        } else {
+      } else {
           return a.date - b.date; // 과거순 (작은 날짜가 먼저)
         }
       });
@@ -391,197 +391,16 @@ export default function WorkerRemittancePage() {
         </div>
 
         {/* 근무 상세 내역 */}
-        <div className="remittance-detail-section">
-          {/* 근무 상세 내역 헤더 및 정렬 드롭다운 */}
-          <div className="remittance-detail-header">
-            <h2 className="remittance-detail-title">근무 상세 내역</h2>
-            <div className="sort-dropdown-wrapper">
-              <button
-                type="button"
-                className="sort-dropdown-button"
-                onClick={() => setView(!view)}
-              >
-                <span>{sortOrder === "latest" ? "최신순" : "과거순"}</span>
-                {view ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
-              </button>
-              {view && (
-                <div className="sort-dropdown-menu">
-                  <button
-                    type="button"
-                    className={`sort-dropdown-item ${
-                      sortOrder === "latest" ? "active" : ""
-                    }`}
-                    onClick={() => handleSortSelect("latest")}
-                  >
-                    최신순
-                  </button>
-                  <button
-                    type="button"
-                    className={`sort-dropdown-item ${
-                      sortOrder === "oldest" ? "active" : ""
-                    }`}
-                    onClick={() => handleSortSelect("oldest")}
-                  >
-                    과거순
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          {/* 근무 상세 내역 리스트 */}
-          <div className="remittance-detail-list">
-          {isLoading ? (
-            <p className="no-data">로딩 중...</p>
-          ) : workRecords.length > 0 ? (
-            workRecords.map((record, index) => (
-              <div key={record.id}>
-                {/* 근무 내역 카드 (클릭 시 상세 정보 펼치기/접기) */}
-                <div
-                  className="remittance-detail-card"
-                  onClick={() => handleRecordClick(index)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    // 키보드 접근성: Enter 또는 Space 키로도 카드 클릭 가능
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleRecordClick(index);
-                    }
-                  }}
-                >
-                  <div className="detail-date">
-                    <span className="date-number">{record.date}</span>
-                    <span className="date-day">{record.day}</span>
-                  </div>
-                  <div className="detail-time">
-                    <span>
-                      {record.startTime} ~ {record.endTime} {record.workplace}
-                    </span>
-                  </div>
-                </div>
-                {/* 근무 상세 정보 패널 (카드 클릭 시 확장) */}
-                <div
-                  className={`remittance-detail-panel ${
-                    expandedRecordIndex === index ? "open" : ""
-                  }`}
-                >
-                  <div className="detail-panel-content">
-                    {/* 왼쪽 섹션: 기본 근무 정보 */}
-                    <div className="detail-left-section">
-                      <div className="detail-form-item">
-                        <label className="detail-form-label">근무지</label>
-                        <input
-                          type="text"
-                          className="detail-form-input"
-                          value={record.workplace}
-                          readOnly
-                        />
-                      </div>
-                      <div className="detail-form-item">
-                        <label className="detail-form-label">근무 시간</label>
-                        <div className="time-input-group">
-                          <input
-                            type="text"
-                            className="detail-form-input time-input"
-                            value={record.startTime}
-                            readOnly
-                          />
-                          <span className="time-separator">~</span>
-                          <input
-                            type="text"
-                            className="detail-form-input time-input"
-                            value={record.endTime}
-                            readOnly
-                          />
-                        </div>
-                      </div>
-                      <div className="detail-form-item">
-                        <label className="detail-form-label">휴게 시간</label>
-                        <input
-                          type="text"
-                          className="detail-form-input"
-                          value={formatBreakTime(record.breakMinutes)}
-                          readOnly
-                        />
-                      </div>
-                      <div className="detail-form-item">
-                        <label className="detail-form-label">시급</label>
-                        <input
-                          type="text"
-                          className="detail-form-input"
-                          value={formatCurrency(record.hourlyWage)}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                    {/* 오른쪽 섹션: 수당, 보험, 세금 정보 */}
-                    <div className="detail-right-section">
-                      {/* 수당 버튼들 (야간, 연장, 휴일 등) */}
-                      <div className="allowance-buttons">
-                        {allowanceDefinitions.map(({ key, label }) => {
-                          const allowance = record.allowances?.[key] || {
-                            enabled: false,
-                            rate: 0,
-                          };
-                          return (
-                            <button
-                              key={key}
-                              type="button"
-                              className={`allowance-button ${
-                                allowance.enabled ? "active" : ""
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {/* 야간 근무 수당이 활성화된 경우에만 표시 */}
-                      {record.allowances?.night?.enabled && (
-                        <div className="detail-form-item">
-                          <label className="detail-form-label">
-                            야간 근무 금액
-                          </label>
-                          <input
-                            type="text"
-                            className="detail-form-input"
-                            value={`${record.allowances.night.rate} %`}
-                            readOnly
-                          />
-                        </div>
-                      )}
-                      {/* 4대 보험 적용 여부 */}
-                      <div className="insurance-toggle-item">
-                        <label className="detail-form-label">4대 보험</label>
-                        <div
-                          className={`toggle-switch ${
-                            record.socialInsurance ? "on" : "off"
-                          }`}
-                        >
-                          <div className="toggle-slider"></div>
-                        </div>
-                      </div>
-                      {/* 소득세 원천징수 여부 */}
-                      <div className="insurance-toggle-item">
-                        <label className="detail-form-label">소득세</label>
-                        <div
-                          className={`toggle-switch ${
-                            record.withholdingTax ? "on" : "off"
-                          }`}
-                        >
-                          <div className="toggle-slider"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="no-data">근무 내역이 없습니다.</p>
-          )}
-          </div>
-        </div>
+        <WorkDetailList
+          workRecords={workRecords}
+          isLoading={isLoading}
+          sortOrder={sortOrder}
+          view={view}
+          expandedRecordIndex={expandedRecordIndex}
+          onSortSelect={handleSortSelect}
+          onViewToggle={() => setView(!view)}
+          onRecordClick={handleRecordClick}
+        />
   </div>
   );
 }
