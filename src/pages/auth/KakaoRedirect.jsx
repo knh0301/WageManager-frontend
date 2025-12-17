@@ -44,11 +44,28 @@ export default function KakaoRedirect() {
         
         // 3-1. 기존 회원인 경우 (200 응답)
         if (loginResponse.success && loginResponse.data.accessToken) {
+          console.log('[KakaoRedirect] 로그인 성공 - localStorage 저장 시작');
+          console.log('[KakaoRedirect] 저장할 데이터:', {
+            token: loginResponse.data.accessToken,
+            userId: loginResponse.data.userId,
+            name: loginResponse.data.name,
+            userType: loginResponse.data.userType,
+          });
+          
           // localStorage에 모든 데이터 저장
           localStorage.setItem('token', loginResponse.data.accessToken);
           localStorage.setItem('userId', String(loginResponse.data.userId));
           localStorage.setItem('name', loginResponse.data.name || '');
           localStorage.setItem('userType', loginResponse.data.userType || '');
+          
+          // 저장 확인
+          console.log('[KakaoRedirect] localStorage 저장 후 확인:', {
+            token: localStorage.getItem('token'),
+            userId: localStorage.getItem('userId'),
+            name: localStorage.getItem('name'),
+            userType: localStorage.getItem('userType'),
+            allKeys: Object.keys(localStorage),
+          });
           
           // Redux에 저장
           dispatch(setAuthToken({

@@ -19,6 +19,15 @@ const getAuthHeaders = () => {
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn('[httpClient] localStorage에 token이 없습니다.');
+    console.warn('[httpClient] localStorage 전체 내용:', {
+      token: localStorage.getItem('token'),
+      userId: localStorage.getItem('userId'),
+      name: localStorage.getItem('name'),
+      userType: localStorage.getItem('userType'),
+      allKeys: Object.keys(localStorage),
+    });
   }
   return headers;
 };
@@ -129,14 +138,26 @@ const httpClient = {
     try {
       const authHeaders = getAuthHeaders();
       // options.headers에 Authorization이 명시적으로 undefined로 설정되어 있으면 제거
+      // 단, options.headers가 없거나 Authorization이 명시되지 않은 경우에는 authHeaders의 Authorization을 유지
       const headers = { ...authHeaders, ...options.headers };
-      if (options.headers?.Authorization === undefined) {
+      // options.headers가 존재하고, 그 안에 Authorization이 명시적으로 undefined로 설정된 경우에만 제거
+      if (options.headers && options.headers.Authorization === undefined) {
         delete headers.Authorization;
       }
       
       // Content-Type이 명시적으로 설정되지 않았으면 application/json으로 설정
       if (!headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
+      }
+      
+      // 디버깅: Authorization 헤더 확인
+      if (url.includes('correction-requests') || url.includes('work-records')) {
+        console.log('[httpClient] POST 요청 헤더 확인:', {
+          url,
+          hasAuthorization: !!headers.Authorization,
+          authorizationHeader: headers.Authorization ? `${headers.Authorization.substring(0, 20)}...` : '없음',
+          allHeaders: headers,
+        });
       }
       
       // options에서 headers를 제외한 나머지만 사용

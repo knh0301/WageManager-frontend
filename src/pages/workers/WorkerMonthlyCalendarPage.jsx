@@ -331,6 +331,15 @@ function WorkerMonthlyCalendarPage() {
 
   const handleConfirmEdit = async (form) => { // 수정 요청 확인 핸들러
     try {
+      // 디버깅: 정정 요청 시작 시 localStorage 확인
+      console.log('[handleConfirmEdit] 정정 요청 시작 - localStorage 확인:', {
+        token: localStorage.getItem('token'),
+        userId: localStorage.getItem('userId'),
+        name: localStorage.getItem('name'),
+        userType: localStorage.getItem('userType'),
+        allKeys: Object.keys(localStorage),
+      });
+      
       // 1. 해당 workRecordId가 현재 로그인한 근로자의 근무 기록인지 확인
       const [year, month, day] = form.date.split("-").map(Number);
       const targetDate = new Date(year, month - 1, day);
@@ -389,7 +398,19 @@ function WorkerMonthlyCalendarPage() {
         },
       };
 
+      console.log("=== 근무 기록 정정 요청 ===");
+      console.log("요청 URL: POST /api/worker/correction-requests");
+      console.log("요청 Body:", payload);
+      console.log("===========================");
+
       const response = await createCorrectionRequest(payload);
+
+      console.log("=== 근무 기록 정정 요청 응답 ===");
+      console.log("응답 데이터:", response);
+      console.log("응답 success:", response?.success);
+      console.log("응답 data:", response?.data);
+      console.log("응답 error:", response?.error);
+      console.log("==============================");
 
       if (response?.success) {
         toast.success("근무 기록 정정 요청이 접수되었습니다.", {
@@ -409,6 +430,14 @@ function WorkerMonthlyCalendarPage() {
         autoClose: 3000,
       });
     } catch (error) {
+      console.log("=== 근무 기록 정정 요청 에러 ===");
+      console.log("에러 객체:", error);
+      console.log("에러 status:", error.status || error.response?.status);
+      console.log("에러 message:", error.message);
+      console.log("에러 error:", error.error);
+      console.log("에러 response:", error.response);
+      console.log("==============================");
+
       const status = error.status || error.response?.status || "";
       const statusText = status ? `[${status}] ` : "";
       const errorMessage =
