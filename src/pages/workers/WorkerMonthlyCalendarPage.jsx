@@ -170,6 +170,7 @@ function WorkerMonthlyCalendarPage() {
   useEffect(() => {
     const fetchWorkplaces = async () => {
       try {
+        // 1. 계약 목록 가져오기
         const contractsResponse = await getContracts();
         
         // 응답이 배열인지 확인
@@ -180,11 +181,28 @@ function WorkerMonthlyCalendarPage() {
           contracts = [contractsResponse.data];
         }
         
-        // 근무지 옵션 설정 (id와 workerName 포함)
-        const workplaces = contracts.map((contract) => ({
-          id: typeof contract === 'object' ? contract.id : contract,
-          workerName: contract.workerName || '',
-        }));
+        // 2. 각 계약의 상세 정보를 가져와서 workplaceName 포함
+        const workplaces = await Promise.all(
+          contracts.map(async (contract) => {
+            const contractId = typeof contract === 'object' ? contract.id : contract;
+            
+            try {
+              const contractDetail = await getContractDetail(contractId);
+              return {
+                id: contractId,
+                workerName: contractDetail.data?.workerName || contract.workerName || '',
+                workplaceName: contractDetail.data?.workplaceName || '',
+              };
+            } catch (error) {
+              console.error(`[WorkerMonthlyCalendarPage] 계약 ${contractId} 상세 정보 조회 실패:`, error);
+              return {
+                id: contractId,
+                workerName: contract.workerName || '',
+                workplaceName: '',
+              };
+            }
+          })
+        );
         
         setWorkplaceOptions(workplaces);
       } catch (error) {

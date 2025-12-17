@@ -56,7 +56,7 @@ function AddWorkModal({
           >
             {workplaceOptions.map((workplace) => (
               <option key={workplace.id} value={workplace.id}>
-                {workplace.workerName}
+                {workplace.workplaceName || workplace.workerName}
               </option>
             ))}
           </select>
@@ -187,6 +187,7 @@ AddWorkModal.propTypes = {
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       workerName: PropTypes.string.isRequired,
+      workplaceName: PropTypes.string,
     })
   ).isRequired,
   onConfirm: PropTypes.func.isRequired,
