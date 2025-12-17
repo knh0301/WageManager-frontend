@@ -11,9 +11,6 @@ const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 
 const workLabelColor = (contractId, status, contractColorMap) => { // contractId와 상태에 따른 라벨 색상 클래스명 반환
-  // PENDING_APPROVAL 상태인 경우 회색으로 표시
-  if (status === "PENDING_APPROVAL") return "pending";
-  
   // contractId를 기반으로 색상 인덱스 가져오기
   const colorIndex = contractColorMap[contractId] ?? 3; // 기본값은 3 (4번째 색상)
   
@@ -265,7 +262,9 @@ function WorkerMonthlyCalendarPage() {
     return cells;
   }, [currentYear, currentMonth]);
 
-  const recordsForSelectedDay = workRecords[selectedDateKey] || [];
+  const recordsForSelectedDay = (workRecords[selectedDateKey] || []).filter(
+    (record) => record.status !== "PENDING_APPROVAL"
+  );
 
   const handleMemoChange = (e) => { 
     const value = e.target.value;

@@ -260,7 +260,10 @@ function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
             date.getMonth(),
             date.getDate()
           );
-          const records = workRecords[dateKey] || [];
+          const allRecords = workRecords[dateKey] || [];
+          const records = allRecords.filter(
+            (record) => record.status !== "PENDING_APPROVAL"
+          );
           const dayLabel = getKoreanDayLabel(date.getDay());
           const dayNumber = date.getDate();
 
@@ -328,12 +331,14 @@ WeeklyCalendar.propTypes = {
     PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
+        contractId: PropTypes.number,
         start: PropTypes.string.isRequired,
         end: PropTypes.string.isRequired,
         wage: PropTypes.number.isRequired,
         place: PropTypes.string.isRequired,
         breakMinutes: PropTypes.number,
         totalWorkMinutes: PropTypes.number,
+        status: PropTypes.string,
       })
     )
   ),

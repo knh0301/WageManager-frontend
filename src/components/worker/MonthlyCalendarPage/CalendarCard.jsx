@@ -32,7 +32,9 @@ function CalendarCard({
           }
 
           const key = makeDateKey(currentYear, currentMonth, day);
-          const labels = workRecords[key] || [];
+          const labels = (workRecords[key] || []).filter(
+            (w) => w.status !== "PENDING_APPROVAL"
+          );
           const isSelected = selectedDateKey === key;
           const isToday = todayKey === key;
 
