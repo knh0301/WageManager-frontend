@@ -25,9 +25,25 @@ const getKoreanDayLabel = (dayIndex) => {
 // 시간 객체를 "HH:mm" 형식으로 변환
 const formatTime = (timeObj) => {
   if (!timeObj) return "00:00";
-  const hour = String(timeObj.hour || 0).padStart(2, "0");
-  const minute = String(timeObj.minute || 0).padStart(2, "0");
-  return `${hour}:${minute}`;
+  
+  // hour와 minute이 직접 있는 경우
+  if (typeof timeObj.hour !== 'undefined' && typeof timeObj.minute !== 'undefined') {
+    const hour = String(timeObj.hour || 0).padStart(2, "0");
+    const minute = String(timeObj.minute || 0).padStart(2, "0");
+    return `${hour}:${minute}`;
+  }
+  
+  // 문자열 형식인 경우 (예: "09:00" 또는 "09:00:00")
+  if (typeof timeObj === 'string') {
+    // "HH:mm:ss" 형식을 "HH:mm"으로 변환
+    const parts = timeObj.split(':');
+    if (parts.length >= 2) {
+      return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+    }
+    return timeObj;
+  }
+  
+  return "00:00";
 };
 
 // API 응답 데이터를 더미데이터 형식으로 매핑
