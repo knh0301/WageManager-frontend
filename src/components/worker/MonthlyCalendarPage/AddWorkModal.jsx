@@ -51,12 +51,12 @@ function AddWorkModal({
           <div className="add-work-modal-title">근무 추가하기</div>
           <select
             className="add-work-select"
-            value={form.place}
-            onChange={(e) => handleFieldChange("place", e.target.value)}
+            value={form.contractId || ""}
+            onChange={(e) => handleFieldChange("contractId", Number(e.target.value))}
           >
-            {workplaceOptions.map((place) => (
-              <option key={place} value={place}>
-                {place}
+            {workplaceOptions.map((workplace) => (
+              <option key={workplace.id} value={workplace.id}>
+                {workplace.workerName}
               </option>
             ))}
           </select>
@@ -174,7 +174,7 @@ function AddWorkModal({
 
 AddWorkModal.propTypes = {
   form: PropTypes.shape({
-    place: PropTypes.string,
+    contractId: PropTypes.number,
     date: PropTypes.string,
     startHour: PropTypes.string,
     startMinute: PropTypes.string,
@@ -183,7 +183,12 @@ AddWorkModal.propTypes = {
     breakMinutes: PropTypes.number,
   }),
   setForm: PropTypes.func.isRequired,
-  workplaceOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  workplaceOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      workerName: PropTypes.string.isRequired,
+    })
+  ).isRequired,
   onConfirm: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
 };

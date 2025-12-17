@@ -104,3 +104,14 @@ export const getWorkRecords = async (startDate, endDate) => {
   }
 };
 
+// 근무 기록 생성 요청
+export const createWorkRecord = async (payload) => {
+  try {
+    const response = await httpClient.post('/api/worker/work-records', payload);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] createWorkRecord 에러:', error);
+    throw error;
+  }
+};
+
