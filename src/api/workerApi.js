@@ -77,3 +77,19 @@ export const getCorrectionRequests = async () => {
   }
 };
 
+// 근로자 근무 기록 조회
+export const getWorkRecords = async (startDate, endDate) => {
+  try {
+    const url = `/api/worker/work-records?startDate=${startDate}&endDate=${endDate}`;
+    const response = await httpClient.get(url);
+    return response;
+  } catch (error) {
+    // 404 에러는 빈 배열로 처리
+    if (error.status === 404) {
+      return { success: true, data: [] };
+    }
+    console.error('[workerApi] getWorkRecords 에러:', error);
+    throw error;
+  }
+};
+

@@ -1,36 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "./WorkerMonthlyCalendarPage.css";
 import WorkEditRequestBox from "../../components/worker/MonthlyCalendarPage/WorkEditRequestBox";
 import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkModal";
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
+import { getContracts, getContractDetail, getWorkRecords } from "../../api/workerApi";
 
 const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
-
-const initialWorkRecords = {
-  "2025-10-06": [
-    { id: 1, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-08": [
-    { id: 2, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-  "2025-10-13": [
-    { id: 3, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-15": [
-    { id: 4, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-    { id: 5, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-  "2025-10-20": [
-    { id: 6, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-27": [
-    { id: 7, start: "09:00", end: "13:00", wage: 40900, place: "버거킹" },
-  ],
-  "2025-10-22": [
-    { id: 8, start: "15:00", end: "21:00", wage: 60180, place: "맥도날드" },
-  ],
-};
 
 const workplaceOptions = ["맥도날드", "버거킹"];
 
@@ -46,12 +22,64 @@ const getKoreanDayLabel = (dayIndex) => {
   return map[dayIndex] || "";
 };
 
+// 시간 객체를 "HH:mm" 형식으로 변환
+const formatTime = (timeObj) => {
+  if (!timeObj) return "00:00";
+  const hour = String(timeObj.hour || 0).padStart(2, "0");
+  const minute = String(timeObj.minute || 0).padStart(2, "0");
+  return `${hour}:${minute}`;
+};
+
+// API 응답 데이터를 더미데이터 형식으로 매핑
+const mapWorkRecords = (apiData, hourlyWageMap) => {
+  const recordsByDate = {};
+  const memosByDate = {};
+
+  if (!apiData || !Array.isArray(apiData)) {
+    return { recordsByDate, memosByDate };
+  }
+
+  apiData.forEach((record) => {
+    const dateKey = record.workDate;
+    const contractId = record.contractId;
+    const hourlyWage = hourlyWageMap[contractId] || 0;
+    
+    // totalWorkMinutes를 사용하여 급여 계산 (분 단위를 시간으로 변환)
+    const wage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
+
+    const mappedRecord = {
+      id: record.id,
+      contractId: record.contractId,
+      start: formatTime(record.startTime),
+      end: formatTime(record.endTime),
+      wage: wage,
+      place: record.workplaceName,
+      breakMinutes: record.breakMinutes || 0,
+      totalWorkMinutes: record.totalWorkMinutes || 0,
+      status: record.status,
+      isModified: record.isModified,
+    };
+
+    if (!recordsByDate[dateKey]) {
+      recordsByDate[dateKey] = [];
+    }
+    recordsByDate[dateKey].push(mappedRecord);
+
+    // memo 저장 (빈 문자열이어도 저장)
+    if (record.memo !== undefined) {
+      memosByDate[dateKey] = record.memo || "";
+    }
+  });
+
+  return { recordsByDate, memosByDate };
+};
+
 function WorkerMonthlyCalendarPage() {
   const today = new Date();
 
   const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => today.getMonth());
-  const [workRecords] = useState(initialWorkRecords);
+  const [workRecords, setWorkRecords] = useState({});
   const [memos, setMemos] = useState({});
 
   const [selectedDateKey, setSelectedDateKey] = useState(() =>
@@ -61,6 +89,58 @@ function WorkerMonthlyCalendarPage() {
   const [editForm, setEditForm] = useState(null); // 수정 요청 폼 상태
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); 
   const [addForm, setAddForm] = useState(null);
+
+  // API에서 근무 기록 가져오기
+  useEffect(() => {
+    const fetchWorkRecords = async () => {
+      try {
+        // 1. 계약 목록 가져오기
+        const contractsResponse = await getContracts();
+        const contractIds = contractsResponse.data || [];
+        
+        if (contractIds.length === 0) {
+          setWorkRecords({});
+          setMemos({});
+          return;
+        }
+
+        // 2. 각 계약의 시급 정보 가져오기
+        const hourlyWageMap = {};
+        await Promise.all(
+          contractIds.map(async (contractId) => {
+            try {
+              const contractDetail = await getContractDetail(contractId);
+              if (contractDetail.data?.hourlyWage !== undefined) {
+                hourlyWageMap[contractId] = contractDetail.data.hourlyWage;
+              }
+            } catch (error) {
+              console.error(`[WorkerMonthlyCalendarPage] 계약 ${contractId} 상세 정보 조회 실패:`, error);
+            }
+          })
+        );
+
+        // 3. 현재 월의 시작일과 종료일 계산
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const startDate = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(1)}`;
+        const endDate = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(lastDay.getDate())}`;
+
+        // 4. 근무 기록 가져오기
+        const workRecordsResponse = await getWorkRecords(startDate, endDate);
+        const workRecordsData = workRecordsResponse.data || [];
+
+        // 5. 데이터 매핑
+        const { recordsByDate, memosByDate } = mapWorkRecords(workRecordsData, hourlyWageMap);
+        setWorkRecords(recordsByDate);
+        setMemos((prev) => ({ ...prev, ...memosByDate }));
+      } catch (error) {
+        console.error("[WorkerMonthlyCalendarPage] 근무 기록 조회 실패:", error);
+        setWorkRecords({});
+        setMemos({});
+      }
+    };
+
+    fetchWorkRecords();
+  }, [currentYear, currentMonth]);
 
   const handlePrevMonth = () => { // 이전 달로 이동
     setCurrentMonth((prev) => {
@@ -109,11 +189,9 @@ function WorkerMonthlyCalendarPage() {
       const [y, m] = key.split("-").map(Number);
       if (y === currentYear && m === currentMonth + 1) {
         list.forEach((record) => {
-          const [sh, sm] = record.start.split(":").map(Number);
-          const [eh, em] = record.end.split(":").map(Number);
-          const diff = eh * 60 + em - (sh * 60 + sm);
-          minutes += diff;
-          wage += record.wage;
+          // totalWorkMinutes 사용 (API에서 제공)
+          minutes += record.totalWorkMinutes || 0;
+          wage += record.wage || 0;
         });
       }
     });
@@ -161,6 +239,7 @@ function WorkerMonthlyCalendarPage() {
 
     const formData = {
       recordId: record.id,
+      contractId: record.contractId,
       originalDateKey: dateKey,
       place: record.place,
       wage: record.wage,
