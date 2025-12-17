@@ -522,21 +522,15 @@ function WorkerMonthlyCalendarPage() {
       }
 
       // 2. 근무 추가 요청 보내기
+      // 시간을 "HH:mm:ss" 형식의 문자열로 변환
+      const startTimeStr = `${pad2(Number(form.startHour))}:${pad2(Number(form.startMinute))}:00`;
+      const endTimeStr = `${pad2(Number(form.endHour))}:${pad2(Number(form.endMinute))}:00`;
+      
       const payload = {
         contractId: contractId,
         workDate: form.date,
-        startTime: {
-          hour: Number(form.startHour),
-          minute: Number(form.startMinute),
-          second: 0,
-          nano: 0,
-        },
-        endTime: {
-          hour: Number(form.endHour),
-          minute: Number(form.endMinute),
-          second: 0,
-          nano: 0,
-        },
+        startTime: startTimeStr,
+        endTime: endTimeStr,
         breakMinutes: form.breakMinutes || 0,
         memo: "",
       };
