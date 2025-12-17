@@ -154,3 +154,14 @@ export const calculateSalary = async (contractId, year, month) => {
   }
 };
 
+// 송금 내역 조회
+export const getPayments = async () => {
+  try {
+    const response = await httpClient.get('/api/worker/payments');
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getPayments 에러:', error);
+    throw error;
+  }
+};
+

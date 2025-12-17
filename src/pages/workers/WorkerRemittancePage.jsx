@@ -1,12 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import "./WorkerRemittancePage.css";
-import {
-  remittanceStatus,
-} from "./remittanceDummyData";
 import { formatCurrency } from "../employer/utils/formatUtils";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import WorkDetailList from "../../components/worker/RemittancePage/WorkDetailList";
-import { getContracts, getContractDetail, getWorkRecords, calculateSalary } from "../../api/workerApi";
+import { getContracts, getContractDetail, getWorkRecords, calculateSalary, getPayments } from "../../api/workerApi";
 import { formatTime, parseWorkDate, pad2 } from "../../utils/dateUtils";
 
 /**
@@ -42,14 +39,10 @@ export default function WorkerRemittancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [calculatedSalary, setCalculatedSalary] = useState(null); // 계산된 급여 정보
   const [isCalculatingSalary, setIsCalculatingSalary] = useState(false); // 급여 계산 중 상태
+  const [payments, setPayments] = useState([]); // 송금 내역 목록
 
   // 선택된 근무지 정보 조회
   const selectedWorkplace = workplaces.find((wp) => wp.id === selectedWorkplaceId);
-
-  // 데이터 조회를 위한 월 키 생성 (예: "2025-09")
-  const monthKey = useMemo(() => {
-    return `${currentYear}-${pad2(currentMonth)}`;
-  }, [currentYear, currentMonth]);
 
   // 근무지 목록 가져오기
   useEffect(() => {
@@ -212,6 +205,25 @@ export default function WorkerRemittancePage() {
     fetchCalculatedSalary();
   }, [fetchCalculatedSalary]);
 
+  // 송금 내역 가져오기
+  const fetchPayments = useCallback(async () => {
+    try {
+      const response = await getPayments();
+      if (response?.success && response?.data) {
+        setPayments(response.data);
+      } else {
+        setPayments([]);
+      }
+    } catch (error) {
+      console.error("[WorkerRemittancePage] 송금 내역 조회 실패:", error);
+      setPayments([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
+
   // 해당 월의 총 급여 계산 (calculateSalary API 결과 사용)
   const totalWage = useMemo(() => {
     if (calculatedSalary?.netPay !== undefined) {
@@ -220,47 +232,57 @@ export default function WorkerRemittancePage() {
     return 0;
   }, [calculatedSalary]);
 
-  // 입금 상태 정보 계산
-  // - completed: 입금 완료 (송금 날짜 표시)
-  // - pending: 입금 대기 (해당 월이 지났지만 아직 입금되지 않음)
-  // - before: 입금 전 (해당 월이 아직 지나지 않음)
+  // 입금 상태 정보 계산 (API 데이터 기반)
+  // - completed: 입금 완료 (isPaid === true, 송금 날짜 표시)
+  // - pending: 입금 대기 (isPaid === false, 해당 월이 지났지만 아직 입금되지 않음)
+  // - before: 입금 전 (isPaid === false, 해당 월이 아직 지나지 않음)
   const remittanceInfo = useMemo(() => {
-    if (!selectedWorkplace || !remittanceStatus[selectedWorkplace?.name]) {
+    if (!calculatedSalary?.id) {
+      // 급여 계산 결과가 없으면 "입금 전"으로 표시
       return { status: "before", remittanceDate: null };
     }
-    const status = remittanceStatus[selectedWorkplace.name][monthKey] || {
-      isCompleted: false,
-      remittanceDate: null,
-    };
 
-    // 해당 월이 지났는지 확인
+    // 현재 선택된 월의 송금 내역 찾기 (salaryId로 매칭)
+    const payment = payments.find((p) => p.salaryId === calculatedSalary.id);
+
+    if (!payment) {
+      // 송금 내역이 없으면 해당 월이 지났는지 확인
+      const today = new Date();
+      const currentYearNum = today.getFullYear();
+      const currentMonthNum = today.getMonth() + 1;
+      
+      const isMonthPassed = 
+        currentYearNum > currentYear || 
+        (currentYearNum === currentYear && currentMonthNum > currentMonth);
+
+      return {
+        status: isMonthPassed ? "pending" : "before",
+        remittanceDate: null,
+      };
+    }
+
+    // isPaid가 true면 입금 완료
+    if (payment.isPaid) {
+      return {
+        status: "completed",
+        remittanceDate: payment.paymentDate || null,
+      };
+    }
+
+    // isPaid가 false면 입금 대기 또는 입금 전
     const today = new Date();
     const currentYearNum = today.getFullYear();
-    const currentMonthNum = today.getMonth() + 1; // 0-based to 1-based
+    const currentMonthNum = today.getMonth() + 1;
     
-    // 선택한 월이 현재 월보다 이전인지 확인 (년도도 고려)
     const isMonthPassed = 
       currentYearNum > currentYear || 
       (currentYearNum === currentYear && currentMonthNum > currentMonth);
 
-    // 상태 결정
-    if (status.isCompleted) {
-      return {
-        status: "completed",
-        remittanceDate: status.remittanceDate,
-      };
-    } else if (isMonthPassed) {
-      return {
-        status: "pending",
-        remittanceDate: null,
-      };
-    } else {
-      return {
-        status: "before",
-        remittanceDate: null,
-      };
-    }
-  }, [selectedWorkplace, monthKey, currentYear, currentMonth]);
+    return {
+      status: isMonthPassed ? "pending" : "before",
+      remittanceDate: null,
+    };
+  }, [calculatedSalary, payments, currentYear, currentMonth]);
 
   // 이전 월로 이동 (1월이면 이전 년도 12월로 이동)
   const handlePrevMonth = () => {
