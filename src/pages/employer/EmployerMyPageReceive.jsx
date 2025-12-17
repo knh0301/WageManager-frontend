@@ -1,24 +1,100 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import "../../styles/employerMyPageReceive.css";
-import { formatCurrency, formatBreakTime } from "./utils/formatUtils";
-import { mockRequests } from "./dummyData";
-import { allowanceDefinitions } from "./utils/shiftUtils";
 import Swal from "sweetalert2";
+import userService from "../../services/userService";
+import workplaceService from "../../services/workplaceService";
+import correctionRequestService from "../../services/correctionRequestService";
+import workRecordService from "../../services/workRecordService";
 
 export default function EmployerMyPageReceive() {
   const navigate = useNavigate();
   const [expandedCardId, setExpandedCardId] = useState(null);
-  const [requests, setRequests] = useState(mockRequests);
+  const [user, setUser] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState(null);
 
-  // 날짜 기준으로 최신순 정렬 (가장 최근 날짜가 위에)
+  // 사용자 정보 및 요청 목록 로드
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 사용자 정보 조회
+        const userData = await userService.getMyInfo();
+        setUser(userData);
+        setProfileImage(userData.profileImageUrl);
+
+        // 모든 근무지 조회
+        const workplaces = await workplaceService.getWorkplaces();
+
+        // 모든 근무지의 승인 대기 요청 조회
+        const allRequests = [];
+        for (const workplace of workplaces) {
+          try {
+            const response = await correctionRequestService.getPendingApprovals(workplace.id);
+
+            // CorrectionRequest 변환
+            if (response.correctionRequests) {
+              response.correctionRequests.forEach(req => {
+                allRequests.push({
+                  id: `correction-${req.id}`,
+                  type: 'correction',
+                  originalId: req.id,
+                  workRecordId: req.workRecordId,
+                  workerName: req.requester.name,
+                  workplace: req.workplaceName,
+                  date: req.requestedWorkDate,
+                  startTime: req.requestedStartTime,
+                  endTime: req.requestedEndTime,
+                  originalDate: req.originalWorkDate,
+                  originalStartTime: req.originalStartTime,
+                  originalEndTime: req.originalEndTime,
+                  status: req.status,
+                  createdAt: req.createdAt,
+                });
+              });
+            }
+
+            // WorkRecordCreation 변환
+            if (response.workRecordCreations) {
+              response.workRecordCreations.forEach(req => {
+                allRequests.push({
+                  id: `creation-${req.id}`,
+                  type: 'creation',
+                  originalId: req.id,
+                  workerName: req.requester.name,
+                  workplace: req.workplaceName,
+                  date: req.requestedWorkDate,
+                  startTime: req.requestedStartTime,
+                  endTime: req.requestedEndTime,
+                  status: req.status,
+                  createdAt: req.createdAt,
+                });
+              });
+            }
+          } catch (error) {
+            console.error(`근무지 ${workplace.id} 요청 조회 실패:`, error);
+          }
+        }
+
+        setRequests(allRequests);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+        Swal.fire("오류", "데이터를 불러오는데 실패했습니다.", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 날짜 기준으로 최신순 정렬
   const sortedRequests = useMemo(() => {
     return [...requests].sort((a, b) => {
-      // 날짜 비교: month와 date를 사용해서 Date 객체 생성
-      const dateA = new Date(2025, a.month - 1, a.date);
-      const dateB = new Date(2025, b.month - 1, b.date);
-      // 최신 날짜가 위로 오도록 내림차순 정렬
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
       return dateB - dateA;
     });
   }, [requests]);
@@ -31,55 +107,86 @@ export default function EmployerMyPageReceive() {
     setExpandedCardId(expandedCardId === cardId ? null : cardId);
   };
 
-  const handleApprove = (request, e) => {
+  const handleApprove = async (request, e) => {
     e.stopPropagation();
-    Swal.fire({
+
+    const displayDate = new Date(request.date).toLocaleDateString('ko-KR');
+    const confirmText = request.type === 'correction'
+      ? `${displayDate} ${request.originalStartTime} ~ ${request.originalEndTime}\n→ ${request.startTime} ~ ${request.endTime}`
+      : `${displayDate} ${request.startTime} ~ ${request.endTime}`;
+
+    const result = await Swal.fire({
       icon: "question",
-      title: `${request.workerName}님의 근무 요청을 승인하시겠습니까?`,
-      text: `${request.workplace} - ${request.startTime} ~ ${request.endTime}`,
+      title: `${request.workerName}님의 ${request.type === 'correction' ? '정정' : '근무'} 요청을 승인하시겠습니까?`,
+      text: `${request.workplace}\n${confirmText}`,
       showCancelButton: true,
       confirmButtonText: "승인",
       cancelButtonText: "취소",
       confirmButtonColor: "var(--color-green)",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // 상태 업데이트: 해당 요청의 status를 'approved'로 변경
-        setRequests((prevRequests) =>
-          prevRequests.map((req) =>
-            req.id === request.id ? { ...req, status: "approved" } : req
-          )
-        );
-        // 토글 패널 닫기
-        setExpandedCardId(null);
-        Swal.fire("승인 완료", "근무 요청이 승인되었습니다.", "success");
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        if (request.type === 'correction') {
+          await correctionRequestService.approveRequest(request.originalId);
+        } else {
+          await workRecordService.approveWorkRecord(request.originalId);
+        }
+
+        // 목록에서 제거
+        setRequests(prevRequests => prevRequests.filter(req => req.id !== request.id));
+        setExpandedCardId(null);
+
+        Swal.fire("승인 완료", `${request.type === 'correction' ? '정정' : '근무'} 요청이 승인되었습니다.`, "success");
+      } catch (error) {
+        console.error("승인 실패:", error);
+        Swal.fire("승인 실패", error.message || "승인 처리 중 오류가 발생했습니다.", "error");
+      }
+    }
   };
 
-  const handleReject = (request, e) => {
+  const handleReject = async (request, e) => {
     e.stopPropagation();
-    Swal.fire({
+
+    const result = await Swal.fire({
       icon: "warning",
-      title: `${request.workerName}님의 근무 요청을 거절하시겠습니까?`,
+      title: `${request.workerName}님의 ${request.type === 'correction' ? '정정' : '근무'} 요청을 거절하시겠습니까?`,
       text: "거절된 요청은 복구할 수 없습니다.",
       showCancelButton: true,
       confirmButtonText: "거절",
       cancelButtonText: "취소",
       confirmButtonColor: "var(--color-red)",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // 상태 업데이트: 해당 요청의 status를 'rejected'로 변경
-        setRequests((prevRequests) =>
-          prevRequests.map((req) =>
-            req.id === request.id ? { ...req, status: "rejected" } : req
-          )
-        );
-        // 토글 패널 닫기
-        setExpandedCardId(null);
-        Swal.fire("거절 완료", "근무 요청이 거절되었습니다.", "success");
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        if (request.type === 'correction') {
+          await correctionRequestService.rejectRequest(request.originalId);
+        } else {
+          await workRecordService.rejectWorkRecord(request.originalId);
+        }
+
+        // 목록에서 제거
+        setRequests(prevRequests => prevRequests.filter(req => req.id !== request.id));
+        setExpandedCardId(null);
+
+        Swal.fire("거절 완료", `${request.type === 'correction' ? '정정' : '근무'} 요청이 거절되었습니다.`, "success");
+      } catch (error) {
+        console.error("거절 실패:", error);
+        Swal.fire("거절 실패", error.message || "거절 처리 중 오류가 발생했습니다.", "error");
+      }
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="mypage-main">
+        <div className="mypage-content">
+          <div>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mypage-main">
@@ -87,11 +194,19 @@ export default function EmployerMyPageReceive() {
         <nav className="mypage-nav">
           <div className="mypage-profile-card">
             <div className="mypage-avatar-wrapper">
-              <div className="mypage-avatar-placeholder">
-                <FaUser />
-              </div>
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="프로필"
+                  className="mypage-avatar-image"
+                />
+              ) : (
+                <div className="mypage-avatar-placeholder">
+                  <FaUser />
+                </div>
+              )}
             </div>
-            <div className="mypage-profile-name">김나현</div>
+            <div className="mypage-profile-name">{user?.name || "사용자"}</div>
             <hr />
           </div>
           <ul>
@@ -123,162 +238,131 @@ export default function EmployerMyPageReceive() {
             {sortedRequests.length === 0 ? (
               <p>받은 근무 요청이 없습니다.</p>
             ) : (
-              sortedRequests.map((request) => (
-                <div key={request.id}>
-                  <div
-                    className="mypage-receive-card"
-                    onClick={() => handleCardClick(request.id)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div className="mypage-receive-date">
-                      {request.month}월 {request.date}일
-                    </div>
-                    <div className="mypage-receive-divider"></div>
-                    <div className="mypage-receive-info">
-                      <div className="mypage-receive-worker">
-                        {request.workerName}({request.workplace})
+              sortedRequests.map((request) => {
+                const requestDate = new Date(request.date);
+                const month = requestDate.getMonth() + 1;
+                const date = requestDate.getDate();
+
+                return (
+                  <div key={request.id}>
+                    <div
+                      className="mypage-receive-card"
+                      onClick={() => handleCardClick(request.id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="mypage-receive-date">
+                        {month}월 {date}일
                       </div>
-                      <div className="mypage-receive-time">
-                        {request.startTime} ~ {request.endTime}
-                      </div>
-                    </div>
-                    {request.status !== null && (
-                      <div className="mypage-receive-status">
-                        <button
-                          type="button"
-                          className={`mypage-status-button ${
-                            request.status === "approved"
-                              ? "mypage-status-approved"
-                              : "mypage-status-rejected"
-                          }`}
-                          disabled
-                        >
-                          {request.status === "approved" ? "승인함" : "거절함"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className={`shift-detail-panel ${
-                      expandedCardId === request.id ? "open" : ""
-                    }`}
-                  >
-                    <div className="detail-header">
-                      <div className="detail-header-left">
-                        <div>
-                          <p className="detail-label">근무자</p>
-                          <h3 className="detail-name">{request.workerName}</h3>
+                      <div className="mypage-receive-divider"></div>
+                      <div className="mypage-receive-info">
+                        <div className="mypage-receive-worker">
+                          {request.workerName}({request.workplace})
+                          {request.type === 'correction' && (
+                            <span style={{ marginLeft: '8px', color: 'var(--color-orange)', fontSize: '0.9em' }}>
+                              [정정 요청]
+                            </span>
+                          )}
                         </div>
-                        <div>
-                          <p className="detail-label">근무지</p>
-                          <p className="detail-value">{request.workplace}</p>
+                        <div className="mypage-receive-time">
+                          {request.type === 'correction' ? (
+                            <>
+                              <span style={{ textDecoration: 'line-through', color: '#999' }}>
+                                {request.originalStartTime} ~ {request.originalEndTime}
+                              </span>
+                              {' → '}
+                              <span>{request.startTime} ~ {request.endTime}</span>
+                            </>
+                          ) : (
+                            `${request.startTime} ~ ${request.endTime}`
+                          )}
                         </div>
                       </div>
-                      <div className="detail-header-actions">
-                        {request.status === null ? (
+                    </div>
+                    <div
+                      className={`shift-detail-panel ${
+                        expandedCardId === request.id ? "open" : ""
+                      }`}
+                    >
+                      <div className="detail-header">
+                        <div className="detail-header-left">
+                          <div>
+                            <p className="detail-label">근무자</p>
+                            <h3 className="detail-name">{request.workerName}</h3>
+                          </div>
+                          <div>
+                            <p className="detail-label">근무지</p>
+                            <p className="detail-value">{request.workplace}</p>
+                          </div>
+                        </div>
+                        <div className="detail-header-actions">
+                          <button
+                            type="button"
+                            className="detail-save-button"
+                            onClick={(e) => handleApprove(request, e)}
+                          >
+                            승인
+                          </button>
+                          <button
+                            type="button"
+                            className="detail-delete-button"
+                            onClick={(e) => handleReject(request, e)}
+                          >
+                            거절
+                          </button>
+                          <button
+                            type="button"
+                            className="detail-close-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedCardId(null);
+                            }}
+                          >
+                            닫기
+                          </button>
+                        </div>
+                      </div>
+                      <div className="detail-grid">
+                        <div>
+                          <p className="detail-label">요청 타입</p>
+                          <p className="detail-value">
+                            {request.type === 'correction' ? '정정 요청' : '근무 생성 요청'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="detail-label">근무 날짜</p>
+                          <p className="detail-value">
+                            {requestDate.toLocaleDateString('ko-KR')}
+                          </p>
+                        </div>
+                        {request.type === 'correction' && (
                           <>
-                            <button
-                              type="button"
-                              className="detail-save-button"
-                              onClick={(e) => handleApprove(request, e)}
-                            >
-                              승인
-                            </button>
-                            <button
-                              type="button"
-                              className="detail-delete-button"
-                              onClick={(e) => handleReject(request, e)}
-                            >
-                              거절
-                            </button>
+                            <div>
+                              <p className="detail-label">기존 근무 시간</p>
+                              <p className="detail-value">
+                                {request.originalStartTime} ~ {request.originalEndTime}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="detail-label">변경 요청 시간</p>
+                              <p className="detail-value">
+                                {request.startTime} ~ {request.endTime}
+                              </p>
+                            </div>
                           </>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="detail-close-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedCardId(null);
-                          }}
-                        >
-                          닫기
-                        </button>
-                      </div>
-                    </div>
-                    <div className="detail-grid">
-                      <div>
-                        <p className="detail-label">근무 날짜</p>
-                        <p className="detail-value">
-                          2025.{String(request.month).padStart(2, "0")}.
-                          {String(request.date).padStart(2, "0")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="detail-label">근무 시간</p>
-                        <p className="detail-value">
-                          {request.startTime} ~ {request.endTime}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="detail-label">휴게 시간</p>
-                        <p className="detail-value">
-                          {formatBreakTime(request.breakMinutes)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="detail-label">시급</p>
-                        <p className="detail-value">
-                          {formatCurrency(request.hourlyWage)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="detail-section">
-                      <p className="detail-label">수당 정보</p>
-                      <ul className="allowance-list">
-                        {allowanceDefinitions.map(({ key, label }) => {
-                          const allowance = request.allowances?.[key] || {
-                            enabled: false,
-                            rate: 0,
-                          };
-                          return (
-                            <li
-                              key={key}
-                              className={`allowance-item ${
-                                allowance.enabled ? "on" : "off"
-                              }`}
-                            >
-                              <span>{label}</span>
-                              <strong>
-                                {allowance.enabled
-                                  ? `${allowance.rate}%`
-                                  : "없음"}
-                              </strong>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                    <div className="detail-status-row">
-                      <div
-                        className={`status-pill ${
-                          request.socialInsurance ? "on" : "off"
-                        }`}
-                      >
-                        4대보험{" "}
-                        {request.socialInsurance ? "적용" : "미적용"}
-                      </div>
-                      <div
-                        className={`status-pill ${
-                          request.withholdingTax ? "on" : "off"
-                        }`}
-                      >
-                        소득세{" "}
-                        {request.withholdingTax ? "공제" : "미공제"}
+                        )}
+                        {request.type === 'creation' && (
+                          <div>
+                            <p className="detail-label">근무 시간</p>
+                            <p className="detail-value">
+                              {request.startTime} ~ {request.endTime}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

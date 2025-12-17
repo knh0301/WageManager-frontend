@@ -1,6 +1,13 @@
 import api from "./api";
 
 const correctionRequestService = {
+  // 고용주 - 승인 대기중인 모든 요청 조회 (통합)
+  getPendingApprovals: async (workplaceId, filter = "ALL") => {
+    return await api.get(`/employer/workplaces/${workplaceId}/pending-approvals`, {
+      params: { filter },
+    });
+  },
+
   // 고용주 - 정정 요청 목록 조회
   getEmployerRequests: async (params) => {
     return await api.get("/employer/correction-requests", { params });
