@@ -2,22 +2,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import { MdArrowForwardIos } from "react-icons/md";
 import WorkEditRequestBox from "../MonthlyCalendarPage/WorkEditRequestBox";
+import { pad2, getWeekStart } from "../../../utils/dateUtils";
 import "./WeeklyCalendar.css";
 
-const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 const getKoreanDayLabel = (dayIndex) => {
   const map = ["일", "월", "화", "수", "목", "금", "토"];
   return map[dayIndex] || "";
-};
-
-// 주의 시작일(일요일)을 구하는 함수
-const getWeekStart = (date) => {
-  const d = new Date(date);
-  const day = d.getDay(); //0(일요일) ~ 6(토요일)
-  d.setDate(d.getDate() - day); // 일요일로 이동
-  return d;
 };
 
 function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {

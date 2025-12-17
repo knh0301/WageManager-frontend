@@ -1,3 +1,14 @@
+// 숫자를 2자리 문자열로 변환 (1 -> "01", 10 -> "10")
+export const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
+
+// 주의 시작일(일요일)을 구하는 함수
+export const getWeekStart = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0(일요일) ~ 6(토요일)
+  d.setDate(d.getDate() - day); // 일요일로 이동
+  return d;
+};
+
 // 날짜 형식 변환 함수 (2025-12-17 -> 2025년 12월 17일)
 export const formatDateToKorean = (dateString) => {
   if (!dateString) return "";

@@ -5,9 +5,8 @@ import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkMod
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
 import { toast } from "react-toastify";
 import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest, createWorkRecord } from "../../api/workerApi";
-import { formatTime } from "../../utils/dateUtils";
+import { formatTime, pad2 } from "../../utils/dateUtils";
 
-const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 

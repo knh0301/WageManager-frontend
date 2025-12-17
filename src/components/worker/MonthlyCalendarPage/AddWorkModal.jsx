@@ -2,8 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import "./AddWorkModal.css";
-
-const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
+import { pad2 } from "../../../utils/dateUtils";
 const hourOptions = Array.from({ length: 24 }, (_, i) => pad2(i));
 const minuteOptions = ["00", "10", "20", "30", "40", "50"];
 const breakOptions = [0, 30, 60, 90, 120];
