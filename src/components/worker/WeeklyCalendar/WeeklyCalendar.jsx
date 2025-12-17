@@ -98,6 +98,10 @@ function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
       const records = workRecords[dateKey] || [];
 
       records.forEach((record) => {
+        // PENDING_APPROVAL 상태인 근무 기록은 계산에서 제외
+        if (record.status === "PENDING_APPROVAL") {
+          return;
+        }
         // totalWorkMinutes가 있으면 사용, 없으면 start/end로 계산
         if (record.totalWorkMinutes !== undefined) {
           totalMinutes += record.totalWorkMinutes || 0;

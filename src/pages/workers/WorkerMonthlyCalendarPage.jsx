@@ -285,6 +285,10 @@ function WorkerMonthlyCalendarPage() {
       const [y, m] = key.split("-").map(Number);
       if (y === currentYear && m === currentMonth + 1) {
         list.forEach((record) => {
+          // PENDING_APPROVAL 상태인 근무 기록은 계산에서 제외
+          if (record.status === "PENDING_APPROVAL") {
+            return;
+          }
           // totalWorkMinutes 사용 (API에서 제공)
           minutes += record.totalWorkMinutes || 0;
           wage += record.wage || 0;
