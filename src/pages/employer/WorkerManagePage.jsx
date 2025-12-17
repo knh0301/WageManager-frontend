@@ -183,6 +183,24 @@ export default function WorkerManagePage() {
 
   const handleWorkplaceChange = (e) => {
     const value = e.target.value;
+
+    // "근무지 추가" 옵션 선택 시
+    if (value === "add-new") {
+      setIsAddingWorkplace(true);
+      setIsManagingWorkplaces(false);
+      setSelectedWorkplaceForEdit(null);
+      setEditingWorkplace(null);
+      setSelectedWorker(null);
+      setHoveredBlockGroup(null);
+      setIsEditingWork(false);
+      setEditedWorkInfo(null);
+      if (isAddingWorker) {
+        resetAddWorkerFlow();
+        setIsAddingWorker(false);
+      }
+      return;
+    }
+
     // 일반 근무지 선택 시 모든 모드 해제
     setIsAddingWorkplace(false);
     setIsManagingWorkplaces(false);
@@ -725,35 +743,20 @@ export default function WorkerManagePage() {
   return (
     <div className="worker-manage-page">
       {/* 왼쪽 사이드바 */}
-      {!isManagingWorkplaces && !isAddingWorkplace && (
+      {!isManagingWorkplaces && (
         <div className="worker-manage-left-panel">
           <div className="worker-manage-workplace-select">
-            <div className="workplace-select-wrapper">
-              <select
-                value={selectedWorkplaceId}
-                onChange={handleWorkplaceChange}
-                className="workplace-select"
-              >
-                {workplaces.map((wp) => (
-                  <option key={wp.id} value={wp.id}>
-                    {wp.name}
-                  </option>
-                ))}
-              </select>
-              {!isAddingWorkplace &&
-                !isManagingWorkplaces &&
-                selectedWorkplaceId &&
-                workplaces.length > 1 && (
-                  <button
-                    type="button"
-                    className="delete-workplace-button"
-                    onClick={handleDeleteWorkplace}
-                    title="근무지 삭제"
-                  >
-                    <FaTimes />
-                  </button>
-                )}
-            </div>
+            <select
+              value={isAddingWorkplace ? "add-new" : selectedWorkplaceId}
+              onChange={handleWorkplaceChange}
+            >
+              {workplaces.map((wp) => (
+                <option key={wp.id} value={wp.id}>
+                  {wp.name}
+                </option>
+              ))}
+              <option value="add-new">+ 근무지 추가</option>
+            </select>
           </div>
 
           {!isAddingWorkplace && !isManagingWorkplaces && (

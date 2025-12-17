@@ -10,12 +10,8 @@ import { allowanceDefinitions } from "./utils/shiftUtils";
 
 export default function RemittanceManagePage() {
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
-  const [currentYear, setCurrentYear] = useState(() =>
-    new Date().getFullYear()
-  );
-  const [currentMonth, setCurrentMonth] = useState(
-    () => new Date().getMonth() + 1
-  );
+  const [currentYear, setCurrentYear] = useState(2025);
+  const [currentMonth, setCurrentMonth] = useState(10);
 
   const selectedWorkplace =
     initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
@@ -283,7 +279,7 @@ export default function RemittanceManagePage() {
 
       <div className="remittance-right-panel">
         <div className="remittance-summary-box">
-          <h3 className="summary-title">누적 급여</h3>
+          <h3 className="summary-title">이번 달 급여</h3>
           <div className="summary-amount">{formatCurrency(totalWage)}</div>
         </div>
         <button

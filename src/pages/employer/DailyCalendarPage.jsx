@@ -66,41 +66,25 @@ export default function DailyCalendarPage() {
     [workplaceSchedules, dateKey]
   );
 
-  // 겹치는 근무를 서로 다른 레인으로 배치
+  // 각 근무자마다 고정된 레인 할당 (한 명당 한 줄)
   const scheduleWithLanes = useMemo(() => {
+    // 근무자 이름별로 레인 인덱스 할당
+    const workerLaneMap = new Map();
+    let nextLaneIndex = 0;
+
     // 시간순으로 정렬
     const sorted = [...currentScheduleData].sort(
       (a, b) => a.startHour - b.startHour
     );
 
-    const lanes = []; // 각 레인에 있는 shift block들의 정보를 저장
-
     return sorted.map((item) => {
-      const shiftStart = item.startHour;
-      const shiftEnd = item.startHour + item.durationHours;
-
-      // 겹치지 않는 레인 찾기
-      let laneIndex = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        // 해당 레인의 모든 block과 겹치지 않는지 확인
-        const canFit = lanes[i].every(
-          (block) => block.end <= shiftStart || block.start >= shiftEnd
-        );
-        if (canFit) {
-          laneIndex = i;
-          break;
-        }
+      // 해당 근무자에게 이미 레인이 할당되었는지 확인
+      if (!workerLaneMap.has(item.name)) {
+        workerLaneMap.set(item.name, nextLaneIndex);
+        nextLaneIndex++;
       }
 
-      // 겹치지 않는 레인이 없으면 새 레인 생성
-      if (laneIndex === -1) {
-        laneIndex = lanes.length;
-        lanes.push([{ start: shiftStart, end: shiftEnd }]);
-      } else {
-        // 레인에 새로운 block 추가
-        lanes[laneIndex].push({ start: shiftStart, end: shiftEnd });
-      }
-
+      const laneIndex = workerLaneMap.get(item.name);
       return { ...item, laneIndex };
     });
   }, [currentScheduleData]);
@@ -592,13 +576,13 @@ export default function DailyCalendarPage() {
           </div>
           <div
             className="daily-timeline"
-            style={{ height: `${laneCount * 100 + 40}px` }}
+            style={{ height: `${laneCount * 80 + 40}px` }}
           >
             {/* 근무자 타임라인 블록 */}
             {scheduleWithLanes.map((item) => {
               const left = (item.startHour / 24) * 100;
               const width = (item.durationHours / 24) * 100;
-              const top = 20 + item.laneIndex * 100;
+              const top = 20 + item.laneIndex * 80;
               // 근무 시간이 1시간 40분 이하일 때는 이름만 표시
               const isSmallBlock = item.durationHours <= 100 / 60; // 1시간 40분 = 100분
               // 근무 시간이 2시간 30분 이하일 때는 총 시간 숨김
@@ -631,10 +615,13 @@ export default function DailyCalendarPage() {
               );
             })}
           </div>
-          {/* 근무 블록을 선택하면 토글되는 상세/편집 패널 */}
-          {activeShift && (
-            <div className="shift-detail-panel open">
-              <div className="detail-header">
+        </div>
+
+        {/* 근무 정보 카드 - 근무 블록 선택 시 별도 카드로 표시 */}
+        {activeShift && (
+          <div className="daily-shift-detail-card">
+            <h2 className="detail-card-title">근무 정보</h2>
+            <div className="detail-header">
                 <div className="detail-header-left">
                   <div>
                     <p className="detail-label">근무자</p>
@@ -930,9 +917,8 @@ export default function DailyCalendarPage() {
                   </>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <aside className="daily-side-panel">
         {/* 우측 월 달력 */}

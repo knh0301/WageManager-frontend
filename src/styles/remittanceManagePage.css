@@ -75,6 +75,7 @@
   justify-content: center;
   gap: 24px;
   margin-bottom: 32px;
+  margin-left: 60px;
 }
 
 .month-nav-button {
@@ -97,18 +98,17 @@
 }
 
 .month-display {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #333333;
-  min-width: 150px;
   text-align: center;
 }
 
 .remittance-detail-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333333;
-  margin: 0 0 24px 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #888888;
+  margin: 20px 0 24px 0;
 }
 
 .remittance-detail-list {
