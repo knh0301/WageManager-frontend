@@ -484,10 +484,11 @@ function WorkerMonthlyCalendarPage() {
         contracts = [contractsResponse.data];
       }
       
-      // contractId 추출 및 검증
-      const contractIds = contracts.map((contract) => 
-        typeof contract === 'object' ? contract.id : contract
-      );
+      // contractId 추출 및 검증 (타입 정규화: 모두 숫자로 변환)
+      const contractIds = contracts.map((contract) => {
+        const id = typeof contract === 'object' ? contract.id : contract;
+        return Number(id);
+      });
       
       const contractId = Number(form.contractId);
       
