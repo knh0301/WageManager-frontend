@@ -448,7 +448,7 @@ function WorkerMonthlyCalendarPage() {
     }
   };
 
-  const handleDeleteRequest = (form) => { // 삭제 요청 핸들러
+  const handleDeleteRequest = () => { // 삭제 요청 핸들러
     // TODO: 백엔드로 삭제 요청 보내기
     setEditForm(null);
   };
