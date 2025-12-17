@@ -201,8 +201,8 @@ export default function WorkerWeeklyCalendarPage() {
           position: "top-right",
           autoClose: 3000,
         });
-        // 근무 기록 다시 불러오기
-        await fetchWorkRecords();
+        // 정정 요청은 고용주 승인 후에야 변경되므로 UI 업데이트하지 않음
+        // WeeklyCalendar 컴포넌트에서 폼을 닫도록 처리
         return;
       }
 

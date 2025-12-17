@@ -187,10 +187,15 @@ function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
   // 근무 기록 정정 요청 확인
   const handleConfirmEditInternal = async (form) => {
     if (onConfirmEdit) {
-      await onConfirmEdit(form);
-      setEditForm(null);
-      setSelectedDateKey(null);
-      setSelectedRecordId(null);
+      try {
+        await onConfirmEdit(form);
+        // 성공 시 폼 닫기 (월간 캘린더와 동일하게)
+        setEditForm(null);
+        setSelectedDateKey(null);
+        setSelectedRecordId(null);
+      } catch {
+        // 에러 발생 시 폼은 열어둠 (사용자가 수정 가능하도록)
+      }
     } else {
       // TODO: 백엔드로 수정 요청 보내기
       console.log("edit request payload:", form);
