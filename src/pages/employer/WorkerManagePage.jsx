@@ -235,12 +235,6 @@ export default function WorkerManagePage() {
   const handleWorkplaceChange = (e) => {
     const value = e.target.value;
 
-    // "근무지 추가" 옵션 선택 시 새 페이지로 이동
-    if (value === "add-new") {
-      navigate("/employer/add-workplace");
-      return;
-    }
-
     // 일반 근무지 선택 시 모든 모드 해제
     setIsAddingWorkplace(false);
     setIsManagingWorkplaces(false);
@@ -875,7 +869,7 @@ export default function WorkerManagePage() {
         <div className="worker-manage-left-panel">
           <div className="worker-manage-workplace-select">
             <select
-              value={isAddingWorkplace ? "add-new" : selectedWorkplaceId}
+              value={selectedWorkplaceId}
               onChange={handleWorkplaceChange}
             >
               {workplaces.map((wp) => (
@@ -883,7 +877,6 @@ export default function WorkerManagePage() {
                   {wp.name}
                 </option>
               ))}
-              <option value="add-new">+ 근무지 추가</option>
             </select>
           </div>
 
