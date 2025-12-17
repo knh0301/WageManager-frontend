@@ -57,7 +57,7 @@ export const formatTime = (timeObj) => {
   return "";
 };
 
-// 날짜 문자열을 숫자와 요일로 변환 ("2025-12-17" -> { date: 17, day: "토" })
+// 날짜 문자열을 숫자와 요일로 변환 ("2025-12-17" -> { date: 17, day: "수" })
 export const parseWorkDate = (dateString) => {
   if (!dateString) return { date: 0, day: "" };
   
