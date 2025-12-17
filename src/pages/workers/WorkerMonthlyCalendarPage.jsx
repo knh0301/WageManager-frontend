@@ -3,7 +3,8 @@ import "./WorkerMonthlyCalendarPage.css";
 import WorkEditRequestBox from "../../components/worker/MonthlyCalendarPage/WorkEditRequestBox";
 import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkModal";
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
-import { getContracts, getContractDetail, getWorkRecords } from "../../api/workerApi";
+import { toast } from "react-toastify";
+import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest } from "../../api/workerApi";
 
 const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
@@ -298,10 +299,59 @@ function WorkerMonthlyCalendarPage() {
     setEditForm(null);
   };
 
-  const handleConfirmEdit = (form) => { // 수정 요청 확인 핸들러
-    // TODO: 백엔드로 수정 요청 보내기
-    console.log("edit request payload:", form);
-    setEditForm(null);
+  const handleConfirmEdit = async (form) => { // 수정 요청 확인 핸들러
+    try {
+      const payload = {
+        workRecordId: form.recordId,
+        requestedWorkDate: form.date,
+        requestedStartTime: {
+          hour: Number(form.startHour),
+          minute: Number(form.startMinute),
+          second: 0,
+          nano: 0,
+        },
+        requestedEndTime: {
+          hour: Number(form.endHour),
+          minute: Number(form.endMinute),
+          second: 0,
+          nano: 0,
+        },
+      };
+
+      const response = await createCorrectionRequest(payload);
+
+      if (response?.success) {
+        toast.success("근무 기록 정정 요청이 접수되었습니다.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        setEditForm(null);
+        return;
+      }
+
+      const errorMessage =
+        response?.error?.message || "근무 기록 정정 요청에 실패했습니다.";
+      const errorCode = response?.error?.code || "UNKNOWN";
+
+      toast.error(`[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } catch (error) {
+      const status = error.status || error.response?.status || "";
+      const statusText = status ? `[${status}] ` : "";
+      const errorMessage =
+        error.error?.message ||
+        error.message ||
+        "근무 기록 정정 요청에 실패했습니다.";
+      const errorCode =
+        error.error?.code || error.errorCode || "UNKNOWN";
+
+      toast.error(`${statusText}[${errorCode}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
   };
 
   const handleDeleteRequest = (form) => { // 삭제 요청 핸들러

@@ -77,6 +77,17 @@ export const getCorrectionRequests = async () => {
   }
 };
 
+// 근무 기록 정정 요청 생성
+export const createCorrectionRequest = async (payload) => {
+  try {
+    const response = await httpClient.post('/api/worker/correction-requests', payload);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] createCorrectionRequest 에러:', error);
+    throw error;
+  }
+};
+
 // 근로자 근무 기록 조회
 export const getWorkRecords = async (startDate, endDate) => {
   try {

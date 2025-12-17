@@ -36,19 +36,16 @@ const saveNewAccessToken = (newAccessToken) => {
     userType: currentState.userType,
   }));
   
-  console.log('[httpClient] 새로운 access token 저장 완료');
 };
 
 // Refresh token 실패 시 로그아웃 처리 (idempotent)
 const handleRefreshTokenFailure = () => {
   // 이미 처리 중이면 중복 실행 방지
   if (isHandlingRefreshFailure) {
-    console.log('[httpClient] Refresh token 실패 처리 이미 진행 중 - 중복 실행 방지');
     return;
   }
   
   isHandlingRefreshFailure = true;
-  console.log('[httpClient] Refresh token 실패 - 로그아웃 처리');
   
   try {
     // localStorage 초기화
@@ -89,7 +86,6 @@ const httpClient = {
   async get(url, options = {}) {
     try {
       const fullUrl = `${API_BASE_URL}${url}`;
-      console.log('Request URL:', fullUrl);
       const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
@@ -103,7 +99,6 @@ const httpClient = {
       } catch (error) {
         // 401 에러로 토큰 갱신 후 재시도
         if (error.shouldRetry) {
-          console.log('[httpClient] GET 요청 재시도');
           const retryResponse = await fetch(fullUrl, {
             method: 'GET',
             headers: {
@@ -149,33 +144,19 @@ const httpClient = {
       
       const fullUrl = `${API_BASE_URL}${url}`;
       const requestBody = JSON.stringify(data);
-      
-      console.log('[httpClient] POST 요청 시작');
-      console.log('[httpClient] 요청 URL:', fullUrl);
-      console.log('[httpClient] 요청 헤더:', headers);
-      console.log('[httpClient] Accept 헤더 확인:', headers['Accept'] || headers['accept']);
-      console.log('[httpClient] 요청 본문:', data);
-      console.log('[httpClient] API_BASE_URL:', API_BASE_URL);
-      
+
       const response = await fetch(fullUrl, {
         method: 'POST',
         headers,
         body: requestBody,
         ...restOptions,
       });
-      
-      console.log('[httpClient] 응답 받음');
-      console.log('[httpClient] 응답 상태:', response.status, response.statusText);
-      console.log('[httpClient] 응답 OK:', response.ok);
-      console.log('[httpClient] 응답 Content-Type:', response.headers.get('Content-Type'));
-      console.log('[httpClient] 응답 Accept 헤더:', response.headers.get('Accept'));
-      
+
       try {
         return await this.handleResponse(response);
       } catch (error) {
         // 401 에러로 토큰 갱신 후 재시도 (refresh API 자체는 재시도하지 않음)
         if (error.shouldRetry && url !== '/api/auth/refresh') {
-          console.log('[httpClient] POST 요청 재시도');
           const retryResponse = await fetch(fullUrl, {
             method: 'POST',
             headers: {
@@ -221,7 +202,6 @@ const httpClient = {
       } catch (error) {
         // 401 에러로 토큰 갱신 후 재시도
         if (error.shouldRetry) {
-          console.log('[httpClient] PUT 요청 재시도');
           const retryResponse = await fetch(fullUrl, {
             method: 'PUT',
             headers: {
@@ -265,7 +245,6 @@ const httpClient = {
       } catch (error) {
         // 401 에러로 토큰 갱신 후 재시도
         if (error.shouldRetry) {
-          console.log('[httpClient] DELETE 요청 재시도');
           const retryResponse = await fetch(fullUrl, {
             method: 'DELETE',
             headers: {
@@ -293,14 +272,9 @@ const httpClient = {
   },
 
   async handleResponse(response, originalRequest = null) {
-    console.log('[httpClient] handleResponse 시작');
-    console.log('[httpClient] 응답 상태 코드:', response.status);
-    console.log('[httpClient] 응답 Content-Type:', response.headers.get('Content-Type'));
-    
+
     const text = await response.text();
-    
-    console.log('[httpClient] 응답 원본 텍스트:', text);
-    
+
     // 응답 데이터 파싱
     let data;
     if (!text) {
@@ -313,18 +287,13 @@ const httpClient = {
         data = { message: response.statusText };
       }
     }
-    
-    console.log('[httpClient] 파싱된 응답 데이터:', data);
-    console.log('[httpClient] response.ok:', response.ok);
-    console.log('[httpClient] data.success:', data.success);
-    
-    // 401, 403 에러 처리: Refresh token으로 토큰 갱신 후 재시도
-    if ((response.status === 401 || response.status === 403) && !originalRequest) {
-      console.log(`[httpClient] ${response.status} 에러 감지 - 토큰 갱신 시도`);
-      
+
+    // 401 에러 처리: Refresh token으로 토큰 갱신 후 재시도
+    // 403(Forbidden)은 권한 문제(비즈니스 로직)일 수 있으므로 토큰 갱신/로그아웃을 트리거하지 않음
+    if (response.status === 401 && !originalRequest) {
+
       // 이미 refresh token 요청 중이면 대기
       if (isRefreshing && refreshPromise) {
-        console.log('[httpClient] 이미 토큰 갱신 중 - 대기');
         try {
           await refreshPromise;
           // 토큰 갱신 완료 후 원래 요청 재시도는 호출한 곳에서 처리
