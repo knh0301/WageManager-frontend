@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { toast } from "react-toastify";
 import "../../../pages/workers/WorkerMyPage.css";
 
 export default function ProfileEdit({ user, onUserUpdate }) {
