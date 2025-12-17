@@ -12,6 +12,7 @@ import WorkerMyPage from "./pages/workers/WorkerMyPage.jsx";
 import DailyCalendarPage from "./pages/employer/DailyCalendarPage.jsx";
 import RemittanceManagePage from "./pages/employer/RemittanceManagePage.jsx";
 import WorkerManagePage from "./pages/employer/WorkerManagePage.jsx";
+import AddWorkplacePage from "./pages/employer/AddWorkplacePage.jsx";
 import EmployerMyPage from "./pages/employer/EmployerMyPage.jsx";
 import EmployerMyPageReceive from "./pages/employer/EmployerMyPageReceive.jsx";
 import NotificationPage from "./pages/NotificationPage.jsx";
@@ -64,6 +65,7 @@ function App() {
           <Route path="daily-calendar" element={<DailyCalendarPage />} />
           <Route path="remittance-manage" element={<RemittanceManagePage />} />
           <Route path="worker-manage" element={<WorkerManagePage />} />
+          <Route path="add-workplace" element={<AddWorkplacePage />} />
           <Route path="employer-mypage" element={<EmployerMyPage />} />
           <Route
             path="employer-mypage-receive"

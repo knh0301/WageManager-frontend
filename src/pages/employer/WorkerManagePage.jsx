@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaUser, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import "../../styles/workerManagePage.css";
@@ -16,6 +17,7 @@ import ScheduleGrid from "./components/ScheduleGrid";
 const daysOfWeek = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function WorkerManagePage() {
+  const navigate = useNavigate();
   const [workplaces, setWorkplaces] = useState(() => initialWorkplaces);
   const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -184,20 +186,9 @@ export default function WorkerManagePage() {
   const handleWorkplaceChange = (e) => {
     const value = e.target.value;
 
-    // "근무지 추가" 옵션 선택 시
+    // "근무지 추가" 옵션 선택 시 새 페이지로 이동
     if (value === "add-new") {
-      setIsAddingWorkplace(true);
-      setIsManagingWorkplaces(false);
-      setSelectedWorkplaceForEdit(null);
-      setEditingWorkplace(null);
-      setSelectedWorker(null);
-      setHoveredBlockGroup(null);
-      setIsEditingWork(false);
-      setEditedWorkInfo(null);
-      if (isAddingWorker) {
-        resetAddWorkerFlow();
-        setIsAddingWorker(false);
-      }
+      navigate("/employer/add-workplace");
       return;
     }
 
