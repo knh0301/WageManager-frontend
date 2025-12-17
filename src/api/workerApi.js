@@ -119,3 +119,49 @@ export const createWorkRecord = async (payload) => {
   }
 };
 
+// 근로자 급여 기록 목록 조회
+export const getSalaries = async () => {
+  try {
+    const response = await httpClient.get('/api/worker/salaries');
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getSalaries 에러:', error);
+    throw error;
+  }
+};
+
+// 근로자 급여 상세 정보 조회
+export const getSalaryDetail = async (salaryId) => {
+  try {
+    const response = await httpClient.get(`/api/worker/salaries/${salaryId}`);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getSalaryDetail 에러:', error);
+    throw error;
+  }
+};
+
+// 급여 자동 계산
+export const calculateSalary = async (contractId, year, month) => {
+  try {
+    const response = await httpClient.post(
+      `/api/worker/salaries/contracts/${contractId}/calculate?year=${year}&month=${month}`
+    );
+    return response;
+  } catch (error) {
+    console.error('[workerApi] calculateSalary 에러:', error);
+    throw error;
+  }
+};
+
+// 송금 내역 조회
+export const getPayments = async () => {
+  try {
+    const response = await httpClient.get('/api/worker/payments');
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getPayments 에러:', error);
+    throw error;
+  }
+};
+

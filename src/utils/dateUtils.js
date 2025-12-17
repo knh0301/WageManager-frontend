@@ -57,3 +57,22 @@ export const formatTime = (timeObj) => {
   return "";
 };
 
+// 날짜 문자열을 숫자와 요일로 변환 ("2025-12-17" -> { date: 17, day: "수" })
+export const parseWorkDate = (dateString) => {
+  if (!dateString) return { date: 0, day: "" };
+  
+  try {
+    const [year, month, day] = dateString.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    const dayIndex = date.getDay();
+    const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+    
+    return {
+      date: day,
+      day: dayLabels[dayIndex] || "",
+    };
+  } catch {
+    return { date: 0, day: "" };
+  }
+};
+
