@@ -164,10 +164,10 @@ export default function ProfileEdit({ user, onUserUpdate }) {
     }
   };
 
-  // kakaoId를 그대로 출력 (형식 변환 없이)
-  const formatKakaoId = (kakaoId) => {
-    if (!kakaoId) return "";
-    return String(kakaoId);
+  // 생년월일을 그대로 출력 (형식 변환 없이)
+  const formatBirthDate = (birthDate) => {
+    if (!birthDate) return "";
+    return String(birthDate);
   };
 
   const getUserTypeText = (userType) => {
@@ -185,7 +185,7 @@ export default function ProfileEdit({ user, onUserUpdate }) {
           <div className="worker-mypage-name-text-wrapper">
             <div className="worker-mypage-name-text">{localUser.name || ""}</div>
             <div className="worker-mypage-birth-text">
-              {formatKakaoId(localUser.birthDate)}
+              {formatBirthDate(localUser.birthDate)}
             </div>
             <div className="worker-mypage-gender-text">
               {getUserTypeText(localUser.userType)}
