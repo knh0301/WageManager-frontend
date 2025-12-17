@@ -130,26 +130,12 @@ export default function WorkerWeeklyCalendarPage() {
   // 근무 기록 정정 요청 확인
   const handleConfirmEdit = async (form) => {
     try {
-      // 1. 해당 workRecordId가 현재 로그인한 근로자의 근무 기록인지 확인
-      const [year, month, day] = form.date.split("-").map(Number);
-      const targetDate = new Date(year, month - 1, day);
-      
-      // 해당 날짜가 포함된 주의 시작일과 종료일 계산
-      const weekStart = getWeekStart(targetDate);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      
-      const startDate = `${weekStart.getFullYear()}-${pad2(weekStart.getMonth() + 1)}-${pad2(weekStart.getDate())}`;
-      const endDate = `${weekEnd.getFullYear()}-${pad2(weekEnd.getMonth() + 1)}-${pad2(weekEnd.getDate())}`;
-      
-      // 해당 주의 근무 기록 가져오기
-      const workRecordsResponse = await getWorkRecords(startDate, endDate);
-      const workRecordsData = workRecordsResponse.data || [];
-      
-      // workRecordId가 현재 근로자의 근무 기록 목록에 있는지 확인
+      // 1. 기존 상태에서 해당 workRecordId가 있는지 확인
+      // 클라이언트 측 검증은 UX 개선을 위한 것이며, 서버의 403 응답이 최종 검증입니다.
       const workRecordId = Number(form.recordId);
-      const isValidWorkRecord = workRecordsData.some(
-        (record) => Number(record.id) === workRecordId
+      const dateRecords = workRecords[form.date] || [];
+      const isValidWorkRecord = dateRecords.some(
+        (record) => record.id === workRecordId
       );
       
       if (!isValidWorkRecord) {
