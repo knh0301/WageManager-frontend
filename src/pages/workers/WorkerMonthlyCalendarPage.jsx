@@ -381,21 +381,15 @@ function WorkerMonthlyCalendarPage() {
       }
 
       // 2. 정정 요청 보내기
+      // 시간을 "HH:mm:ss" 형식의 문자열로 변환
+      const startTimeStr = `${pad2(Number(form.startHour))}:${pad2(Number(form.startMinute))}:00`;
+      const endTimeStr = `${pad2(Number(form.endHour))}:${pad2(Number(form.endMinute))}:00`;
+      
       const payload = {
         workRecordId: workRecordId,
         requestedWorkDate: form.date,
-        requestedStartTime: {
-          hour: Number(form.startHour),
-          minute: Number(form.startMinute),
-          second: 0,
-          nano: 0,
-        },
-        requestedEndTime: {
-          hour: Number(form.endHour),
-          minute: Number(form.endMinute),
-          second: 0,
-          nano: 0,
-        },
+        requestedStartTime: startTimeStr,
+        requestedEndTime: endTimeStr,
       };
 
       console.log("=== 근무 기록 정정 요청 ===");
