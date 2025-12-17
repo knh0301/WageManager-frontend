@@ -18,6 +18,7 @@ export default function SignupPage() {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState(''); // 이름 입력 필드 추가
   const [kakaoPayLink, setKakaoPayLink] = useState('');
+  const [kakaoPayTouched, setKakaoPayTouched] = useState(false);
   const [kakaoId, setKakaoId] = useState(null);
   const [kakaoName, setKakaoName] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
@@ -326,19 +327,23 @@ export default function SignupPage() {
             <input 
               type="url" 
               value={kakaoPayLink}
-              onChange={(e) => setKakaoPayLink(e.target.value)}
+              onChange={(e) => {
+                setKakaoPayLink(e.target.value);
+                setKakaoPayTouched(true);
+              }}
+              onBlur={() => setKakaoPayTouched(true)}
               placeholder="https://qr.kakaopay.com/..."
               className="form-input"
             />
             <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
               💡 카카오페이 앱에서 "송금" → "QR코드 보기" → 링크 복사
             </p>
-            {kakaoPayLink && !isValidKakaoPayLink && (
+            {kakaoPayTouched && kakaoPayLink && !isValidKakaoPayLink && (
               <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                 카카오페이 링크는 https://qr.kakaopay.com/로 시작해야 합니다.
               </p>
             )}
-            {!kakaoPayLink && (
+            {kakaoPayTouched && !kakaoPayLink && (
               <p style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.25rem' }}>
                 카카오페이 링크를 입력해주세요.
               </p>
