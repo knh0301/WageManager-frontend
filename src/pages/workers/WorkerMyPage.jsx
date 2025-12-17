@@ -5,6 +5,7 @@ import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
 import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo, getContracts, getContractDetail } from "../../api/workerApi";
+import { formatDateToKorean } from "../../utils/dateUtils";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -21,7 +22,7 @@ export default function WorkerMyPage() {
     employeeCode: "",
     profileImageUrl: null,
   });
-
+  
   // 프로필 이미지 상태 관리
   const [profileImage, setProfileImage] = useState(null);
 
@@ -120,17 +121,6 @@ export default function WorkerMyPage() {
   const [previousWorkplaces, setPreviousWorkplaces] = useState([]);
   const [isLoadingWorkplaces, setIsLoadingWorkplaces] = useState(false);
 
-  // 날짜 형식 변환 함수 (2025-12-17 -> 2025년 12월 17일)
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    try {
-      const [year, month, day] = dateString.split("-");
-      return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
-    } catch {
-      return dateString;
-    }
-  };
-
   // 근무지 정보 조회
   useEffect(() => {
     const fetchWorkplaces = async () => {
@@ -147,6 +137,12 @@ export default function WorkerMyPage() {
           const detailPromises = contracts.map((contract) => 
             getContractDetail(contract.id).catch((error) => {
               console.error(`계약 ${contract.id} 상세 정보 조회 실패:`, error);
+              const errorStatus = error.status || error.response?.status || '알 수 없음';
+              const errorMessage = error.error?.message || error.message || '계약 상세 정보 조회에 실패했습니다.';
+              toast.error(`[${errorStatus}] ${errorMessage}`, {
+                position: "top-right",
+                autoClose: 3000,
+              });
               return null;
             })
           );
@@ -162,7 +158,7 @@ export default function WorkerMyPage() {
               const contractData = response.data;
               const workplaceData = {
                 name: contractData.workplaceName || "",
-                startDate: formatDate(contractData.contractStartDate),
+                startDate: formatDateToKorean(contractData.contractStartDate),
                 hourlyWage: contractData.hourlyWage || 0,
               };
               
@@ -171,7 +167,7 @@ export default function WorkerMyPage() {
                 currentWorkplaces.push(workplaceData);
               } else {
                 // 이전 근무지
-                workplaceData.endDate = formatDate(contractData.contractEndDate);
+                workplaceData.endDate = formatDateToKorean(contractData.contractEndDate);
                 previousWorkplacesList.push(workplaceData);
               }
             }
@@ -186,7 +182,17 @@ export default function WorkerMyPage() {
         }
       } catch (error) {
         console.error('근무지 정보 조회 실패:', error);
-        // 에러 시 빈 배열로 설정
+        // 에러 메시지 추출
+        const errorStatus = error.status || error.response?.status || '알 수 없음';
+        const errorMessage = error.error?.message || error.message || '근무지 정보 조회에 실패했습니다.';
+        
+        // react-toastify로 에러 메시지 표시
+        toast.error(`[${errorStatus}] ${errorMessage}`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        
+        // 에러 시 빈 배열로 설정 (UI에는 "현재 근무지가 없습니다" 메시지 표시)
         setWorkplaces([]);
         setPreviousWorkplaces([]);
       } finally {
@@ -264,8 +270,8 @@ export default function WorkerMyPage() {
         if (response.success && response.data) {
           const userData = response.data;
           // API 응답 데이터로 화면 업데이트
-          setUser((prev) => ({
-            ...prev,
+    setUser((prev) => ({
+      ...prev,
             name: userData.name || prev.name,
             phone: userData.phone || prev.phone,
             profileImageUrl: userData.profileImageUrl || prev.profileImageUrl,
