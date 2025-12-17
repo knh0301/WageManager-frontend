@@ -44,7 +44,7 @@ export default function WorkerRemittancePage() {
   // 선택된 근무지 정보 조회
   const selectedWorkplace = workplaces.find((wp) => wp.id === selectedWorkplaceId);
 
-  // 근무지 목록 가져오기
+  // 근무지 목록 가져오기 (마운트 시에만 실행)
   useEffect(() => {
     const fetchWorkplaces = async () => {
       try {
@@ -88,7 +88,8 @@ export default function WorkerRemittancePage() {
     };
 
     fetchWorkplaces();
-  }, [selectedWorkplaceId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 근무 기록 가져오기 (표시용, 급여 계산은 calculateSalary API 사용)
   const fetchWorkRecords = useCallback(async () => {
