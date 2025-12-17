@@ -143,19 +143,24 @@
   white-space: nowrap;
 }
 
-.work-label-burger {
-  background-color: #ffe598;
+.work-label-red {
+  background-color: var(--color-red);
+  color: #fff;
+}
+
+.work-label-yellow {
+  background-color: var(--color-yellow);
   color: #634600;
 }
 
-.work-label-mcdonald {
-  background-color: #ffb3b3;
-  color: #6a1f1f;
+.work-label-mint {
+  background-color: var(--color-mint);
+  color: #1b2a6d;
 }
 
-.work-label-default {
-  background-color: #dde5ff;
-  color: #1b2a6d;
+.work-label-brown {
+  background-color: var(--color-brown);
+  color: #fff;
 }
 
 .work-label-pending {

@@ -10,14 +10,16 @@ const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 
-const workLabelColor = (place, status) => { // 근무지와 상태에 따른 라벨 색상 클래스명 반환
+const workLabelColor = (contractId, status, contractColorMap) => { // contractId와 상태에 따른 라벨 색상 클래스명 반환
   // PENDING_APPROVAL 상태인 경우 회색으로 표시
   if (status === "PENDING_APPROVAL") return "pending";
   
-  // 근무지에 따른 색상
-  if (place.includes("버거킹")) return "burger";
-  if (place.includes("맥도날드")) return "mcdonald";
-  return "default";
+  // contractId를 기반으로 색상 인덱스 가져오기
+  const colorIndex = contractColorMap[contractId] ?? 3; // 기본값은 3 (4번째 색상)
+  
+  // 색상 인덱스에 따라 클래스명 반환 (0: red, 1: yellow, 2: mint, 3: brown)
+  const colorClasses = ["red", "yellow", "mint", "brown"];
+  return colorClasses[colorIndex] || "brown";
 };
 
 const getKoreanDayLabel = (dayIndex) => { 
@@ -109,6 +111,7 @@ function WorkerMonthlyCalendarPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); 
   const [addForm, setAddForm] = useState(null);
   const [workplaceOptions, setWorkplaceOptions] = useState([]); // 근무지 목록
+  const [contractColorMap, setContractColorMap] = useState({}); // contractId -> 색상 인덱스 맵
 
   // 근무 기록 가져오기 함수 (재사용 가능하도록 분리)
   const fetchWorkRecords = useCallback(async () => {
@@ -209,9 +212,18 @@ function WorkerMonthlyCalendarPage() {
         );
         
         setWorkplaceOptions(workplaces);
+        
+        // contractId -> 색상 인덱스 맵 생성 (순서대로 0, 1, 2, 3, 3, 3...)
+        const colorMap = {};
+        workplaces.forEach((workplace, index) => {
+          // 0: red, 1: yellow, 2: mint, 3: brown (4번째부터는 모두 brown)
+          colorMap[workplace.id] = Math.min(index, 3);
+        });
+        setContractColorMap(colorMap);
       } catch (error) {
         console.error("[WorkerMonthlyCalendarPage] 근무지 목록 조회 실패:", error);
         setWorkplaceOptions([]);
+        setContractColorMap({});
       }
     };
     
@@ -568,6 +580,7 @@ function WorkerMonthlyCalendarPage() {
           onSelectDay={handleDateClick}
           makeDateKey={makeDateKey}
           workLabelColor={workLabelColor}
+          contractColorMap={contractColorMap}
           todayKey={todayKey}
         />
 
