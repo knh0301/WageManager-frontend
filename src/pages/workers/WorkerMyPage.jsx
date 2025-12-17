@@ -3,7 +3,7 @@ import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import { getUserProfile } from "../../api/workerApi";
+import { getUserProfile, getWorkerInfo } from "../../api/workerApi";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -24,15 +24,20 @@ export default function WorkerMyPage() {
   // 프로필 이미지 상태 관리
   const [profileImage, setProfileImage] = useState(null);
 
-  // API로 사용자 프로필 조회
+  // API로 사용자 프로필 조회 및 근로자 정보 조회
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserData = async () => {
       try {
         setIsLoading(true);
-        const response = await getUserProfile();
         
-        if (response.success && response.data) {
-          const userData = response.data;
+        // 1. 사용자 프로필 조회
+        const profileResponse = await getUserProfile();
+        
+        if (profileResponse.success && profileResponse.data) {
+          const userData = profileResponse.data;
+          const userId = userData.id; // id를 userId로 저장
+          
+          // 첫 번째 API 데이터로 사용자 정보 설정
           setUser({
             name: userData.name || "",
             birthDate: userData.kakaoId || "", // kakaoId를 그대로 출력
@@ -43,6 +48,38 @@ export default function WorkerMyPage() {
             profileImageUrl: userData.profileImageUrl || null,
           });
           setProfileImage(userData.profileImageUrl || null);
+          
+          // 2. 근로자 정보 조회 (userId가 있을 때만)
+          if (userId) {
+            try {
+              const workerResponse = await getWorkerInfo(userId);
+              
+              if (workerResponse.success && workerResponse.data) {
+                const workerData = workerResponse.data;
+                // kakaoPayLink와 employeeCode만 업데이트
+                setUser((prev) => ({
+                  ...prev,
+                  kakaoPayLink: workerData.kakaoPayLink || "",
+                  employeeCode: workerData.workerCode || "",
+                }));
+              } else {
+                // 에러 응답인 경우 kakaoPayLink와 employeeCode만 빈 문자열로 처리
+                setUser((prev) => ({
+                  ...prev,
+                  kakaoPayLink: "",
+                  employeeCode: "",
+                }));
+              }
+            } catch (workerError) {
+              console.error('근로자 정보 조회 실패:', workerError);
+              // 에러 시 kakaoPayLink와 employeeCode만 빈 문자열로 처리
+              setUser((prev) => ({
+                ...prev,
+                kakaoPayLink: "",
+                employeeCode: "",
+              }));
+            }
+          }
         } else {
           // 에러 응답인 경우 빈 문자열로 초기화
           setUser({
@@ -74,7 +111,7 @@ export default function WorkerMyPage() {
       }
     };
 
-    fetchUserProfile();
+    fetchUserData();
   }, []);
 
   // 임시 근무지 데이터
