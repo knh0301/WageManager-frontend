@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import "../../styles/remittanceManagePage.css";
 import {
   initialWorkplaces,
@@ -7,18 +7,101 @@ import {
 } from "./dummyData";
 import { formatCurrency, formatBreakTime } from "./utils/formatUtils";
 import { allowanceDefinitions } from "./utils/shiftUtils";
+import workplaceService from "../../services/workplaceService";
+import contractService from "../../services/contractService";
+import workRecordService from "../../services/workRecordService";
 
 export default function RemittanceManagePage() {
-  const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(1);
-  const [currentYear, setCurrentYear] = useState(2025);
-  const [currentMonth, setCurrentMonth] = useState(10);
+  const today = new Date();
+  const [workplaces, setWorkplaces] = useState([]);
+  const [selectedWorkplaceId, setSelectedWorkplaceId] = useState(null);
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
+  const [workersList, setWorkersList] = useState({});
+  const [workRecords, setWorkRecords] = useState([]);
+
+  // 근무지 목록 조회
+  useEffect(() => {
+    const fetchWorkplaces = async () => {
+      try {
+        const data = await workplaceService.getWorkplaces();
+        setWorkplaces(data);
+        if (data.length > 0 && !selectedWorkplaceId) {
+          setSelectedWorkplaceId(data[0].id);
+        }
+      } catch (error) {
+        console.error("근무지 조회 실패:", error);
+        // 에러 시 더미 데이터 사용
+        setWorkplaces(initialWorkplaces);
+        if (!selectedWorkplaceId) {
+          setSelectedWorkplaceId(1);
+        }
+      }
+    };
+    fetchWorkplaces();
+  }, []);
+
+  // 선택된 근무지의 근로자 목록 조회
+  useEffect(() => {
+    if (!selectedWorkplaceId) return;
+
+    const fetchWorkers = async () => {
+      try {
+        const workers = await contractService.getContractsByWorkplace(selectedWorkplaceId);
+        console.log('RemittancePage - Fetched workers from API:', workers);
+        setWorkersList((prev) => ({
+          ...prev,
+          [selectedWorkplaceId]: workers,
+        }));
+      } catch (error) {
+        console.error("근로자 목록 조회 실패:", error);
+        console.log('RemittancePage - Using dummy data:', workplaceWorkers[selectedWorkplaceId]);
+        // 에러 시 더미 데이터 사용
+        setWorkersList((prev) => ({
+          ...prev,
+          [selectedWorkplaceId]: workplaceWorkers[selectedWorkplaceId] || [],
+        }));
+      }
+    };
+
+    fetchWorkers();
+  }, [selectedWorkplaceId]);
+
+  // 근무 기록 조회
+  useEffect(() => {
+    if (!selectedWorkplaceId) return;
+
+    const fetchWorkRecords = async () => {
+      try {
+        const startDate = new Date(currentYear, currentMonth - 1, 1);
+        const endDate = new Date(currentYear, currentMonth, 0);
+
+        const data = await workRecordService.getWorkRecords(
+          selectedWorkplaceId,
+          startDate,
+          endDate
+        );
+
+        setWorkRecords(data);
+      } catch (error) {
+        console.error("근무 기록 조회 실패:", error);
+        setWorkRecords([]);
+      }
+    };
+
+    fetchWorkRecords();
+  }, [selectedWorkplaceId, currentYear, currentMonth]);
 
   const selectedWorkplace =
-    initialWorkplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
+    workplaces.find((wp) => wp.id === selectedWorkplaceId)?.name || "";
 
   const workers = useMemo(() => {
-    return workplaceWorkers[selectedWorkplaceId] || [];
-  }, [selectedWorkplaceId]);
+    const result = workersList[selectedWorkplaceId] || [];
+    console.log('RemittancePage - workers:', result);
+    console.log('RemittancePage - selectedWorkplaceId:', selectedWorkplaceId);
+    console.log('RemittancePage - workersList:', workersList);
+    return result;
+  }, [selectedWorkplaceId, workersList]);
 
   const selectedWorker = useMemo(() => {
     return workers.length > 0 ? workers[0] : null;
@@ -29,31 +112,75 @@ export default function RemittanceManagePage() {
 
   const [expandedRecordIndex, setExpandedRecordIndex] = useState(null);
 
-  const workerData = useMemo(() => {
-    if (!currentSelectedWorker || !remittanceData[selectedWorkplace]) {
-      return null;
+  // LocalTime을 문자열로 변환
+  const formatTime = (time) => {
+    if (Array.isArray(time)) {
+      const [h, m] = time;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    } else if (typeof time === 'string') {
+      return time.substring(0, 5);
     }
-    const monthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-    return (
-      remittanceData[selectedWorkplace]?.[currentSelectedWorker]?.[monthKey] ||
-      null
-    );
-  }, [currentSelectedWorker, selectedWorkplace, currentYear, currentMonth]);
+    return time;
+  };
+
+  // 근무 기록을 표시용 데이터로 변환
+  const workerData = useMemo(() => {
+    console.log('RemittancePage - currentSelectedWorker:', currentSelectedWorker);
+    console.log('RemittancePage - workRecords:', workRecords);
+
+    if (!currentSelectedWorker || !workRecords.length) {
+      console.log('RemittancePage - No worker or no records');
+      return [];
+    }
+
+    // 선택된 근로자의 근무 기록만 필터링
+    const filtered = workRecords.filter(record => {
+      console.log('RemittancePage - Comparing:', record.workerName, '===', currentSelectedWorker.workerName);
+      return record.workerName === currentSelectedWorker.workerName;
+    });
+    console.log('RemittancePage - Filtered records:', filtered);
+
+    return filtered
+      .map(record => {
+        const date = new Date(record.workDate);
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+        // 근무 시간 계산 (시급 * 근무시간)
+        const startTime = formatTime(record.startTime);
+        const endTime = formatTime(record.endTime);
+        const [startH, startM] = startTime.split(':').map(Number);
+        const [endH, endM] = endTime.split(':').map(Number);
+        const startDecimal = startH + startM / 60;
+        const endDecimal = endH + endM / 60;
+        const workHours = endDecimal - startDecimal - (record.breakMinutes || 0) / 60;
+        const wage = Math.floor(workHours * (record.hourlyWage || 0));
+
+        return {
+          date: date.getDate(),
+          day: dayNames[date.getDay()],
+          startTime,
+          endTime,
+          hourlyWage: record.hourlyWage,
+          breakMinutes: record.breakMinutes,
+          wage,
+          allowances: {
+            overtime: { enabled: false, rate: 0 },
+            night: { enabled: false, rate: 0 },
+            weekend: { enabled: false, rate: 0 },
+          },
+          socialInsurance: true,
+          withholdingTax: true,
+        };
+      })
+      .sort((a, b) => a.date - b.date);
+  }, [currentSelectedWorker, workRecords]);
 
   const totalWage = useMemo(() => {
-    if (!currentSelectedWorker || !remittanceData[selectedWorkplace]) {
+    if (!workerData || workerData.length === 0) {
       return 0;
     }
-    const monthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
-    const workerMonthData =
-      remittanceData[selectedWorkplace]?.[currentSelectedWorker]?.[monthKey];
-    if (!workerMonthData || workerMonthData.length === 0) {
-      return 0;
-    }
-
-    // 선택된 연/월의 레코드만 합산
-    return workerMonthData.reduce((sum, record) => sum + (record.wage ?? 0), 0);
-  }, [currentSelectedWorker, selectedWorkplace, currentYear, currentMonth]);
+    return workerData.reduce((sum, record) => sum + (record.wage ?? 0), 0);
+  }, [workerData]);
 
   const handlePrevMonth = () => {
     setCurrentMonth((prev) => {
@@ -82,8 +209,8 @@ export default function RemittanceManagePage() {
     setExpandedRecordIndex(null);
   };
 
-  const handleWorkerClick = (workerName) => {
-    setManuallySelectedWorker(workerName);
+  const handleWorkerClick = (worker) => {
+    setManuallySelectedWorker(worker);
     setExpandedRecordIndex(null);
   };
 
@@ -104,7 +231,7 @@ export default function RemittanceManagePage() {
             onChange={handleWorkplaceChange}
             className="workplace-select"
           >
-            {initialWorkplaces.map((wp) => (
+            {workplaces.map((wp) => (
               <option key={wp.id} value={wp.id}>
                 {wp.name}
               </option>
@@ -114,13 +241,13 @@ export default function RemittanceManagePage() {
         <div className="remittance-worker-list">
           {workers.map((worker) => (
             <div
-              key={worker}
+              key={worker.id}
               className={`worker-item ${
-                currentSelectedWorker === worker ? "selected" : ""
+                currentSelectedWorker?.id === worker.id ? "selected" : ""
               }`}
               onClick={() => handleWorkerClick(worker)}
             >
-              {worker}
+              {worker.workerName}
             </div>
           ))}
         </div>
@@ -187,7 +314,7 @@ export default function RemittanceManagePage() {
                     <div className="detail-header-left">
                       <div>
                         <h3 className="detail-name">
-                          {currentSelectedWorker || "-"}
+                          {currentSelectedWorker?.workerName || "-"}
                         </h3>
                       </div>
                       <div>

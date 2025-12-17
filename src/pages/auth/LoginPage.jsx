@@ -38,18 +38,20 @@ export default function LoginPage() {
     }
   };
 
-  const handleDevLogin = async () => {
+  const handleDevLogin = async (userType = 'WORKER') => {
     try {
-      // 기본값으로 개발자 로그인 (WORKER 타입)
-      const response = await devLogin('1', '테스트 사용자', 'WORKER');
-      
+      // userType에 따라 다른 사용자로 로그인
+      const userId = userType === 'EMPLOYER' ? '2' : '1';
+      const userName = userType === 'EMPLOYER' ? '테스트 고용주' : '테스트 근로자';
+      const response = await devLogin(userId, userName, userType);
+
       if (response.success && response.data?.accessToken) {
         // localStorage에 모든 데이터 저장
         localStorage.setItem('token', response.data.accessToken);
         localStorage.setItem('userId', String(response.data.userId));
         localStorage.setItem('name', response.data.name || '');
         localStorage.setItem('userType', response.data.userType || '');
-        
+
         // Redux에 모든 데이터 저장
         dispatch(setAuthToken({
           accessToken: response.data.accessToken,
@@ -57,7 +59,7 @@ export default function LoginPage() {
           name: response.data.name,
           userType: response.data.userType,
         }));
-        
+
         // userType에 따라 리다이렉트
         if (response.data.userType === 'EMPLOYER') {
           navigate('/employer');
@@ -96,18 +98,32 @@ export default function LoginPage() {
         </button>
         {/* 개발자 로그인 버튼 (개발 환경에서만 표시) */}
         {import.meta.env.DEV && (
-          <button
-            onClick={handleDevLogin}
-            className="px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
-            style={{
-              backgroundColor: 'var(--color-background)',
-              color: 'var(--color-main)',
-              border: '2px solid var(--color-background)',
-              cursor: 'pointer',
-            }}
-          >
-            개발자 로그인
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => handleDevLogin('WORKER')}
+              className="px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
+              style={{
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-main)',
+                border: '2px solid var(--color-background)',
+                cursor: 'pointer',
+              }}
+            >
+              테스트 근로자 로그인
+            </button>
+            <button
+              onClick={() => handleDevLogin('EMPLOYER')}
+              className="px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
+              style={{
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-main)',
+                border: '2px solid var(--color-background)',
+                cursor: 'pointer',
+              }}
+            >
+              테스트 고용주 로그인
+            </button>
+          </div>
         )}
       </div>
     </div>
