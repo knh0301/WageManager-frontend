@@ -7,6 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER;
 // Refresh token 요청 중인지 추적 (동시 요청 방지)
 let isRefreshing = false;
 let refreshPromise = null;
+// Refresh token 실패 처리 중인지 추적 (중복 실행 방지)
+let isHandlingRefreshFailure = false;
 
 // 토큰을 가져오는 헬퍼 함수
 const getAuthHeaders = () => {
@@ -37,8 +39,15 @@ const saveNewAccessToken = (newAccessToken) => {
   console.log('[httpClient] 새로운 access token 저장 완료');
 };
 
-// Refresh token 실패 시 로그아웃 처리
+// Refresh token 실패 시 로그아웃 처리 (idempotent)
 const handleRefreshTokenFailure = () => {
+  // 이미 처리 중이면 중복 실행 방지
+  if (isHandlingRefreshFailure) {
+    console.log('[httpClient] Refresh token 실패 처리 이미 진행 중 - 중복 실행 방지');
+    return;
+  }
+  
+  isHandlingRefreshFailure = true;
   console.log('[httpClient] Refresh token 실패 - 로그아웃 처리');
   
   // localStorage 초기화
