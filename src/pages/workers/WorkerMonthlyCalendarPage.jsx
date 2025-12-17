@@ -9,6 +9,14 @@ import { formatTime, pad2 } from "../../utils/dateUtils";
 
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
+// contractId를 안전하게 id로 변환하는 함수
+const getId = (contractId) => {
+  if (contractId === null || contractId === undefined) return null;
+  if (typeof contractId === 'object' && 'id' in contractId) {
+    return contractId.id;
+  }
+  return contractId;
+};
 
 const workLabelColor = (contractId, status, contractColorMap) => { // contractId와 상태에 따른 라벨 색상 클래스명 반환
   // contractId를 기반으로 색상 인덱스 가져오기
@@ -112,8 +120,11 @@ function WorkerMonthlyCalendarPage() {
       await Promise.all(
         contractIds.map(async (contractId) => {
           try {
-            // contractId가 객체인 경우 id 필드 추출
-            const id = typeof contractId === 'object' ? contractId.id : contractId;
+            const id = getId(contractId);
+            if (!id) {
+              console.warn(`[WorkerMonthlyCalendarPage] 유효하지 않은 contractId:`, contractId);
+              return;
+            }
             
             const contractDetail = await getContractDetail(id);
             

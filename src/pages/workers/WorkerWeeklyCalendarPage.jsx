@@ -42,6 +42,15 @@ const mapWorkRecords = (apiData, hourlyWageMap) => {
   return { recordsByDate };
 };
 
+// contractId를 안전하게 id로 변환하는 함수
+const getId = (contractId) => {
+  if (contractId === null || contractId === undefined) return null;
+  if (typeof contractId === 'object' && 'id' in contractId) {
+    return contractId.id;
+  }
+  return contractId;
+};
+
 export default function WorkerWeeklyCalendarPage() {
   const today = new Date();
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(today));
@@ -71,7 +80,12 @@ export default function WorkerWeeklyCalendarPage() {
       await Promise.all(
         contractIds.map(async (contractId) => {
           try {
-            const id = typeof contractId === 'object' ? contractId.id : contractId;
+            const id = getId(contractId);
+            if (!id) {
+              console.warn(`[WorkerWeeklyCalendarPage] 유효하지 않은 contractId:`, contractId);
+              return;
+            }
+            
             const contractDetail = await getContractDetail(id);
             
             if (contractDetail.data?.hourlyWage !== undefined) {
