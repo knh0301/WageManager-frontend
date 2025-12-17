@@ -172,14 +172,12 @@ export default function WorkerWeeklyCalendarPage() {
       );
       
       if (!isValidWorkRecord) {
-        toast.error(
-          "[FORBIDDEN] 본인의 근무 기록만 정정 요청할 수 있습니다.",
-          {
-            position: "top-right",
-            autoClose: 3000,
-          }
-        );
-        return;
+        const errorMessage = "[FORBIDDEN] 본인의 근무 기록만 정정 요청할 수 있습니다.";
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        throw new Error(errorMessage);
       }
 
       // 2. 정정 요청 보내기
@@ -202,10 +200,11 @@ export default function WorkerWeeklyCalendarPage() {
           autoClose: 3000,
         });
         // 정정 요청은 고용주 승인 후에야 변경되므로 UI 업데이트하지 않음
-        // WeeklyCalendar 컴포넌트에서 폼을 닫도록 처리
+        // 성공 시 WeeklyCalendar 컴포넌트에서 폼을 닫도록 처리
         return;
       }
 
+      // response.success가 false인 경우 Error를 throw하여 WeeklyCalendar의 catch에서 처리
       const errorMessage =
         response?.error?.message || "근무 기록 정정 요청에 실패했습니다.";
       const errorCode = response?.error?.code || "UNKNOWN";
@@ -214,6 +213,8 @@ export default function WorkerWeeklyCalendarPage() {
         position: "top-right",
         autoClose: 3000,
       });
+      
+      throw new Error(errorMessage);
     } catch (error) {
       const status = error.status || error.response?.status || "";
       const statusText = status ? `[${status}] ` : "";
