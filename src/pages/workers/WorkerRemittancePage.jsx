@@ -6,7 +6,7 @@ import {
 import { formatCurrency } from "../employer/utils/formatUtils";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import WorkDetailList from "../../components/worker/RemittancePage/WorkDetailList";
-import { getContracts, getContractDetail, getWorkRecords, getSalaries, getSalaryDetail } from "../../api/workerApi";
+import { getContracts, getContractDetail, getWorkRecords, calculateSalary } from "../../api/workerApi";
 import { formatTime, parseWorkDate, pad2 } from "../../utils/dateUtils";
 
 /**
@@ -40,6 +40,8 @@ export default function WorkerRemittancePage() {
   const [workplaceView, setWorkplaceView] = useState(false); // 근무지 선택 드롭다운 열림/닫힘 상태
   const [workRecords, setWorkRecords] = useState([]); // 근무 기록 목록
   const [isLoading, setIsLoading] = useState(false);
+  const [calculatedSalary, setCalculatedSalary] = useState(null); // 계산된 급여 정보
+  const [isCalculatingSalary, setIsCalculatingSalary] = useState(false); // 급여 계산 중 상태
 
   // 선택된 근무지 정보 조회
   const selectedWorkplace = workplaces.find((wp) => wp.id === selectedWorkplaceId);
@@ -95,7 +97,7 @@ export default function WorkerRemittancePage() {
     fetchWorkplaces();
   }, [selectedWorkplaceId]);
 
-  // 근무 기록 가져오기
+  // 근무 기록 가져오기 (표시용, 급여 계산은 calculateSalary API 사용)
   const fetchWorkRecords = useCallback(async () => {
     if (!selectedWorkplaceId) {
       setWorkRecords([]);
@@ -105,7 +107,7 @@ export default function WorkerRemittancePage() {
     try {
       setIsLoading(true);
       
-      // 1. 계약 상세 정보 가져오기 (시급, payrollDeductionType)
+      // 계약 상세 정보 가져오기 (workplaceName 등)
       const contractDetail = await getContractDetail(selectedWorkplaceId);
       const hourlyWage = contractDetail.data?.hourlyWage || 0;
       const payrollDeductionType = contractDetail.data?.payrollDeductionType || '';
@@ -114,7 +116,7 @@ export default function WorkerRemittancePage() {
       const hasSocialInsurance = payrollDeductionType.includes('INSURANCE');
       const hasWithholdingTax = payrollDeductionType.includes('TAX');
 
-      // 2. 해당 월의 근무 기록 가져오기
+      // 해당 월의 근무 기록 가져오기
       const lastDay = new Date(currentYear, currentMonth, 0).getDate();
       const startDate = `${currentYear}-${pad2(currentMonth)}-${pad2(1)}`;
       const endDate = `${currentYear}-${pad2(currentMonth)}-${pad2(lastDay)}`;
@@ -122,77 +124,50 @@ export default function WorkerRemittancePage() {
       const workRecordsResponse = await getWorkRecords(startDate, endDate);
       const workRecordsData = workRecordsResponse.data || [];
 
-      // 3. 급여 기록 목록 가져오기
-      const salariesResponse = await getSalaries();
-      const salariesList = salariesResponse.data || [];
+      // 근무 기록 매핑 (급여 계산은 calculateSalary API 결과 사용)
+      const mappedRecords = workRecordsData
+        .filter((record) => record.contractId === selectedWorkplaceId && record.status !== "PENDING_APPROVAL")
+        .map((record) => {
+          // 날짜 파싱
+          const { date, day } = parseWorkDate(record.workDate);
 
-      // 4. 각 근무 기록에 대한 급여 상세 정보 가져오기
-      const mappedRecords = await Promise.all(
-        workRecordsData
-          .filter((record) => record.contractId === selectedWorkplaceId && record.status !== "PENDING_APPROVAL")
-          .map(async (record) => {
-            // 날짜 파싱
-            const { date, day } = parseWorkDate(record.workDate);
-            
-            // 해당 근무 기록의 급여 정보 찾기
-            const salary = salariesList.find((s) => s.workRecordId === record.id);
-            
-            let overtimePay = 0;
-            let nightPay = 0;
-            let holidayPay = 0;
-            
-            if (salary) {
-              try {
-                const salaryDetail = await getSalaryDetail(salary.id);
-                overtimePay = salaryDetail.data?.overtimePay || 0;
-                nightPay = salaryDetail.data?.nightPay || 0;
-                holidayPay = salaryDetail.data?.holidayPay || 0;
-              } catch (error) {
-                console.error(`[WorkerRemittancePage] 급여 ${salary.id} 상세 정보 조회 실패:`, error);
-              }
-            }
+          // 기본 급여 계산 (표시용, 실제 급여는 calculateSalary API 결과 사용)
+          const baseWage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
 
-            // 수당 활성화 여부 및 비율 계산
-            const baseWage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
-            const overtimeRate = overtimePay > 0 ? Math.round((overtimePay / baseWage) * 100) : 0;
-            const nightRate = nightPay > 0 ? Math.round((nightPay / baseWage) * 100) : 0;
-            const holidayRate = holidayPay > 0 ? Math.round((holidayPay / baseWage) * 100) : 0;
-
-            return {
-              id: record.id,
-              date: date,
-              day: day,
-              startTime: formatTime(record.startTime) || "00:00",
-              endTime: formatTime(record.endTime) || "00:00",
-              workplace: contractDetail.data?.workplaceName || '',
-              breakMinutes: record.breakMinutes || 0,
-              hourlyWage: hourlyWage,
-              wage: baseWage + overtimePay + nightPay + holidayPay,
-              allowances: {
-                overtime: {
-                  enabled: overtimePay > 0,
-                  rate: overtimeRate,
-                },
-                night: {
-                  enabled: nightPay > 0,
-                  rate: nightRate,
-                },
-                holiday: {
-                  enabled: holidayPay > 0,
-                  rate: holidayRate,
-                },
+          return {
+            id: record.id,
+            date: date,
+            day: day,
+            startTime: formatTime(record.startTime) || "00:00",
+            endTime: formatTime(record.endTime) || "00:00",
+            workplace: contractDetail.data?.workplaceName || '',
+            breakMinutes: record.breakMinutes || 0,
+            hourlyWage: hourlyWage,
+            wage: baseWage, // 기본 급여만 표시 (실제 급여는 calculateSalary API 결과 사용)
+            allowances: {
+              overtime: {
+                enabled: false,
+                rate: 0,
               },
-              socialInsurance: hasSocialInsurance,
-              withholdingTax: hasWithholdingTax,
-            };
-          })
-      );
+              night: {
+                enabled: false,
+                rate: 0,
+              },
+              holiday: {
+                enabled: false,
+                rate: 0,
+              },
+            },
+            socialInsurance: hasSocialInsurance,
+            withholdingTax: hasWithholdingTax,
+          };
+        });
 
       // 날짜 기준으로 정렬
       const sortedRecords = [...mappedRecords].sort((a, b) => {
-      if (sortOrder === "latest") {
+        if (sortOrder === "latest") {
           return b.date - a.date; // 최신순 (큰 날짜가 먼저)
-      } else {
+        } else {
           return a.date - b.date; // 과거순 (작은 날짜가 먼저)
         }
       });
@@ -210,10 +185,40 @@ export default function WorkerRemittancePage() {
     fetchWorkRecords();
   }, [fetchWorkRecords]);
 
-  // 해당 월의 총 급여 계산
+  // 급여 계산 API 호출
+  const fetchCalculatedSalary = useCallback(async () => {
+    if (!selectedWorkplaceId) {
+      setCalculatedSalary(null);
+      return;
+    }
+
+    try {
+      setIsCalculatingSalary(true);
+      const response = await calculateSalary(selectedWorkplaceId, currentYear, currentMonth);
+      if (response?.success && response?.data) {
+        setCalculatedSalary(response.data);
+      } else {
+        setCalculatedSalary(null);
+      }
+    } catch (error) {
+      console.error("[WorkerRemittancePage] 급여 계산 실패:", error);
+      setCalculatedSalary(null);
+    } finally {
+      setIsCalculatingSalary(false);
+    }
+  }, [selectedWorkplaceId, currentYear, currentMonth]);
+
+  useEffect(() => {
+    fetchCalculatedSalary();
+  }, [fetchCalculatedSalary]);
+
+  // 해당 월의 총 급여 계산 (calculateSalary API 결과 사용)
   const totalWage = useMemo(() => {
-    return workRecords.reduce((sum, record) => sum + (record.wage ?? 0), 0);
-  }, [workRecords]);
+    if (calculatedSalary?.netPay !== undefined) {
+      return calculatedSalary.netPay;
+    }
+    return 0;
+  }, [calculatedSalary]);
 
   // 입금 상태 정보 계산
   // - completed: 입금 완료 (송금 날짜 표시)
@@ -363,7 +368,9 @@ export default function WorkerRemittancePage() {
             <div className="wage-card">
             <div className="wage-info-section">
               <div className="wage-label">급여</div>
-              <div className="wage-amount">{formatCurrency(totalWage)}</div>
+              <div className="wage-amount">
+                {isCalculatingSalary ? "계산 중..." : formatCurrency(totalWage)}
+              </div>
             </div>
             <div className="remittance-status-card">
               {/* 입금 상태에 따른 버튼 및 정보 표시 */}

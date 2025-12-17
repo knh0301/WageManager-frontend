@@ -141,3 +141,16 @@ export const getSalaryDetail = async (salaryId) => {
   }
 };
 
+// 급여 자동 계산
+export const calculateSalary = async (contractId, year, month) => {
+  try {
+    const response = await httpClient.post(
+      `/api/worker/salaries/contracts/${contractId}/calculate?year=${year}&month=${month}`
+    );
+    return response;
+  } catch (error) {
+    console.error('[workerApi] calculateSalary 에러:', error);
+    throw error;
+  }
+};
+
