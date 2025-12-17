@@ -4,7 +4,7 @@ import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo } from "../../api/workerApi";
+import { getUserProfile, getWorkerInfo, updateUserProfile, updateAccountInfo, getContracts, getContractDetail } from "../../api/workerApi";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -115,35 +115,87 @@ export default function WorkerMyPage() {
     fetchUserData();
   }, []);
 
-  // 임시 근무지 데이터
-  const [workplaces] = useState([
-    {
-      name: "맥도날드",
-      startDate: "2025년 4월 23일",
-      hourlyWage: 10030,
-    },
-    {
-      name: "버거킹",
-      startDate: "2025년 5월 15일",
-      hourlyWage: 10030,
-    },
-  ]);
+  // 근무지 데이터
+  const [workplaces, setWorkplaces] = useState([]);
+  const [previousWorkplaces, setPreviousWorkplaces] = useState([]);
+  const [isLoadingWorkplaces, setIsLoadingWorkplaces] = useState(false);
 
-  // 임시 이전 근무지 데이터
-  const [previousWorkplaces] = useState([
-    {
-      name: "롯데리아",
-      startDate: "2023년 4월 23일",
-      endDate: "2024년 5월 15일",
-      hourlyWage: 10030,
-    },
-    {
-      name: "스타벅스",
-      startDate: "2022년 1월 28일",
-      endDate: "2024년 5월 15일",
-      hourlyWage: 10030,
-    },
-  ]);
+  // 날짜 형식 변환 함수 (2025-12-17 -> 2025년 12월 17일)
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const [year, month, day] = dateString.split("-");
+      return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  // 근무지 정보 조회
+  useEffect(() => {
+    const fetchWorkplaces = async () => {
+      try {
+        setIsLoadingWorkplaces(true);
+        
+        // 1. 전체 계약 목록 조회
+        const contractsResponse = await getContracts();
+        
+        if (contractsResponse.success && contractsResponse.data && Array.isArray(contractsResponse.data)) {
+          const contracts = contractsResponse.data;
+          
+          // 2. 각 계약의 상세 정보를 병렬로 조회
+          const detailPromises = contracts.map((contract) => 
+            getContractDetail(contract.id).catch((error) => {
+              console.error(`계약 ${contract.id} 상세 정보 조회 실패:`, error);
+              return null;
+            })
+          );
+          
+          const detailResponses = await Promise.all(detailPromises);
+          
+          // 3. 상세 정보를 매핑하여 현재 근무지와 이전 근무지로 분류
+          const currentWorkplaces = [];
+          const previousWorkplacesList = [];
+          
+          detailResponses.forEach((response) => {
+            if (response && response.success && response.data) {
+              const contractData = response.data;
+              const workplaceData = {
+                name: contractData.workplaceName || "",
+                startDate: formatDate(contractData.contractStartDate),
+                hourlyWage: contractData.hourlyWage || 0,
+              };
+              
+              if (contractData.isActive) {
+                // 현재 근무지
+                currentWorkplaces.push(workplaceData);
+              } else {
+                // 이전 근무지
+                workplaceData.endDate = formatDate(contractData.contractEndDate);
+                previousWorkplacesList.push(workplaceData);
+              }
+            }
+          });
+          
+          setWorkplaces(currentWorkplaces);
+          setPreviousWorkplaces(previousWorkplacesList);
+        } else {
+          // 에러 응답인 경우 빈 배열로 설정
+          setWorkplaces([]);
+          setPreviousWorkplaces([]);
+        }
+      } catch (error) {
+        console.error('근무지 정보 조회 실패:', error);
+        // 에러 시 빈 배열로 설정
+        setWorkplaces([]);
+        setPreviousWorkplaces([]);
+      } finally {
+        setIsLoadingWorkplaces(false);
+      }
+    };
+
+    fetchWorkplaces();
+  }, []);
 
   // 임시 정정 요청 데이터
   const [editRequests] = useState([
@@ -265,6 +317,7 @@ export default function WorkerMyPage() {
           <WorkplaceManage
             workplaces={workplaces}
             previousWorkplaces={previousWorkplaces}
+            isLoading={isLoadingWorkplaces}
           />
         );
       case "editRequest":

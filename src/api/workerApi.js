@@ -44,3 +44,25 @@ export const updateAccountInfo = async (accountData) => {
   }
 };
 
+// 근로자 계약 목록 조회
+export const getContracts = async () => {
+  try {
+    const response = await httpClient.get('/api/worker/contracts');
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getContracts 에러:', error);
+    throw error;
+  }
+};
+
+// 근로자 계약 상세 정보 조회
+export const getContractDetail = async (contractId) => {
+  try {
+    const response = await httpClient.get(`/api/worker/contracts/${contractId}`);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] getContractDetail 에러:', error);
+    throw error;
+  }
+};
+
