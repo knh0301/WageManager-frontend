@@ -208,7 +208,7 @@ export default function WorkerRemittancePage() {
     fetchCalculatedSalary();
   }, [fetchCalculatedSalary]);
 
-  // 송금 내역 가져오기
+  // 송금 내역 가져오기 (월 변경 시 갱신)
   const fetchPayments = useCallback(async () => {
     try {
       const response = await getPayments();
@@ -225,7 +225,7 @@ export default function WorkerRemittancePage() {
 
   useEffect(() => {
     fetchPayments();
-  }, [fetchPayments]);
+  }, [fetchPayments, currentYear, currentMonth]);
 
   // 해당 월의 총 급여 계산 (calculateSalary API 결과 사용)
   const totalWage = useMemo(() => {
