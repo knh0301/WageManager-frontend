@@ -50,18 +50,25 @@ const handleRefreshTokenFailure = () => {
   isHandlingRefreshFailure = true;
   console.log('[httpClient] Refresh token 실패 - 로그아웃 처리');
   
-  // localStorage 초기화
-  localStorage.removeItem('token');
-  localStorage.removeItem('userId');
-  localStorage.removeItem('name');
-  localStorage.removeItem('userType');
-  
-  // Redux 초기화
-  store.dispatch(clearAuth());
-  
-  // 로그인 페이지로 리다이렉트
-  if (typeof window !== 'undefined') {
-    window.location.href = '/';
+  try {
+    // localStorage 초기화
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('name');
+    localStorage.removeItem('userType');
+    
+    // Redux 초기화
+    store.dispatch(clearAuth());
+    
+    // 로그인 페이지로 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  } finally {
+    // 리다이렉트가 실패하거나 예외가 발생해도 플래그는 리셋
+    // (리다이렉트 성공 시 페이지가 새로고침되므로 플래그는 자동으로 리셋되지만,
+    //  방어적 프로그래밍을 위해 명시적으로 리셋)
+    isHandlingRefreshFailure = false;
   }
 };
 
