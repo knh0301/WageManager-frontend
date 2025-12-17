@@ -216,7 +216,10 @@ function WorkerMonthlyCalendarPage() {
 
   // API에서 근무 기록 가져오기
   useEffect(() => {
-    fetchWorkRecords();
+    const loadWorkRecords = async () => {
+      await fetchWorkRecords();
+    };
+    loadWorkRecords();
   }, [fetchWorkRecords]);
 
   const handlePrevMonth = () => { // 이전 달로 이동
