@@ -346,9 +346,18 @@ function WorkerMonthlyCalendarPage() {
       const workRecordsResponse = await getWorkRecords(startDate, endDate);
       const workRecordsData = workRecordsResponse.data || [];
       
+      // 디버깅: 근무 기록 목록 콘솔 출력
+      console.log("=== 근무 기록 정정 요청 - workRecordId 확인 ===");
+      console.log("요청한 날짜 범위:", { startDate, endDate });
+      console.log("받은 근무 기록 목록:", workRecordsData);
+      console.log("근무 기록 ID 목록:", workRecordsData.map(record => record.id));
+      console.log("정정하려는 workRecordId:", form.recordId);
+      console.log("=============================================");
+      
       // workRecordId가 현재 근로자의 근무 기록 목록에 있는지 확인
+      const workRecordId = Number(form.recordId);
       const isValidWorkRecord = workRecordsData.some(
-        (record) => record.id === form.recordId
+        (record) => Number(record.id) === workRecordId
       );
       
       if (!isValidWorkRecord) {
@@ -364,7 +373,7 @@ function WorkerMonthlyCalendarPage() {
 
       // 2. 정정 요청 보내기
       const payload = {
-        workRecordId: form.recordId,
+        workRecordId: workRecordId,
         requestedWorkDate: form.date,
         requestedStartTime: {
           hour: Number(form.startHour),
@@ -443,8 +452,37 @@ function WorkerMonthlyCalendarPage() {
 
   const handleConfirmAddWork = async (form) => { // 근무 추가 확인 핸들러
     try {
+      // 1. contractId가 현재 로그인한 근로자의 계약 목록에 있는지 확인
+      const contractsResponse = await getContracts();
+      
+      let contracts = [];
+      if (Array.isArray(contractsResponse.data)) {
+        contracts = contractsResponse.data;
+      } else if (contractsResponse.data) {
+        contracts = [contractsResponse.data];
+      }
+      
+      // contractId 추출 및 검증
+      const contractIds = contracts.map((contract) => 
+        typeof contract === 'object' ? contract.id : contract
+      );
+      
+      const contractId = Number(form.contractId);
+      
+      if (!contractIds.includes(contractId)) {
+        toast.error(
+          "[FORBIDDEN] 본인의 계약만 사용하여 근무를 추가할 수 있습니다.",
+          {
+            position: "top-right",
+            autoClose: 3000,
+          }
+        );
+        return;
+      }
+
+      // 2. 근무 추가 요청 보내기
       const payload = {
-        contractId: form.contractId,
+        contractId: contractId,
         workDate: form.date,
         startTime: {
           hour: Number(form.startHour),
