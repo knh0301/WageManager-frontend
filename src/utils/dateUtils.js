@@ -13,7 +13,7 @@ export const formatDateToKorean = (dateString) => {
 export const formatDateToMonthDay = (dateString) => {
   if (!dateString) return "";
   try {
-    const [year, month, day] = dateString.split("-");
+    const [, month, day] = dateString.split("-");
     return `${parseInt(month)}월 ${parseInt(day)}일`;
   } catch {
     return dateString;
