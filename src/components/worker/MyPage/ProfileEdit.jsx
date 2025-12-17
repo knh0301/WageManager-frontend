@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { toast } from "react-toastify";
 import "../../../pages/workers/WorkerMyPage.css";
 
 export default function ProfileEdit({ user, onUserUpdate }) {
@@ -78,9 +79,9 @@ export default function ProfileEdit({ user, onUserUpdate }) {
         }
       }
 
-      // 유효성 검사 통과 시 에러 초기화 및 저장
+      // 유효성 검사 통과 시 에러 초기화 및 API 호출
       setErrors({});
-      onUserUpdate(localUser);
+      onUserUpdate(localUser, section);
     }
 
     setEditableSections((prev) => ({

@@ -22,3 +22,14 @@ export const getWorkerInfo = async (userId) => {
   }
 };
 
+// 사용자 프로필 수정
+export const updateUserProfile = async (userData) => {
+  try {
+    const response = await httpClient.put('/api/users/me', userData);
+    return response;
+  } catch (error) {
+    console.error('[workerApi] updateUserProfile 에러:', error);
+    throw error;
+  }
+};
+

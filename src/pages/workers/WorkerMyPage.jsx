@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
-import { getUserProfile, getWorkerInfo } from "../../api/workerApi";
+import { getUserProfile, getWorkerInfo, updateUserProfile } from "../../api/workerApi";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
@@ -169,19 +170,48 @@ export default function WorkerMyPage() {
     },
   ]);
 
-  const handleUserUpdate = (updatedUser) => {
-    setUser(updatedUser);
-    // 나중에 API 호출 추가
-  };
-
-  const handleProfileImageUpdate = (imageUrl) => {
-    setProfileImage(imageUrl);
-    // user 상태의 profileImageUrl도 업데이트
-    setUser((prev) => ({
-      ...prev,
-      profileImageUrl: imageUrl,
-    }));
-    // 나중에 프로필 이미지 업데이트 API 호출 추가
+  const handleUserUpdate = async (updatedUser, section) => {
+    try {
+      // 수정한 필드만 request body에 포함
+      const requestBody = {};
+      
+      if (section === "basic" && updatedUser.name !== undefined) {
+        requestBody.name = updatedUser.name || "";
+      }
+      
+      if (section === "phone" && updatedUser.phone !== undefined) {
+        requestBody.phone = updatedUser.phone || "";
+      }
+      
+      // API 호출
+      const response = await updateUserProfile(requestBody);
+      
+      if (response.success && response.data) {
+        const userData = response.data;
+        // API 응답 데이터로 화면 업데이트
+        setUser((prev) => ({
+          ...prev,
+          name: userData.name || prev.name,
+          phone: userData.phone || prev.phone,
+          profileImageUrl: userData.profileImageUrl || prev.profileImageUrl,
+        }));
+        
+        if (userData.profileImageUrl) {
+          setProfileImage(userData.profileImageUrl);
+        }
+      }
+    } catch (error) {
+      console.error('사용자 프로필 수정 실패:', error);
+      // 에러 메시지 추출
+      const errorStatus = error.status || error.response?.status || '알 수 없음';
+      const errorMessage = error.error?.message || error.message || '프로필 수정에 실패했습니다.';
+      
+      // react-toastify로 에러 메시지 표시
+      toast.error(`[${errorStatus}] ${errorMessage}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
   };
 
 
@@ -224,7 +254,6 @@ export default function WorkerMyPage() {
         <ProfileBox
           user={user}
           profileImage={profileImage}
-          onProfileImageUpdate={handleProfileImageUpdate}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
