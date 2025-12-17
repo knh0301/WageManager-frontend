@@ -301,6 +301,38 @@ function WorkerMonthlyCalendarPage() {
 
   const handleConfirmEdit = async (form) => { // 수정 요청 확인 핸들러
     try {
+      // 1. 해당 workRecordId가 현재 로그인한 근로자의 근무 기록인지 확인
+      const [year, month, day] = form.date.split("-").map(Number);
+      const targetDate = new Date(year, month - 1, day);
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth();
+      
+      // 해당 날짜가 포함된 월의 시작일과 종료일 계산
+      const lastDay = new Date(targetYear, targetMonth + 1, 0);
+      const startDate = `${targetYear}-${pad2(targetMonth + 1)}-${pad2(1)}`;
+      const endDate = `${targetYear}-${pad2(targetMonth + 1)}-${pad2(lastDay.getDate())}`;
+      
+      // 해당 월의 근무 기록 가져오기
+      const workRecordsResponse = await getWorkRecords(startDate, endDate);
+      const workRecordsData = workRecordsResponse.data || [];
+      
+      // workRecordId가 현재 근로자의 근무 기록 목록에 있는지 확인
+      const isValidWorkRecord = workRecordsData.some(
+        (record) => record.id === form.recordId
+      );
+      
+      if (!isValidWorkRecord) {
+        toast.error(
+          "[FORBIDDEN] 본인의 근무 기록만 정정 요청할 수 있습니다.",
+          {
+            position: "top-right",
+            autoClose: 3000,
+          }
+        );
+        return;
+      }
+
+      // 2. 정정 요청 보내기
       const payload = {
         workRecordId: form.recordId,
         requestedWorkDate: form.date,

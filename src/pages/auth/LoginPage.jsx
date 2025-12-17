@@ -34,7 +34,6 @@ export default function LoginPage() {
     if (kakaoAuthUrl) {
       window.location.href = kakaoAuthUrl;
     } else {
-      console.error('카카오 로그인 설정 오류: 환경 변수가 설정되지 않았습니다.');
       alert('카카오 로그인 설정이 완료되지 않았습니다. 관리자에게 문의하세요.');
     }
   };
@@ -69,7 +68,6 @@ export default function LoginPage() {
         throw new Error(response.error?.message || '개발자 로그인 실패');
       }
     } catch (error) {
-      console.error('개발자 로그인 에러:', error);
       Swal.fire({
         icon: 'error',
         title: '로그인 실패',

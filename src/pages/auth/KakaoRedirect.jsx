@@ -36,37 +36,14 @@ export default function KakaoRedirect() {
       );
 
       const { access_token } = tokenResponse.data;
-      if (import.meta.env.DEV) {
-        console.log('카카오 액세스 토큰 획득 성공');
-        console.log('access_token 길이:', access_token?.length);
-      }
 
       // 2. 백엔드 서버에 카카오 로그인 요청
       setStatus('서버에 로그인 요청 중...');
       try {
-        if (import.meta.env.DEV) {
-          console.log('kakaoLoginWithToken 호출 중...');
-        }
         const loginResponse = await kakaoLoginWithToken(access_token);
-        if (import.meta.env.DEV) {
-          console.log('카카오 로그인 API 응답:', {
-            success: loginResponse.success,
-            hasAccessToken: !!loginResponse.data?.accessToken,
-            userType: loginResponse.data?.userType,
-          });
-        }
         
         // 3-1. 기존 회원인 경우 (200 응답)
         if (loginResponse.success && loginResponse.data.accessToken) {
-          if (import.meta.env.DEV) {
-            console.log('기존 회원 로그인 성공');
-          }
-          
-          // 액세스 토큰, userId, workerCode 출력
-          console.log('액세스 토큰:', loginResponse.data.accessToken);
-          console.log('userId:', loginResponse.data.userId);
-          console.log('workerCode:', loginResponse.data.workerCode);
-          
           // localStorage에 모든 데이터 저장
           localStorage.setItem('token', loginResponse.data.accessToken);
           localStorage.setItem('userId', String(loginResponse.data.userId));
@@ -102,10 +79,6 @@ export default function KakaoRedirect() {
         const isUserNotFound = statusCode === 404 || statusCode === 401;
         
         if (isUserNotFound) {
-          if (import.meta.env.DEV) {
-            console.log('신규 회원으로 판단됨 (404/401)');
-          }
-          
           // 회원가입 페이지로 이동하면서 카카오 액세스 토큰 전달
           navigate('/signup', { 
             state: { 
@@ -114,28 +87,6 @@ export default function KakaoRedirect() {
           });
         } else {
           // 400, 500 등 다른 에러
-          console.error('[KakaoRedirect] 로그인 API 에러 발생');
-          console.error('[KakaoRedirect] 에러 객체:', error);
-          console.error('[KakaoRedirect] 에러 타입:', typeof error);
-          console.error('[KakaoRedirect] 에러 메시지:', error.message);
-          console.error('[KakaoRedirect] 에러 상태 코드:', error.status);
-          console.error('[KakaoRedirect] 에러 response:', error.response);
-          console.error('[KakaoRedirect] 에러 response.data:', error.response?.data);
-          console.error('[KakaoRedirect] 에러 error.error:', error.error);
-          console.error('[KakaoRedirect] 에러 스택:', error.stack);
-          console.error('[KakaoRedirect] 전체 에러 정보 (JSON):', JSON.stringify(error, null, 2));
-          
-          // 500 에러인 경우 추가 디버깅 정보
-          if (statusCode === 500) {
-            console.error('[KakaoRedirect] ⚠️⚠️⚠️ 500 서버 에러 발생 ⚠️⚠️⚠️');
-            console.error('[KakaoRedirect] 백엔드 로그를 확인해야 합니다!');
-            console.error('[KakaoRedirect] 에러 코드:', error.errorCode || error.error?.code);
-            console.error('[KakaoRedirect] 에러 메시지:', error.errorMessage || error.error?.message);
-            console.error('[KakaoRedirect] 전체 에러 데이터:', error.fullErrorData || error.response?.data);
-            console.error('[KakaoRedirect] 요청한 카카오 액세스 토큰 길이:', access_token?.length);
-            console.error('[KakaoRedirect] 요청 URL: /api/auth/kakao/login');
-          }
-          
           // 에러 메시지 추출 (우선순위: error.error.message > error.message > error.response.data.message > 기본 메시지)
           const errorMessage = error.error?.message || error.message || error.response?.data?.message || error.response?.data?.error?.message || '로그인 처리 중 오류가 발생했습니다.';
           
@@ -151,13 +102,6 @@ export default function KakaoRedirect() {
       }
 
     } catch (error) {
-      console.error('[KakaoRedirect] 카카오 인증 처리 과정 실패');
-      console.error('[KakaoRedirect] 외부 catch 에러 객체:', error);
-      console.error('[KakaoRedirect] 외부 catch 에러 타입:', typeof error);
-      console.error('[KakaoRedirect] 외부 catch 에러 메시지:', error.message);
-      console.error('[KakaoRedirect] 외부 catch 에러 스택:', error.stack);
-      console.error('[KakaoRedirect] 외부 catch 전체 에러 정보 (JSON):', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-      
       setStatus('인증 처리에 실패했습니다.');
       Swal.fire({
         icon: 'error',
@@ -175,7 +119,6 @@ export default function KakaoRedirect() {
     const error = searchParams.get('error');
 
     if (error) {
-      console.error('카카오 로그인 에러:', error);
       setStatus('로그인에 실패했습니다.');
       const timer = setTimeout(() => {
         navigate('/');
@@ -184,7 +127,6 @@ export default function KakaoRedirect() {
     }
 
     if (!code) {
-      console.error('인증 코드가 없습니다.');
       setStatus('인증 코드를 받지 못했습니다.');
       const timer = setTimeout(() => {
         navigate('/');

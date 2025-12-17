@@ -14,13 +14,6 @@ export const kakaoLoginWithToken = async (kakaoAccessToken) => {
 
     return result;
   } catch (error) {
-    console.error('[authApi] kakaoLoginWithToken 에러 발생:', error);
-    console.error('[authApi] 에러 상세 정보:', {
-      message: error.message,
-      status: error.status,
-      response: error.response,
-      data: error.response?.data,
-    });
     throw error;
   }
 };
@@ -89,8 +82,6 @@ export const refreshAccessToken = async () => {
         errorData = { message: response.statusText };
       }
       
-      console.error('[authApi] refreshAccessToken 실패:', errorData);
-      
       throw {
         status: response.status,
         message: errorData.error?.message || errorData.message || '토큰 갱신 실패',
@@ -110,7 +101,6 @@ export const refreshAccessToken = async () => {
     
     throw new Error(data.error?.message || '토큰 갱신 실패');
   } catch (error) {
-    console.error('[authApi] refreshAccessToken 에러:', error);
     throw error;
   }
 };

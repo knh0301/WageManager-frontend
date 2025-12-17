@@ -24,9 +24,6 @@ export default function SignupPage() {
   const [profileImageUrl, setProfileImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 디버깅: kakaoId 확인
-  console.log('SignupPage - kakaoId:', kakaoId);
-
   // 카카오 액세스 토큰으로 카카오 ID 가져오기
   useEffect(() => {
     const fetchKakaoUserInfo = async () => {
@@ -50,13 +47,6 @@ export default function SignupPage() {
         const kakaoNameFromResponse = profile?.nickname || kakaoAccount?.name || userResponse.data.properties?.nickname || '카카오사용자';
         const profileImageUrlFromResponse = profile?.profile_image_url;
         
-        console.log('카카오 ID:', kakaoIdFromResponse);
-        console.log('카카오 이름:', kakaoNameFromResponse);
-        console.log('카카오 프로필 이미지 URL:', profileImageUrlFromResponse);
-        console.log('카카오 사용자 전체 데이터:', userResponse.data);
-        console.log('카카오 계정 정보:', kakaoAccount);
-        console.log('카카오 프로필 정보:', profile);
-        
         setKakaoId(String(kakaoIdFromResponse));
         setKakaoName(kakaoNameFromResponse || '카카오사용자');
         setProfileImageUrl(profileImageUrlFromResponse || '');
@@ -65,7 +55,6 @@ export default function SignupPage() {
           setName(kakaoNameFromResponse);
         }
       } catch (error) {
-        console.error('카카오 사용자 정보 가져오기 실패:', error);
         Swal.fire({
           icon: 'error',
           title: '오류 발생',
@@ -181,7 +170,6 @@ export default function SignupPage() {
 
     try {
       // 카카오 회원가입 API 호출 (회원가입 + 로그인 동시 처리)
-      console.log('카카오 회원가입 요청 중...');
       const registerResponse = await kakaoRegister(
         kakaoAccessToken,
         userType,
@@ -189,16 +177,10 @@ export default function SignupPage() {
         kakaoPayLink,
         profileImageUrl || ''
       );
-      console.log('카카오 회원가입 응답:', registerResponse);
 
       if (!registerResponse.success || !registerResponse.data?.accessToken) {
         throw new Error(registerResponse.error?.message || '회원가입 실패');
       }
-
-      // 액세스 토큰, userId 출력
-      console.log('액세스 토큰:', registerResponse.data.accessToken);
-      console.log('userId:', registerResponse.data.userId);
-      console.log('userType:', registerResponse.data.userType);
 
       // localStorage에 모든 데이터 저장
       localStorage.setItem('token', registerResponse.data.accessToken);
@@ -228,8 +210,6 @@ export default function SignupPage() {
         }
       });
     } catch (error) {
-      console.error('회원가입 에러:', error);
-      
       // 에러 상태 코드 확인
       const statusCode = Number(error.response?.status) || Number(error.status) || 0;
       
