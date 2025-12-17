@@ -10,7 +10,7 @@ function WorkDetailList({
   isLoading,
   sortOrder,
   view,
-  expandedRecordIndex,
+  expandedRecordIndex = null,
   onSortSelect,
   onViewToggle,
   onRecordClick,
@@ -247,10 +247,6 @@ WorkDetailList.propTypes = {
   onSortSelect: PropTypes.func.isRequired,
   onViewToggle: PropTypes.func.isRequired,
   onRecordClick: PropTypes.func.isRequired,
-};
-
-WorkDetailList.defaultProps = {
-  expandedRecordIndex: null,
 };
 
 export default WorkDetailList;
