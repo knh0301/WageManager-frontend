@@ -1,29 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileBox from "../../components/worker/MyPage/ProfileBox";
 import ProfileEdit from "../../components/worker/MyPage/ProfileEdit";
 import WorkplaceManage from "../../components/worker/MyPage/WorkplaceManage";
 import WorkEditRequestList from "../../components/worker/MyPage/WorkEditRequestList";
+import { getUserProfile } from "../../api/workerApi";
 import "./WorkerMyPage.css";
 
 export default function WorkerMyPage() {
   const [activeTab, setActiveTab] = useState("profile");
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 임시 데이터 (나중에 API로 대체)
+  // 사용자 데이터
   const [user, setUser] = useState({
-    name: "김나현",
-    birthDate: "2003-03-01",
-    gender: "woman",
-    phone: "010-5156-1565",
-    email: "abc@gmail.com",
-    password: "*********",
-    kakaoPayLink: "djfoaflkjaelakewewf",
-    employeeCode: "fde5fd",
+    name: "",
+    birthDate: "",
+    userType: "",
+    phone: "",
+    kakaoPayLink: "",
+    employeeCode: "",
     profileImageUrl: null,
   });
 
-  
   // 프로필 이미지 상태 관리
-  const [profileImage, setProfileImage] = useState(user.profileImageUrl);
+  const [profileImage, setProfileImage] = useState(null);
+
+  // API로 사용자 프로필 조회
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getUserProfile();
+        
+        if (response.success && response.data) {
+          const userData = response.data;
+          setUser({
+            name: userData.name || "",
+            birthDate: userData.kakaoId || "", // kakaoId를 그대로 출력
+            userType: userData.userType || "",
+            phone: userData.phone || "",
+            kakaoPayLink: "",
+            employeeCode: "",
+            profileImageUrl: userData.profileImageUrl || null,
+          });
+          setProfileImage(userData.profileImageUrl || null);
+        } else {
+          // 에러 응답인 경우 빈 문자열로 초기화
+          setUser({
+            name: "",
+            birthDate: "",
+            userType: "",
+            phone: "",
+            kakaoPayLink: "",
+            employeeCode: "",
+            profileImageUrl: null,
+          });
+          setProfileImage(null);
+        }
+      } catch (error) {
+        console.error('사용자 프로필 조회 실패:', error);
+        // 에러 시 빈 문자열로 초기화
+        setUser({
+          name: "",
+          birthDate: "",
+          userType: "",
+          phone: "",
+          kakaoPayLink: "",
+          employeeCode: "",
+          profileImageUrl: null,
+        });
+        setProfileImage(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   // 임시 근무지 데이터
   const [workplaces] = useState([
@@ -118,6 +170,16 @@ export default function WorkerMyPage() {
         return null;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="worker-mypage-main">
+        <div className="worker-mypage-content">
+          <p>로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="worker-mypage-main">

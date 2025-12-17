@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../../../pages/workers/WorkerMyPage.css";
 
 export default function ProfileEdit({ user, onUserUpdate }) {
   const [editableSections, setEditableSections] = useState({
     basic: false,
     phone: false,
-    email: false,
-    password: false,
     kakaoPay: false,
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [localUser, setLocalUser] = useState(user);
   const [errors, setErrors] = useState({});
 
@@ -31,13 +27,6 @@ export default function ProfileEdit({ user, onUserUpdate }) {
     }
 
     switch (section) {
-      case "email": {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-          return { isValid: false, message: "올바른 이메일 형식이 아닙니다." };
-        }
-        break;
-      }
       case "phone": {
         const phoneRegex = /^010-\d{4}-\d{4}$/;
         if (!phoneRegex.test(value)) {
@@ -45,12 +34,6 @@ export default function ProfileEdit({ user, onUserUpdate }) {
             isValid: false,
             message: "전화번호는 010-XXXX-XXXX 형식이어야 합니다.",
           };
-        }
-        break;
-      }
-      case "password": {
-        if (value.length < 8) {
-          return { isValid: false, message: "비밀번호는 8자 이상이어야 합니다." };
         }
         break;
       }
@@ -123,52 +106,31 @@ export default function ProfileEdit({ user, onUserUpdate }) {
     }));
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    
-    // ISO 날짜 형식(YYYY-MM-DD)인 경우 타임존 문제를 피하기 위해 직접 파싱
-    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (isoDateRegex.test(dateString)) {
-      const [year, month, day] = dateString.split("-");
-      // 로컬 시간으로 Date 객체 생성하여 유효성 검증 (month는 0부터 시작하므로 -1)
-      const date = new Date(Number(year), Number(month) - 1, Number(day));
-      // 유효한 날짜인지 확인 (타임존 문제 없이 로컬 시간으로 생성했으므로 검증 가능)
-      if (
-        date.getFullYear() === Number(year) &&
-        date.getMonth() === Number(month) - 1 &&
-        date.getDate() === Number(day)
-      ) {
-        // 파싱한 값을 그대로 사용 (이미 zero-padding 되어 있음)
-        return `${year}.${month}.${day}`;
-      }
-    }
-    
-    // 다른 형식이거나 유효하지 않은 날짜인 경우 기존 방식 사용
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}.${month}.${day}`;
+  // kakaoId를 그대로 출력 (형식 변환 없이)
+  const formatKakaoId = (kakaoId) => {
+    if (!kakaoId) return "";
+    return String(kakaoId);
   };
 
-  const getGenderText = (gender) => {
-    return gender === "man" ? "남성" : "여성";
+  const getUserTypeText = (userType) => {
+    if (!userType) return "";
+    return userType === "EMPLOYER" ? "고용주" : "근로자";
   };
 
   return (
     <div className="worker-mypage-container">
       <h1 className="worker-mypage-title">기본 정보</h1>
 
-      {/* 이름, 생년월일, 성별 */}
+      {/* 이름, 생년월일, 역할 */}
       <div className="worker-mypage-basic-info">
         <div className="worker-mypage-name-row">
           <div className="worker-mypage-name-text-wrapper">
-            <div className="worker-mypage-name-text">{localUser.name}</div>
+            <div className="worker-mypage-name-text">{localUser.name || ""}</div>
             <div className="worker-mypage-birth-text">
-              {formatDate(localUser.birthDate)}
+              {formatKakaoId(localUser.birthDate)}
             </div>
             <div className="worker-mypage-gender-text">
-              {getGenderText(localUser.gender)}
+              {getUserTypeText(localUser.userType)}
             </div>
           </div>
           <button
@@ -184,7 +146,7 @@ export default function ProfileEdit({ user, onUserUpdate }) {
               <span className="worker-mypage-label">이름</span>
               <input
                 type="text"
-                value={localUser.name}
+                value={localUser.name || ""}
                 onChange={(e) => handleChange("name", e.target.value)}
                 className={errors.basic ? "worker-mypage-input-error" : ""}
               />
@@ -205,7 +167,7 @@ export default function ProfileEdit({ user, onUserUpdate }) {
         <div className="worker-mypage-input-wrapper">
           <input
             type="tel"
-            value={localUser.phone}
+            value={localUser.phone || ""}
             disabled={!editableSections.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
             className={errors.phone ? "worker-mypage-input-error" : ""}
@@ -219,72 +181,6 @@ export default function ProfileEdit({ user, onUserUpdate }) {
           onClick={() => toggleEdit("phone")}
         >
           {editableSections.phone ? "완료" : "수정"}
-        </button>
-      </div>
-      <hr />
-
-      {/* 이메일 */}
-      <div className="worker-mypage-field worker-mypage-email-field">
-        <span className="worker-mypage-label">이메일</span>
-        <div className="worker-mypage-email-input-container">
-          <input
-            type="email"
-            value={localUser.email}
-            disabled={!editableSections.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            className={errors.email ? "worker-mypage-input-error" : ""}
-          />
-          {errors.email && (
-            <span className="worker-mypage-error-message worker-mypage-email-error">
-              {errors.email}
-            </span>
-          )}
-        </div>
-        <button
-          className="worker-mypage-edit-button"
-          onClick={() => toggleEdit("email")}
-        >
-          {editableSections.email ? "완료" : "수정"}
-        </button>
-      </div>
-      <hr />
-
-      {/* 비밀번호 */}
-      <div className="worker-mypage-field">
-        <span className="worker-mypage-label">비밀번호</span>
-        <div className="worker-mypage-input-wrapper">
-          <div className="worker-mypage-password-input-wrapper">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={localUser.password}
-              disabled={!editableSections.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              className={errors.password ? "worker-mypage-input-error" : ""}
-            />
-            <button
-              type="button"
-              className="worker-mypage-view-button"
-              onMouseEnter={() => setShowPassword(true)}
-              onMouseLeave={() => setShowPassword(false)}
-              onFocus={() => setShowPassword(true)}
-              onBlur={() => setShowPassword(false)}
-              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
-              title={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
-            >
-              {showPassword ? <FaEye /> : <FaEyeSlash />}
-            </button>
-          </div>
-          {errors.password && (
-            <span className="worker-mypage-error-message">
-              {errors.password}
-            </span>
-          )}
-        </div>
-        <button
-          className="worker-mypage-edit-button"
-          onClick={() => toggleEdit("password")}
-        >
-          {editableSections.password ? "완료" : "수정"}
         </button>
       </div>
       <hr />
@@ -342,12 +238,11 @@ ProfileEdit.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string,
     birthDate: PropTypes.string,
-    gender: PropTypes.string,
+    userType: PropTypes.string,
     phone: PropTypes.string,
-    email: PropTypes.string,
-    password: PropTypes.string,
     kakaoPayLink: PropTypes.string,
     employeeCode: PropTypes.string,
+    profileImageUrl: PropTypes.string,
   }).isRequired,
   onUserUpdate: PropTypes.func.isRequired,
 };

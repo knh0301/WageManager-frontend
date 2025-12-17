@@ -58,7 +58,7 @@ export default function ProfileBox({
               />
             </label>
           </div>
-          <div className="worker-mypage-profile-name">{user.name}</div>
+          <div className="worker-mypage-profile-name">{user.name || ""}</div>
         </div>
         <hr />
       </div>
@@ -111,7 +111,7 @@ ProfileBox.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string,
     birthDate: PropTypes.string,
-    gender: PropTypes.string,
+    userType: PropTypes.string,
     profileImageUrl: PropTypes.string,
   }).isRequired,
   profileImage: PropTypes.string,
