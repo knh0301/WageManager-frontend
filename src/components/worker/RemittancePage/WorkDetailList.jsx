@@ -243,10 +243,14 @@ WorkDetailList.propTypes = {
   isLoading: PropTypes.bool.isRequired,
   sortOrder: PropTypes.oneOf(["latest", "oldest"]).isRequired,
   view: PropTypes.bool.isRequired,
-  expandedRecordIndex: PropTypes.number,
+  expandedRecordIndex: PropTypes.oneOfType([PropTypes.number, PropTypes.oneOf([null])]),
   onSortSelect: PropTypes.func.isRequired,
   onViewToggle: PropTypes.func.isRequired,
   onRecordClick: PropTypes.func.isRequired,
+};
+
+WorkDetailList.defaultProps = {
+  expandedRecordIndex: null,
 };
 
 export default WorkDetailList;
