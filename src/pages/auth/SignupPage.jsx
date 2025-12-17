@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-import { kakaoRegister, kakaoLoginWithToken } from '../../api/authApi';
+import { kakaoRegister } from '../../api/authApi';
 import { setAuthToken, setUserDetails } from '../../features/auth/authSlice';
 import Swal from 'sweetalert2';
 import { FaUser, FaTimes } from 'react-icons/fa';
