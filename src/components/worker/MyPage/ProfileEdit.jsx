@@ -107,6 +107,22 @@ export default function ProfileEdit({ user, onUserUpdate }) {
     }));
   };
 
+  // 전화번호 입력 핸들러 (하이픈 자동 추가)
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/[^0-9]/g, ''); // 숫자만 허용
+    
+    // 하이픈 자동 추가: 010-1234-5678 형식
+    if (value.length > 3 && value.length <= 7) {
+      value = value.slice(0, 3) + '-' + value.slice(3);
+    } else if (value.length > 7) {
+      value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+    }
+    
+    if (value.length <= 13) { // 최대 13자리 (하이픈 포함)
+      handleChange("phone", value);
+    }
+  };
+
   // kakaoId를 그대로 출력 (형식 변환 없이)
   const formatKakaoId = (kakaoId) => {
     if (!kakaoId) return "";
@@ -170,7 +186,9 @@ export default function ProfileEdit({ user, onUserUpdate }) {
             type="tel"
             value={localUser.phone || ""}
             disabled={!editableSections.phone}
-            onChange={(e) => handleChange("phone", e.target.value)}
+            onChange={handlePhoneChange}
+            placeholder="010-1234-5678"
+            maxLength={13}
             className={errors.phone ? "worker-mypage-input-error" : ""}
           />
           {errors.phone && (
