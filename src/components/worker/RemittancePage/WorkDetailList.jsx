@@ -95,48 +95,23 @@ function WorkDetailList({
                   <div className="detail-left-section">
                     <div className="detail-form-item">
                       <label className="detail-form-label">근무지</label>
-                      <input
-                        type="text"
-                        className="detail-form-input"
-                        value={record.workplace}
-                        readOnly
-                      />
+                      <div className="detail-form-value">{record.workplace}</div>
                     </div>
                     <div className="detail-form-item">
                       <label className="detail-form-label">근무 시간</label>
                       <div className="time-input-group">
-                        <input
-                          type="text"
-                          className="detail-form-input time-input"
-                          value={record.startTime}
-                          readOnly
-                        />
+                        <div className="detail-form-value time-input">{record.startTime}</div>
                         <span className="time-separator">~</span>
-                        <input
-                          type="text"
-                          className="detail-form-input time-input"
-                          value={record.endTime}
-                          readOnly
-                        />
+                        <div className="detail-form-value time-input">{record.endTime}</div>
                       </div>
                     </div>
                     <div className="detail-form-item">
                       <label className="detail-form-label">휴게 시간</label>
-                      <input
-                        type="text"
-                        className="detail-form-input"
-                        value={formatBreakTime(record.breakMinutes)}
-                        readOnly
-                      />
+                      <div className="detail-form-value">{formatBreakTime(record.breakMinutes)}</div>
                     </div>
                     <div className="detail-form-item">
                       <label className="detail-form-label">시급</label>
-                      <input
-                        type="text"
-                        className="detail-form-input"
-                        value={formatCurrency(record.hourlyWage)}
-                        readOnly
-                      />
+                      <div className="detail-form-value">{formatCurrency(record.hourlyWage)}</div>
                     </div>
                   </div>
                   {/* 오른쪽 섹션: 수당, 보험, 세금 정보 */}
@@ -167,12 +142,7 @@ function WorkDetailList({
                         <label className="detail-form-label">
                           야간 근무 금액
                         </label>
-                        <input
-                          type="text"
-                          className="detail-form-input"
-                          value={`${record.allowances.night.rate} %`}
-                          readOnly
-                        />
+                        <div className="detail-form-value">{record.allowances.night.rate}%</div>
                       </div>
                     )}
                     {/* 4대 보험 적용 여부 */}
