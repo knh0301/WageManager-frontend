@@ -1,15 +1,75 @@
-const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER || 'http://localhost:8080';
+import { refreshAccessToken } from './authApi';
+import { store } from '../app/store';
+import { setAuthToken, clearAuth } from '../features/auth/authSlice';
+
+const API_BASE_URL = import.meta.env.VITE_WAGEMANAGER;
+
+// Refresh token 요청 중인지 추적 (동시 요청 방지)
+let isRefreshing = false;
+let refreshPromise = null;
+// Refresh token 실패 처리 중인지 추적 (중복 실행 방지)
+let isHandlingRefreshFailure = false;
 
 // 토큰을 가져오는 헬퍼 함수
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   const headers = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json', // JSON 응답을 명시적으로 요청
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
   return headers;
+};
+
+// 새로운 access token을 저장하는 헬퍼 함수
+const saveNewAccessToken = (newAccessToken) => {
+  localStorage.setItem('token', newAccessToken);
+  
+  // Redux에 저장 (기존 userId, name, userType 유지)
+  const currentState = store.getState().auth;
+  store.dispatch(setAuthToken({
+    accessToken: newAccessToken,
+    userId: currentState.userId,
+    name: currentState.name,
+    userType: currentState.userType,
+  }));
+  
+  console.log('[httpClient] 새로운 access token 저장 완료');
+};
+
+// Refresh token 실패 시 로그아웃 처리 (idempotent)
+const handleRefreshTokenFailure = () => {
+  // 이미 처리 중이면 중복 실행 방지
+  if (isHandlingRefreshFailure) {
+    console.log('[httpClient] Refresh token 실패 처리 이미 진행 중 - 중복 실행 방지');
+    return;
+  }
+  
+  isHandlingRefreshFailure = true;
+  console.log('[httpClient] Refresh token 실패 - 로그아웃 처리');
+  
+  try {
+    // localStorage 초기화
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('name');
+    localStorage.removeItem('userType');
+    
+    // Redux 초기화
+    store.dispatch(clearAuth());
+    
+    // 로그인 페이지로 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  } finally {
+    // 리다이렉트가 실패하거나 예외가 발생해도 플래그는 리셋
+    // (리다이렉트 성공 시 페이지가 새로고침되므로 플래그는 자동으로 리셋되지만,
+    //  방어적 프로그래밍을 위해 명시적으로 리셋)
+    isHandlingRefreshFailure = false;
+  }
 };
 
 // 네트워크 에러 처리 공통 함수
@@ -38,8 +98,34 @@ const httpClient = {
         },
         ...options,
       });
-      return this.handleResponse(response);
+      try {
+        return await this.handleResponse(response);
+      } catch (error) {
+        // 401 에러로 토큰 갱신 후 재시도
+        if (error.shouldRetry) {
+          console.log('[httpClient] GET 요청 재시도');
+          const retryResponse = await fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+            ...options,
+          });
+          return await this.handleResponse(retryResponse, { url, method: 'GET', options });
+        }
+        throw error;
+      }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
+      if (error.shouldRetry) {
+        throw error;
+      }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },
@@ -61,21 +147,67 @@ const httpClient = {
       // options에서 headers를 제외한 나머지만 사용
       const { headers: _, ...restOptions } = options;
       
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const fullUrl = `${API_BASE_URL}${url}`;
+      const requestBody = JSON.stringify(data);
+      
+      console.log('[httpClient] POST 요청 시작');
+      console.log('[httpClient] 요청 URL:', fullUrl);
+      console.log('[httpClient] 요청 헤더:', headers);
+      console.log('[httpClient] Accept 헤더 확인:', headers['Accept'] || headers['accept']);
+      console.log('[httpClient] 요청 본문:', data);
+      console.log('[httpClient] API_BASE_URL:', API_BASE_URL);
+      
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        body: requestBody,
         ...restOptions,
       });
-      return this.handleResponse(response);
+      
+      console.log('[httpClient] 응답 받음');
+      console.log('[httpClient] 응답 상태:', response.status, response.statusText);
+      console.log('[httpClient] 응답 OK:', response.ok);
+      console.log('[httpClient] 응답 Content-Type:', response.headers.get('Content-Type'));
+      console.log('[httpClient] 응답 Accept 헤더:', response.headers.get('Accept'));
+      
+      try {
+        return await this.handleResponse(response);
+      } catch (error) {
+        // 401 에러로 토큰 갱신 후 재시도 (refresh API 자체는 재시도하지 않음)
+        if (error.shouldRetry && url !== '/api/auth/refresh') {
+          console.log('[httpClient] POST 요청 재시도');
+          const retryResponse = await fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+            body: requestBody,
+            ...restOptions,
+          });
+          return await this.handleResponse(retryResponse, { url, method: 'POST', data, options });
+        }
+        throw error;
+      }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
+      if (error.shouldRetry) {
+        throw error;
+      }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
+      console.error('[httpClient] POST 요청 중 네트워크 에러:', error);
       handleNetworkError(error);
     }
   },
 
   async put(url, data, options = {}) {
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const fullUrl = `${API_BASE_URL}${url}`;
+      const response = await fetch(fullUrl, {
         method: 'PUT',
         headers: {
           ...getAuthHeaders(),
@@ -84,15 +216,43 @@ const httpClient = {
         body: JSON.stringify(data),
         ...options,
       });
-      return this.handleResponse(response);
+      try {
+        return await this.handleResponse(response);
+      } catch (error) {
+        // 401 에러로 토큰 갱신 후 재시도
+        if (error.shouldRetry) {
+          console.log('[httpClient] PUT 요청 재시도');
+          const retryResponse = await fetch(fullUrl, {
+            method: 'PUT',
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+            body: JSON.stringify(data),
+            ...options,
+          });
+          return await this.handleResponse(retryResponse, { url, method: 'PUT', data, options });
+        }
+        throw error;
+      }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
+      if (error.shouldRetry) {
+        throw error;
+      }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },
 
   async delete(url, options = {}) {
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const fullUrl = `${API_BASE_URL}${url}`;
+      const response = await fetch(fullUrl, {
         method: 'DELETE',
         headers: {
           ...getAuthHeaders(),
@@ -100,20 +260,132 @@ const httpClient = {
         },
         ...options,
       });
-      return this.handleResponse(response);
+      try {
+        return await this.handleResponse(response);
+      } catch (error) {
+        // 401 에러로 토큰 갱신 후 재시도
+        if (error.shouldRetry) {
+          console.log('[httpClient] DELETE 요청 재시도');
+          const retryResponse = await fetch(fullUrl, {
+            method: 'DELETE',
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+            ...options,
+          });
+          return await this.handleResponse(retryResponse, { url, method: 'DELETE', options });
+        }
+        throw error;
+      }
     } catch (error) {
+      // HTTP 응답 에러(status가 있는 경우)는 그대로 throw
+      if (error.status !== undefined && error.status !== null) {
+        throw error;
+      }
+      // shouldRetry 플래그가 있는 경우도 그대로 throw
+      if (error.shouldRetry) {
+        throw error;
+      }
+      // 진짜 네트워크 에러인 경우만 handleNetworkError 호출
       handleNetworkError(error);
     }
   },
 
-  async handleResponse(response) {
-    // 모든 응답을 JSON으로 파싱 (404도 포함)
-    const data = await response.json().catch(() => ({ message: response.statusText }));
+  async handleResponse(response, originalRequest = null) {
+    console.log('[httpClient] handleResponse 시작');
+    console.log('[httpClient] 응답 상태 코드:', response.status);
+    console.log('[httpClient] 응답 Content-Type:', response.headers.get('Content-Type'));
+    
+    const text = await response.text();
+    
+    console.log('[httpClient] 응답 원본 텍스트:', text);
+    
+    // 응답 데이터 파싱
+    let data;
+    if (!text) {
+      data = { message: response.statusText };
+    } else {
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('[httpClient] JSON 파싱 에러:', parseError);
+        data = { message: response.statusText };
+      }
+    }
+    
+    console.log('[httpClient] 파싱된 응답 데이터:', data);
+    console.log('[httpClient] response.ok:', response.ok);
+    console.log('[httpClient] data.success:', data.success);
+    
+    // 401, 403 에러 처리: Refresh token으로 토큰 갱신 후 재시도
+    if ((response.status === 401 || response.status === 403) && !originalRequest) {
+      console.log(`[httpClient] ${response.status} 에러 감지 - 토큰 갱신 시도`);
+      
+      // 이미 refresh token 요청 중이면 대기
+      if (isRefreshing && refreshPromise) {
+        console.log('[httpClient] 이미 토큰 갱신 중 - 대기');
+        try {
+          await refreshPromise;
+          // 토큰 갱신 완료 후 원래 요청 재시도는 호출한 곳에서 처리
+          throw {
+            ...data,
+            status: response.status,
+            response: {
+              status: response.status,
+              data: data,
+            },
+            message: data.error?.message || data.message || '인증이 만료되었습니다. 다시 시도해주세요.',
+            errorCode: data.error?.code,
+            errorMessage: data.error?.message,
+            fullErrorData: data,
+            shouldRetry: true, // 재시도 플래그
+          };
+        } catch (refreshError) {
+          // refresh token 실패
+          handleRefreshTokenFailure();
+          throw refreshError;
+        }
+      }
+      
+      // Refresh token 요청 시작
+      isRefreshing = true;
+      refreshPromise = refreshAccessToken()
+        .then((newAccessToken) => {
+          saveNewAccessToken(newAccessToken);
+          isRefreshing = false;
+          refreshPromise = null;
+          return newAccessToken;
+        })
+        .catch((refreshError) => {
+          isRefreshing = false;
+          refreshPromise = null;
+          handleRefreshTokenFailure();
+          throw refreshError;
+        });
+      
+      await refreshPromise;
+      // 토큰 갱신 성공 - 원래 요청 재시도는 호출한 곳에서 처리
+      throw {
+        ...data,
+        status: response.status,
+        response: {
+          status: response.status,
+          data: data,
+        },
+        message: data.error?.message || data.message || '인증이 만료되었습니다. 다시 시도해주세요.',
+        errorCode: data.error?.code,
+        errorMessage: data.error?.message,
+        fullErrorData: data,
+        shouldRetry: true, // 재시도 플래그
+      };
+    }
     
     // response.ok가 false이고, 응답 데이터에 success가 false이거나 없으면 에러로 처리
     if (!response.ok) {
       // 백엔드가 success: true로 응답하는 경우 (404도 정상 응답으로 처리)
       if (data.success === true) {
+        console.log('[httpClient] success: true이므로 정상 응답으로 처리');
         return data;
       }
       
@@ -125,11 +397,28 @@ const httpClient = {
           status: response.status,
           data: data,
         },
+        message: data.error?.message || data.message || '서버 오류가 발생했습니다.',
+        // 500 에러 디버깅을 위한 추가 정보
+        errorCode: data.error?.code,
+        errorMessage: data.error?.message,
+        fullErrorData: data,
       };
+      
+      console.error('[httpClient] 에러로 처리됨:', error);
+      if (response.status === 500) {
+        console.error('[httpClient] ⚠️ 500 서버 에러 상세 정보:');
+        console.error('[httpClient] - 에러 코드:', data.error?.code);
+        console.error('[httpClient] - 에러 메시지:', data.error?.message);
+        console.error('[httpClient] - 전체 응답 데이터:', data);
+        console.error('[httpClient] - 원본 응답 텍스트:', text);
+        console.error('[httpClient] 💡 백엔드 로그를 확인하세요!');
+      }
+      
       throw error;
     }
     
     // 200 응답인 경우
+    console.log('[httpClient] 정상 응답 반환');
     return data;
   },
 };

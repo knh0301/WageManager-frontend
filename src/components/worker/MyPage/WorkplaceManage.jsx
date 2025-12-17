@@ -1,7 +1,15 @@
 import PropTypes from "prop-types";
 import "../../../pages/workers/WorkerMyPage.css";
 
-export default function WorkplaceManage({ workplaces, previousWorkplaces }) {
+export default function WorkplaceManage({ workplaces, previousWorkplaces, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="worker-mypage-container">
+        <p>로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="worker-mypage-container">
       {/* 현재 근무지 정보 */}
@@ -103,5 +111,6 @@ WorkplaceManage.propTypes = {
       hourlyWage: PropTypes.number,
     })
   ),
+  isLoading: PropTypes.bool,
 };
 

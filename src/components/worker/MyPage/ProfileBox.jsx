@@ -1,38 +1,13 @@
-import { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
-import { FaCamera, FaUser } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import "../../../pages/workers/WorkerMyPage.css";
 
 export default function ProfileBox({
   user,
   profileImage,
-  onProfileImageUpdate,
   activeTab,
   onTabChange,
 }) {
-  const previousImageUrlRef = useRef(null);
-
-  // 컴포넌트 언마운트 시 blob URL 정리
-  useEffect(() => {
-    return () => {
-      if (previousImageUrlRef.current) {
-        URL.revokeObjectURL(previousImageUrlRef.current);
-      }
-    };
-  }, []);
-
-  const handleProfileImageChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    // 이전 blob URL 해제
-    if (previousImageUrlRef.current) {
-      URL.revokeObjectURL(previousImageUrlRef.current);
-    }
-    const imageUrl = URL.createObjectURL(file);
-    previousImageUrlRef.current = imageUrl;
-    onProfileImageUpdate(imageUrl);
-  };
-
   return (
     <nav className="worker-mypage-nav">
       <div className="worker-mypage-profile-card">
@@ -49,16 +24,8 @@ export default function ProfileBox({
                 <FaUser className="worker-mypage-avatar-icon" />
               </div>
             )}
-            <label className="worker-mypage-avatar-camera">
-              <FaCamera />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleProfileImageChange}
-              />
-            </label>
           </div>
-          <div className="worker-mypage-profile-name">{user.name}</div>
+          <div className="worker-mypage-profile-name">{user.name || ""}</div>
         </div>
         <hr />
       </div>
@@ -111,11 +78,10 @@ ProfileBox.propTypes = {
   user: PropTypes.shape({
     name: PropTypes.string,
     birthDate: PropTypes.string,
-    gender: PropTypes.string,
+    userType: PropTypes.string,
     profileImageUrl: PropTypes.string,
   }).isRequired,
   profileImage: PropTypes.string,
-  onProfileImageUpdate: PropTypes.func.isRequired,
   activeTab: PropTypes.string.isRequired,
   onTabChange: PropTypes.func.isRequired,
 };
