@@ -5,15 +5,20 @@ import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkMod
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
 import { toast } from "react-toastify";
 import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest, createWorkRecord } from "../../api/workerApi";
+import { formatTime, pad2 } from "../../utils/dateUtils";
 
-const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
+// contractId를 안전하게 id로 변환하는 함수
+const getId = (contractId) => {
+  if (contractId === null || contractId === undefined) return null;
+  if (typeof contractId === 'object' && 'id' in contractId) {
+    return contractId.id;
+  }
+  return contractId;
+};
 
 const workLabelColor = (contractId, status, contractColorMap) => { // contractId와 상태에 따른 라벨 색상 클래스명 반환
-  // PENDING_APPROVAL 상태인 경우 회색으로 표시
-  if (status === "PENDING_APPROVAL") return "pending";
-  
   // contractId를 기반으로 색상 인덱스 가져오기
   const colorIndex = contractColorMap[contractId] ?? 3; // 기본값은 3 (4번째 색상)
   
@@ -25,30 +30,6 @@ const workLabelColor = (contractId, status, contractColorMap) => { // contractId
 const getKoreanDayLabel = (dayIndex) => { 
   const map = ["일", "월", "화", "수", "목", "금", "토"];
   return map[dayIndex] || "";
-};
-
-// 시간 객체를 "HH:mm" 형식으로 변환
-const formatTime = (timeObj) => {
-  if (!timeObj) return "00:00";
-  
-  // hour와 minute이 직접 있는 경우
-  if (typeof timeObj.hour !== 'undefined' && typeof timeObj.minute !== 'undefined') {
-    const hour = String(timeObj.hour || 0).padStart(2, "0");
-    const minute = String(timeObj.minute || 0).padStart(2, "0");
-    return `${hour}:${minute}`;
-  }
-  
-  // 문자열 형식인 경우 (예: "09:00" 또는 "09:00:00")
-  if (typeof timeObj === 'string') {
-    // "HH:mm:ss" 형식을 "HH:mm"으로 변환
-    const parts = timeObj.split(':');
-    if (parts.length >= 2) {
-      return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
-    }
-    return timeObj;
-  }
-  
-  return "00:00";
 };
 
 // API 응답 데이터를 더미데이터 형식으로 매핑
@@ -71,8 +52,8 @@ const mapWorkRecords = (apiData, hourlyWageMap) => {
     const mappedRecord = {
       id: record.id,
       contractId: record.contractId,
-      start: formatTime(record.startTime),
-      end: formatTime(record.endTime),
+      start: formatTime(record.startTime) || "00:00",
+      end: formatTime(record.endTime) || "00:00",
       wage: wage,
       place: record.workplaceName,
       breakMinutes: record.breakMinutes || 0,
@@ -139,8 +120,11 @@ function WorkerMonthlyCalendarPage() {
       await Promise.all(
         contractIds.map(async (contractId) => {
           try {
-            // contractId가 객체인 경우 id 필드 추출
-            const id = typeof contractId === 'object' ? contractId.id : contractId;
+            const id = getId(contractId);
+            if (!id) {
+              console.warn(`[WorkerMonthlyCalendarPage] 유효하지 않은 contractId:`, contractId);
+              return;
+            }
             
             const contractDetail = await getContractDetail(id);
             
@@ -265,7 +249,9 @@ function WorkerMonthlyCalendarPage() {
     return cells;
   }, [currentYear, currentMonth]);
 
-  const recordsForSelectedDay = workRecords[selectedDateKey] || [];
+  const recordsForSelectedDay = (workRecords[selectedDateKey] || []).filter(
+    (record) => record.status !== "PENDING_APPROVAL"
+  );
 
   const handleMemoChange = (e) => { 
     const value = e.target.value;
@@ -285,6 +271,10 @@ function WorkerMonthlyCalendarPage() {
       const [y, m] = key.split("-").map(Number);
       if (y === currentYear && m === currentMonth + 1) {
         list.forEach((record) => {
+          // PENDING_APPROVAL 상태인 근무 기록은 계산에서 제외
+          if (record.status === "PENDING_APPROVAL") {
+            return;
+          }
           // totalWorkMinutes 사용 (API에서 제공)
           minutes += record.totalWorkMinutes || 0;
           wage += record.wage || 0;

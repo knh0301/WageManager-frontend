@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import { MdArrowForwardIos } from "react-icons/md";
 import WorkEditRequestBox from "../MonthlyCalendarPage/WorkEditRequestBox";
+import { pad2, getWeekStart } from "../../../utils/dateUtils";
 import "./WeeklyCalendar.css";
 
-const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
 
 const getKoreanDayLabel = (dayIndex) => {
@@ -12,15 +12,7 @@ const getKoreanDayLabel = (dayIndex) => {
   return map[dayIndex] || "";
 };
 
-// 주의 시작일(일요일)을 구하는 함수
-const getWeekStart = (date) => {
-  const d = new Date(date);
-  const day = d.getDay(); //0(일요일) ~ 6(토요일)
-  d.setDate(d.getDate() - day); // 일요일로 이동
-  return d;
-};
-
-function WeeklyCalendar({ workRecords = {} }) {
+function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
   const today = new Date();
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     getWeekStart(today)
@@ -28,6 +20,13 @@ function WeeklyCalendar({ workRecords = {} }) {
   const [selectedDateKey, setSelectedDateKey] = useState(null);
   const [selectedRecordId, setSelectedRecordId] = useState(null);
   const [editForm, setEditForm] = useState(null);
+
+  // 주 변경 시 부모 컴포넌트에 알림
+  useEffect(() => {
+    if (onWeekChange) {
+      onWeekChange(currentWeekStart);
+    }
+  }, [currentWeekStart, onWeekChange]);
 
   // 현재 주의 일요일~토요일 날짜 배열
   const weekDays = useMemo(() => {
@@ -91,11 +90,20 @@ function WeeklyCalendar({ workRecords = {} }) {
       const records = workRecords[dateKey] || [];
 
       records.forEach((record) => {
-        const [sh, sm] = record.start.split(":").map(Number);
-        const [eh, em] = record.end.split(":").map(Number);
-        const diff = eh * 60 + em - (sh * 60 + sm);
-        totalMinutes += diff;
-        wage += record.wage;
+        // PENDING_APPROVAL 상태인 근무 기록은 계산에서 제외
+        if (record.status === "PENDING_APPROVAL") {
+          return;
+        }
+        // totalWorkMinutes가 있으면 사용, 없으면 start/end로 계산
+        if (record.totalWorkMinutes !== undefined) {
+          totalMinutes += record.totalWorkMinutes || 0;
+        } else {
+          const [sh, sm] = record.start.split(":").map(Number);
+          const [eh, em] = record.end.split(":").map(Number);
+          const diff = eh * 60 + em - (sh * 60 + sm);
+          totalMinutes += diff;
+        }
+        wage += record.wage || 0;
       });
     });
 
@@ -173,12 +181,24 @@ function WeeklyCalendar({ workRecords = {} }) {
   };
 
   // 근무 기록 정정 요청 확인
-  const handleConfirmEdit = (form) => {
-    // TODO: 백엔드로 수정 요청 보내기
-    console.log("edit request payload:", form);
-    setEditForm(null);
-    setSelectedDateKey(null);
-    setSelectedRecordId(null);
+  const handleConfirmEditInternal = async (form) => {
+    if (onConfirmEdit) {
+      try {
+        await onConfirmEdit(form);
+        // 성공 시 폼 닫기 (월간 캘린더와 동일하게)
+        setEditForm(null);
+        setSelectedDateKey(null);
+        setSelectedRecordId(null);
+      } catch {
+        // 에러 발생 시 폼은 열어둠 (사용자가 수정 가능하도록)
+      }
+    } else {
+      // TODO: 백엔드로 수정 요청 보내기
+      console.log("edit request payload:", form);
+      setEditForm(null);
+      setSelectedDateKey(null);
+      setSelectedRecordId(null);
+    }
   };
 
   // 삭제 요청
@@ -232,7 +252,10 @@ function WeeklyCalendar({ workRecords = {} }) {
             date.getMonth(),
             date.getDate()
           );
-          const records = workRecords[dateKey] || [];
+          const allRecords = workRecords[dateKey] || [];
+          const records = allRecords.filter(
+            (record) => record.status !== "PENDING_APPROVAL"
+          );
           const dayLabel = getKoreanDayLabel(date.getDay());
           const dayNumber = date.getDate();
 
@@ -273,7 +296,7 @@ function WeeklyCalendar({ workRecords = {} }) {
                             <WorkEditRequestBox
                               form={editForm}
                               setForm={setEditForm}
-                              onConfirm={handleConfirmEdit}
+                              onConfirm={handleConfirmEditInternal}
                               onDelete={handleDeleteRequest}
                               onCancel={handleCancelEdit}
                               variant="weekly"
@@ -300,13 +323,18 @@ WeeklyCalendar.propTypes = {
     PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,
+        contractId: PropTypes.number,
         start: PropTypes.string.isRequired,
         end: PropTypes.string.isRequired,
         wage: PropTypes.number.isRequired,
         place: PropTypes.string.isRequired,
         breakMinutes: PropTypes.number,
+        totalWorkMinutes: PropTypes.number,
+        status: PropTypes.string,
       })
     )
   ),
+  onConfirmEdit: PropTypes.func,
+  onWeekChange: PropTypes.func,
 };
 
