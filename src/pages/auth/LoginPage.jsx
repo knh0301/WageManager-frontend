@@ -38,11 +38,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleDevLogin = async (userType = 'WORKER') => {
+  const handleDevLogin = async (userId, userName, userType) => {
     try {
-      // userType에 따라 다른 사용자로 로그인
-      const userId = userType === 'EMPLOYER' ? '2' : '1';
-      const userName = userType === 'EMPLOYER' ? '테스트 고용주' : '테스트 근로자';
       const response = await devLogin(userId, userName, userType);
 
       if (response.success && response.data?.accessToken) {
@@ -79,53 +76,67 @@ export default function LoginPage() {
     }
   };
 
+  const testUsers = [
+    { userId: '1', name: '박지성', userType: 'EMPLOYER' },
+    { userId: '2', name: '김민준', userType: 'WORKER' },
+    { userId: '3', name: '이서연', userType: 'WORKER' },
+    { userId: '4', name: '박지훈', userType: 'WORKER' },
+    { userId: '5', name: '정수빈', userType: 'WORKER' },
+    { userId: '6', name: '최유진', userType: 'WORKER' },
+  ];
+
   return (
-    <div className="flex justify-center items-center min-h-screen p-5" style={{ backgroundColor: 'var(--color-main)' }}>
+    <div className="flex justify-center items-center min-h-screen p-5" style={{ backgroundColor: 'var(--color-main)', position: 'relative' }}>
       <div className="text-center flex flex-col items-center gap-10">
         <h1 className="text-5xl font-bold m-0" style={{ color: 'var(--color-background)' }}>월급관리소</h1>
-        <button 
+        <button
           className="bg-transparent border-0 p-0 cursor-pointer transition-opacity duration-200 hover:opacity-90 active:opacity-80"
           onClick={handleKakaoLogin}
           style={{ position: 'relative', zIndex: 1 }}
         >
-          <img 
-            src={kakaoLoginIcon} 
+          <img
+            src={kakaoLoginIcon}
             alt="카카오 로그인"
             className="block w-full h-auto"
             style={{ pointerEvents: 'none' }}
             draggable={false}
           />
         </button>
-        {/* 개발자 로그인 버튼 (개발 환경에서만 표시) */}
-        {import.meta.env.DEV && (
-          <div className="flex gap-4">
-            <button
-              onClick={() => handleDevLogin('WORKER')}
-              className="px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
-              style={{
-                backgroundColor: 'var(--color-background)',
-                color: 'var(--color-main)',
-                border: '2px solid var(--color-background)',
-                cursor: 'pointer',
-              }}
-            >
-              테스트 근로자 로그인
-            </button>
-            <button
-              onClick={() => handleDevLogin('EMPLOYER')}
-              className="px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
-              style={{
-                backgroundColor: 'var(--color-background)',
-                color: 'var(--color-main)',
-                border: '2px solid var(--color-background)',
-                cursor: 'pointer',
-              }}
-            >
-              테스트 고용주 로그인
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* 테스트 로그인 버튼들 (오른쪽 아래, 개발 환경에서만 표시) */}
+      {import.meta.env.DEV && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          opacity: '0.3',
+          transition: 'opacity 0.2s',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.3'}
+        >
+          {testUsers.map((user) => (
+            <button
+              key={user.userId}
+              onClick={() => handleDevLogin(user.userId, user.name, user.userType)}
+              className="px-3 py-2 rounded text-xs font-medium transition-all duration-200 hover:opacity-90 active:opacity-80"
+              style={{
+                backgroundColor: user.userType === 'EMPLOYER' ? '#769fcd' : '#f5f5f5',
+                color: user.userType === 'EMPLOYER' ? 'white' : '#333',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {user.name} {user.userType === 'EMPLOYER' ? '(고용주)' : ''}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

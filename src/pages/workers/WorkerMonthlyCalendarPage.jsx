@@ -37,25 +37,17 @@ const mapWorkRecords = (apiData, hourlyWageMap) => {
   const recordsByDate = {};
   const memosByDate = {};
 
-  console.log('[mapWorkRecords] 입력 데이터:', { apiData, hourlyWageMap });
-
   if (!apiData || !Array.isArray(apiData)) {
-    console.log('[mapWorkRecords] 유효하지 않은 데이터');
     return { recordsByDate, memosByDate };
   }
 
-  apiData.forEach((record, index) => {
-    console.log(`[mapWorkRecords] 레코드 ${index}:`, record);
-
+  apiData.forEach((record) => {
     const dateKey = record.workDate;
     const contractId = record.contractId;
     const hourlyWage = hourlyWageMap[contractId] || 0;
 
-    console.log(`  → contractId: ${contractId}, hourlyWage: ${hourlyWage}, totalWorkMinutes: ${record.totalWorkMinutes}`);
-
     // totalWorkMinutes를 사용하여 급여 계산 (분 단위를 시간으로 변환)
     const wage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
-    console.log(`  → 계산된 wage: ${wage}`);
 
     const mappedRecord = {
       id: record.id,
@@ -136,7 +128,6 @@ function WorkerMonthlyCalendarPage() {
             }
 
             const contractDetail = await getContractDetail(id);
-            console.log(`[계약 ${id}] 시급 정보:`, contractDetail.data?.hourlyWage);
 
             if (contractDetail.data?.hourlyWage !== undefined) {
               hourlyWageMap[id] = contractDetail.data.hourlyWage;
@@ -147,8 +138,6 @@ function WorkerMonthlyCalendarPage() {
         })
       );
 
-      console.log('[fetchWorkRecords] hourlyWageMap:', hourlyWageMap);
-
       // 3. 현재 월의 시작일과 종료일 계산
       const lastDay = new Date(currentYear, currentMonth + 1, 0);
       const startDate = `${currentYear}-${pad2(currentMonth + 1)}-${pad2(1)}`;
@@ -157,11 +146,9 @@ function WorkerMonthlyCalendarPage() {
       // 4. 근무 기록 가져오기
       const workRecordsResponse = await getWorkRecords(startDate, endDate);
       const workRecordsData = workRecordsResponse.data || [];
-      console.log('[fetchWorkRecords] API 응답 근무 기록:', workRecordsData);
 
       // 5. 데이터 매핑
       const { recordsByDate, memosByDate } = mapWorkRecords(workRecordsData, hourlyWageMap);
-      console.log('[fetchWorkRecords] 매핑된 근무 기록:', recordsByDate);
       setWorkRecords(recordsByDate);
       setMemos((prev) => ({ ...prev, ...memosByDate }));
     } catch (error) {
@@ -295,35 +282,22 @@ function WorkerMonthlyCalendarPage() {
     let minutes = 0;
     let calculatedWage = 0;
 
-    console.log('[월간 집계 디버깅]');
-    console.log('현재 연도/월:', currentYear, currentMonth + 1);
-    console.log('workRecords:', workRecords);
-    console.log('salaries:', salaries);
-
     // 월간 근무시간 및 임시 급여 계산: 근무 기록에서 집계
     Object.entries(workRecords).forEach(([key, list]) => {
       const [y, m] = key.split("-").map(Number);
-      console.log(`날짜 키: ${key}, 파싱: y=${y}, m=${m}`);
       if (y === currentYear && m === currentMonth + 1) {
-        console.log(`✓ 일치! 레코드 수: ${list.length}`);
         list.forEach((record) => {
-          console.log('레코드:', record);
           // PENDING_APPROVAL, DELETED 상태인 근무 기록은 계산에서 제외
           if (record.status === "PENDING_APPROVAL" || record.status === "DELETED") {
-            console.log('→ 제외됨 (상태:', record.status, ')');
             return;
           }
           // totalWorkMinutes 사용 (API에서 제공)
           minutes += record.totalWorkMinutes || 0;
           // 근무 기록의 wage 합산 (급여 데이터가 없을 때 대비)
           calculatedWage += record.wage || 0;
-          console.log(`→ 추가: ${record.totalWorkMinutes}분, ${record.wage}원`);
         });
       }
     });
-
-    console.log('총 근무시간(분):', minutes);
-    console.log('계산된 급여:', calculatedWage);
 
     // 월 급여: 급여 API 데이터가 있으면 사용, 없으면 계산된 값 사용
     let wage = calculatedWage;
@@ -333,9 +307,6 @@ function WorkerMonthlyCalendarPage() {
     if (currentSalary && currentSalary.netPay) {
       // netPay (실수령액) 사용 - 급여가 이미 생성된 경우
       wage = Math.round(Number(currentSalary.netPay) || 0);
-      console.log('급여 API 데이터 사용:', wage);
-    } else {
-      console.log('급여 API 데이터 없음, 계산값 사용:', wage);
     }
 
     return { totalMinutes: minutes, totalWage: wage };

@@ -356,7 +356,6 @@ const httpClient = {
     if (!response.ok) {
       // 백엔드가 success: true로 응답하는 경우 (404도 정상 응답으로 처리)
       if (data.success === true) {
-        console.log('[httpClient] success: true이므로 정상 응답으로 처리');
         return data;
       }
       
