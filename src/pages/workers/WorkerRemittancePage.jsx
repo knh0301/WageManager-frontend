@@ -3,7 +3,7 @@ import "./WorkerRemittancePage.css";
 import { formatCurrency } from "../employer/utils/formatUtils";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import WorkDetailList from "../../components/worker/RemittancePage/WorkDetailList";
-import { getContracts, getContractDetail, getWorkRecords, calculateSalary, getPayments } from "../../api/workerApi";
+import { getContracts, getContractDetail, getWorkRecords, getSalaries, getPayments } from "../../api/workerApi";
 import { formatTime, parseWorkDate, pad2 } from "../../utils/dateUtils";
 
 /**
@@ -181,7 +181,7 @@ export default function WorkerRemittancePage() {
     });
   }, [workRecords, sortOrder]);
 
-  // 급여 계산 API 호출
+  // 급여 조회 (getSalaries API 사용)
   const fetchCalculatedSalary = useCallback(async () => {
     if (!selectedWorkplaceId) {
       setCalculatedSalary(null);
@@ -190,14 +190,21 @@ export default function WorkerRemittancePage() {
 
     try {
       setIsCalculatingSalary(true);
-      const response = await calculateSalary(selectedWorkplaceId, currentYear, currentMonth);
+      const response = await getSalaries();
       if (response?.success && response?.data) {
-        setCalculatedSalary(response.data);
+        // 현재 선택된 연도/월/계약에 해당하는 급여 찾기
+        const matchedSalary = response.data.find(
+          (salary) =>
+            salary.contractId === selectedWorkplaceId &&
+            salary.year === currentYear &&
+            salary.month === currentMonth
+        );
+        setCalculatedSalary(matchedSalary || null);
       } else {
         setCalculatedSalary(null);
       }
     } catch (error) {
-      console.error("[WorkerRemittancePage] 급여 계산 실패:", error);
+      console.error("[WorkerRemittancePage] 급여 조회 실패:", error);
       setCalculatedSalary(null);
     } finally {
       setIsCalculatingSalary(false);
@@ -227,13 +234,16 @@ export default function WorkerRemittancePage() {
     fetchPayments();
   }, [fetchPayments, currentYear, currentMonth]);
 
-  // 해당 월의 총 급여 계산 (calculateSalary API 결과 사용)
+  // 해당 월의 총 급여 계산 (근무 기록 wage 합산)
   const totalWage = useMemo(() => {
-    if (calculatedSalary?.netPay !== undefined) {
-      return calculatedSalary.netPay;
-    }
-    return 0;
-  }, [calculatedSalary]);
+    return workRecords.reduce((sum, record) => {
+      // 승인 대기 중이거나 삭제된 근무는 제외
+      if (record.status === "pending" || record.status === "deleted") {
+        return sum;
+      }
+      return sum + (record.wage || 0);
+    }, 0);
+  }, [workRecords]);
 
   // 입금 상태 정보 계산 (API 데이터 기반)
   // - completed: 입금 완료 (isPaid === true, 송금 날짜 표시)

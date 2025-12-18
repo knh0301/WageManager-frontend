@@ -3,8 +3,11 @@ import api from "./api";
 const correctionRequestService = {
   // 고용주 - 승인 대기중인 모든 요청 조회 (통합)
   getPendingApprovals: async (workplaceId, filter = "ALL") => {
+    // 백엔드는 'type' 파라미터를 기대함 (CREATE, UPDATE, DELETE)
+    // filter가 "ALL"이면 파라미터를 보내지 않음 (전체 조회)
+    const params = filter === "ALL" ? {} : { type: filter };
     return await api.get(`/employer/workplaces/${workplaceId}/pending-approvals`, {
-      params: { filter },
+      params,
     });
   },
 

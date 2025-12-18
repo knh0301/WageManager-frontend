@@ -4,7 +4,7 @@ import WorkEditRequestBox from "../../components/worker/MonthlyCalendarPage/Work
 import AddWorkModal from "../../components/worker/MonthlyCalendarPage/AddWorkModal";
 import CalendarCard from "../../components/worker/MonthlyCalendarPage/CalendarCard";
 import { toast } from "react-toastify";
-import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest, createWorkRecord } from "../../api/workerApi";
+import { getContracts, getContractDetail, getWorkRecords, createCorrectionRequest, createWorkRecord, getSalaries } from "../../api/workerApi";
 import { formatTime, pad2 } from "../../utils/dateUtils";
 
 const makeDateKey = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
@@ -45,7 +45,7 @@ const mapWorkRecords = (apiData, hourlyWageMap) => {
     const dateKey = record.workDate;
     const contractId = record.contractId;
     const hourlyWage = hourlyWageMap[contractId] || 0;
-    
+
     // totalWorkMinutes를 사용하여 급여 계산 (분 단위를 시간으로 변환)
     const wage = Math.round((hourlyWage * record.totalWorkMinutes) / 60);
 
@@ -89,10 +89,11 @@ function WorkerMonthlyCalendarPage() {
   );
 
   const [editForm, setEditForm] = useState(null); // 수정 요청 폼 상태
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false); 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addForm, setAddForm] = useState(null);
   const [workplaceOptions, setWorkplaceOptions] = useState([]); // 근무지 목록
   const [contractColorMap, setContractColorMap] = useState({}); // contractId -> 색상 인덱스 맵
+  const [salaries, setSalaries] = useState([]); // 급여 목록
 
   // 근무 기록 가져오기 함수 (재사용 가능하도록 분리)
   const fetchWorkRecords = useCallback(async () => {
@@ -125,9 +126,9 @@ function WorkerMonthlyCalendarPage() {
               console.warn(`[WorkerMonthlyCalendarPage] 유효하지 않은 contractId:`, contractId);
               return;
             }
-            
+
             const contractDetail = await getContractDetail(id);
-            
+
             if (contractDetail.data?.hourlyWage !== undefined) {
               hourlyWageMap[id] = contractDetail.data.hourlyWage;
             }
@@ -214,6 +215,20 @@ function WorkerMonthlyCalendarPage() {
     fetchWorkplaces();
   }, []);
 
+  // 급여 목록 가져오기
+  useEffect(() => {
+    const fetchSalaries = async () => {
+      try {
+        const response = await getSalaries();
+        setSalaries(response.data || []);
+      } catch (error) {
+        console.error('[WorkerMonthlyCalendarPage] 급여 조회 실패:', error);
+        setSalaries([]);
+      }
+    };
+    fetchSalaries();
+  }, []);
+
   // API에서 근무 기록 가져오기
   useEffect(() => {
     const loadWorkRecords = async () => {
@@ -265,25 +280,37 @@ function WorkerMonthlyCalendarPage() {
 
   const { totalMinutes, totalWage } = useMemo(() => { // 월간 총 근무 시간 및 급여 계산
     let minutes = 0;
-    let wage = 0;
+    let calculatedWage = 0;
 
+    // 월간 근무시간 및 임시 급여 계산: 근무 기록에서 집계
     Object.entries(workRecords).forEach(([key, list]) => {
       const [y, m] = key.split("-").map(Number);
       if (y === currentYear && m === currentMonth + 1) {
         list.forEach((record) => {
-          // PENDING_APPROVAL 상태인 근무 기록은 계산에서 제외
-          if (record.status === "PENDING_APPROVAL") {
+          // PENDING_APPROVAL, DELETED 상태인 근무 기록은 계산에서 제외
+          if (record.status === "PENDING_APPROVAL" || record.status === "DELETED") {
             return;
           }
           // totalWorkMinutes 사용 (API에서 제공)
           minutes += record.totalWorkMinutes || 0;
-          wage += record.wage || 0;
+          // 근무 기록의 wage 합산 (급여 데이터가 없을 때 대비)
+          calculatedWage += record.wage || 0;
         });
       }
     });
 
+    // 월 급여: 급여 API 데이터가 있으면 사용, 없으면 계산된 값 사용
+    let wage = calculatedWage;
+    const currentSalary = salaries.find(
+      (salary) => salary.year === currentYear && salary.month === currentMonth + 1
+    );
+    if (currentSalary && currentSalary.netPay) {
+      // netPay (실수령액) 사용 - 급여가 이미 생성된 경우
+      wage = Math.round(Number(currentSalary.netPay) || 0);
+    }
+
     return { totalMinutes: minutes, totalWage: wage };
-  }, [currentYear, currentMonth, workRecords]);
+  }, [currentYear, currentMonth, workRecords, salaries]);
 
   const totalHoursText = useMemo(() => { // 총 근무 시간 텍스트 변환
     const hours = Math.floor(totalMinutes / 60);
@@ -396,6 +423,7 @@ function WorkerMonthlyCalendarPage() {
       const endTimeStr = `${pad2(Number(form.endHour))}:${pad2(Number(form.endMinute))}:00`;
       
       const payload = {
+        type: 'UPDATE',  // 정정 요청 타입: 기존 근무 수정
         workRecordId: workRecordId,
         requestedWorkDate: form.date,
         requestedStartTime: startTimeStr,
@@ -634,6 +662,9 @@ function WorkerMonthlyCalendarPage() {
             type="button"
             className="add-work-button"
             onClick={handleOpenAddModal}
+            disabled
+            style={{ opacity: 0.5, cursor: 'not-allowed' }}
+            title="임시 비활성화 (백엔드 API 수정 필요)"
           >
             + 근무 추가하기
           </button>

@@ -193,8 +193,6 @@ function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
         // 에러 발생 시 폼은 열어둠 (사용자가 수정 가능하도록)
       }
     } else {
-      // TODO: 백엔드로 수정 요청 보내기
-      console.log("edit request payload:", form);
       setEditForm(null);
       setSelectedDateKey(null);
       setSelectedRecordId(null);
@@ -203,8 +201,6 @@ function WeeklyCalendar({ workRecords = {}, onConfirmEdit, onWeekChange }) {
 
   // 삭제 요청
   const handleDeleteRequest = (form) => {
-    // TODO: 백엔드로 삭제 요청 보내기
-    console.log("delete request payload:", form);
     setEditForm(null);
     setSelectedDateKey(null);
     setSelectedRecordId(null);

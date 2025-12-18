@@ -129,6 +129,9 @@ export default function DailyCalendarPage() {
       const startHour = timeStringToDecimal(startTimeStr);
       const endHour = timeStringToDecimal(endTimeStr);
 
+      // 근무 시간 계산 (시간 단위)
+      const durationHours = endHour - startHour;
+
       scheduleData[workplaceName][dateKey].push({
         id: `shift-${record.id}`,
         name: record.workerName,
@@ -136,6 +139,7 @@ export default function DailyCalendarPage() {
         end: endTimeStr,
         startHour,
         endHour,
+        durationHours,
         breakMinutes: record.breakMinutes || 0,
         hourlyWage: record.hourlyWage || 10030,
         allowances: {

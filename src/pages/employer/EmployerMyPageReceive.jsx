@@ -34,46 +34,31 @@ export default function EmployerMyPageReceive() {
           try {
             const response = await correctionRequestService.getPendingApprovals(workplace.id);
 
-            // CorrectionRequest 변환
-            if (response.correctionRequests) {
-              response.correctionRequests.forEach(req => {
-                allRequests.push({
-                  id: `correction-${req.id}`,
-                  type: 'correction',
-                  originalId: req.id,
-                  workRecordId: req.workRecordId,
-                  workerName: req.requester.name,
-                  workplace: req.workplaceName,
-                  date: req.requestedWorkDate,
-                  startTime: req.requestedStartTime,
-                  endTime: req.requestedEndTime,
-                  originalDate: req.originalWorkDate,
-                  originalStartTime: req.originalStartTime,
-                  originalEndTime: req.originalEndTime,
-                  status: req.status,
-                  createdAt: req.createdAt,
-                });
-              });
-            }
+            // 백엔드는 List<CorrectionRequestDto.ListResponse>를 직접 반환
+            // response가 배열인 경우 처리
+            const correctionRequests = Array.isArray(response) ? response : [];
 
-            // WorkRecordCreation 변환
-            if (response.workRecordCreations) {
-              response.workRecordCreations.forEach(req => {
-                allRequests.push({
-                  id: `creation-${req.id}`,
-                  type: 'creation',
-                  originalId: req.id,
-                  workerName: req.requester.name,
-                  workplace: req.workplaceName,
-                  date: req.requestedWorkDate,
-                  startTime: req.requestedStartTime,
-                  endTime: req.requestedEndTime,
-                  status: req.status,
-                  createdAt: req.createdAt,
-                });
+            correctionRequests.forEach(req => {
+              allRequests.push({
+                id: `correction-${req.id}`,
+                type: 'correction',
+                originalId: req.id,
+                workRecordId: req.workRecordId,
+                workerName: req.requester?.name || '알 수 없음',
+                workplace: req.workplaceName || workplace.name,
+                date: req.workDate || req.requestedWorkDate,
+                startTime: req.requestedStartTime,
+                endTime: req.requestedEndTime,
+                originalDate: req.originalWorkDate,
+                originalStartTime: req.originalStartTime,
+                originalEndTime: req.originalEndTime,
+                requestType: req.type, // CREATE, UPDATE, DELETE
+                status: req.status,
+                createdAt: req.createdAt,
               });
-            }
+            });
           } catch (error) {
+            console.error(`[EmployerMyPageReceive] 근무지 ${workplace.id} 요청 조회 실패:`, error);
             // 개별 근무지 요청 조회 실패 무시
           }
         }
