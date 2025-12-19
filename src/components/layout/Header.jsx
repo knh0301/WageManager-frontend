@@ -20,6 +20,7 @@ export default function Header() {
   // Redux에서 사용자 정보 가져오기
   const authState = useSelector((state) => state.auth);
   const userName = authState.name;
+  const userType = authState.userType || localStorage.getItem('userType');
   const accessToken = authState.accessToken || localStorage.getItem('token');
 
   const toggleNotification = () => {
@@ -28,6 +29,14 @@ export default function Header() {
 
   const closeNotification = () => {
     setIsNotificationOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    if (userType === 'EMPLOYER') {
+      navigate('/employer/daily-calendar');
+    } else {
+      navigate('/worker/monthly-calendar');
+    }
   };
 
   const handleUnreadCountChange = (count) => {
@@ -114,7 +123,13 @@ export default function Header() {
 
   return (
     <header className="header-bar">
-      <img src={logoImage} alt="월급 관리소" className="header-logo" />
+      <img
+        src={logoImage}
+        alt="월급 관리소"
+        className="header-logo"
+        onClick={handleLogoClick}
+        style={{ cursor: 'pointer' }}
+      />
       <div className="header-right">
         <div className="header-notification-wrapper" ref={notificationButtonRef}>
           <button

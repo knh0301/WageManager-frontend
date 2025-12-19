@@ -56,7 +56,6 @@ function App() {
           <Route path="weekly-calendar" element={<WorkerWeeklyCalendarPage />} />
           <Route path="remittance" element={<WorkerRemittancePage />} />
           <Route path="mypage" element={<WorkerMyPage />} />
-          <Route path="notifications" element={<NotificationPage />} />
         </Route>
 
         <Route path="/employer" element={<EmployerLayout />}>
@@ -73,7 +72,6 @@ function App() {
             path="employer-mypage-receive"
             element={<EmployerMyPageReceive />}
           />
-          <Route path="notifications" element={<NotificationPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
