@@ -36,22 +36,32 @@ export default function NotificationDropdown({ isOpen, onClose, onUnreadCountCha
     }
   }, [isOpen]);
 
-  // 읽지 않은 알림들을 읽음 처리
+  // 읽지 않은 알림들을 읽음 처리 (병렬 실행)
   const markNotificationsAsRead = async (notificationsList) => {
     const unreadNotifications = notificationsList.filter((n) => !n.isRead);
 
-    for (const notification of unreadNotifications) {
-      try {
-        await markNotificationAsRead(notification.id);
-      } catch (error) {
-        const errorMessage = error.error?.message || error.message || "알림 읽음 처리에 실패했습니다.";
+    if (unreadNotifications.length === 0) return;
+
+    // 모든 읽음 처리 요청을 병렬로 실행
+    const results = await Promise.allSettled(
+      unreadNotifications.map((notification) => markNotificationAsRead(notification.id))
+    );
+
+    // 성공/실패 개수 계산
+    let successCount = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successCount++;
+      } else {
+        // 실패한 경우 에러 토스트 표시
+        const errorMessage = result.reason?.error?.message || result.reason?.message || "알림 읽음 처리에 실패했습니다.";
         toast.error(errorMessage);
       }
-    }
+    });
 
-    // 읽음 처리 후 unreadCount 업데이트
-    if (unreadNotifications.length > 0 && onUnreadCountChange) {
-      const newUnreadCount = Math.max(0, unreadCount - unreadNotifications.length);
+    // 성공한 개수만큼 unreadCount 업데이트
+    if (successCount > 0 && onUnreadCountChange) {
+      const newUnreadCount = Math.max(0, unreadCount - successCount);
       setUnreadCount(newUnreadCount);
       onUnreadCountChange(newUnreadCount);
     }
