@@ -26,3 +26,13 @@ export const markNotificationAsRead = async (id) => {
   const response = await httpClient.put(`/api/notifications/${id}/read`);
   return response;
 };
+
+/**
+ * 전체 알림 읽음 처리
+ * @returns {Promise<Object>} 읽음 처리 응답
+ */
+export const markAllNotificationsAsRead = async () => {
+  const response = await httpClient.put('/api/notifications/read-all');
+  return response;
+};
+
