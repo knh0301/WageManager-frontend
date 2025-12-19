@@ -144,3 +144,29 @@
   color: #9ca3af;
   font-size: 16px;
 }
+
+/* 더 보기 버튼 */
+.notification-load-more {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notification-load-more:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.notification-load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
