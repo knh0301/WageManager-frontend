@@ -215,11 +215,7 @@ export default function RemittanceManagePage() {
     <div className="remittance-manage-page">
       <div className="remittance-left-panel">
         <div className="remittance-workplace-select">
-          <select
-            value={selectedWorkplaceId}
-            onChange={handleWorkplaceChange}
-            className="workplace-select"
-          >
+          <select value={selectedWorkplaceId} onChange={handleWorkplaceChange}>
             {workplaces.map((wp) => (
               <option key={wp.id} value={wp.id}>
                 {wp.name}
