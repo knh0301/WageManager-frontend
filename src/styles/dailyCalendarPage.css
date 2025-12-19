@@ -284,8 +284,9 @@
   box-sizing: border-box;
 }
 
-.time-wheel-wrapper {
+.daily-page .time-wheel-wrapper {
   display: flex;
+  flex-direction: column;
   gap: 16px;
   flex-wrap: wrap;
 }

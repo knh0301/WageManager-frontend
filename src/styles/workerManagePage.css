@@ -385,8 +385,9 @@
   min-width: 50px;
 }
 
-.time-wheel-wrapper {
+.worker-manage-page .time-wheel-wrapper {
   display: flex;
+  flex-direction: row;
   gap: 8px;
   align-items: center;
   flex-wrap: nowrap;

@@ -78,7 +78,9 @@ export default function WorkerManagePage() {
     if (!workplaceId) return;
 
     try {
-      const contracts = await contractService.getContractsByWorkplace(workplaceId);
+      const contracts = await contractService.getContractsByWorkplace(
+        workplaceId
+      );
       setWorkersList((prev) => ({
         ...prev,
         [workplaceId]: contracts,
@@ -117,7 +119,7 @@ export default function WorkerManagePage() {
     if (isAddingWorker) {
       return null;
     }
-    if (selectedWorker && workers.find(w => w.id === selectedWorker.id)) {
+    if (selectedWorker && workers.find((w) => w.id === selectedWorker.id)) {
       return selectedWorker;
     }
     return workers.length > 0 ? workers[0] : null;
@@ -134,7 +136,9 @@ export default function WorkerManagePage() {
       }
 
       try {
-        const fullContract = await contractService.getContract(currentWorker.id);
+        const fullContract = await contractService.getContract(
+          currentWorker.id
+        );
         setFullContractData(fullContract);
       } catch (error) {
         setFullContractData(null);
@@ -156,27 +160,28 @@ export default function WorkerManagePage() {
     let weeklySchedule = {};
     try {
       if (contract.workSchedules) {
-        const schedules = typeof contract.workSchedules === 'string'
-          ? JSON.parse(contract.workSchedules)
-          : contract.workSchedules;
+        const schedules =
+          typeof contract.workSchedules === "string"
+            ? JSON.parse(contract.workSchedules)
+            : contract.workSchedules;
 
         // dayOfWeek(1-7, 1=월요일, 7=일요일) -> 한글 요일로 변환
         const dayMapping = {
-          1: '월',
-          2: '화',
-          3: '수',
-          4: '목',
-          5: '금',
-          6: '토',
-          7: '일'
+          1: "월",
+          2: "화",
+          3: "수",
+          4: "목",
+          5: "금",
+          6: "토",
+          7: "일",
         };
 
-        schedules.forEach(schedule => {
+        schedules.forEach((schedule) => {
           const dayName = dayMapping[schedule.dayOfWeek];
           if (dayName) {
             weeklySchedule[dayName] = {
               start: schedule.startTime,
-              end: schedule.endTime
+              end: schedule.endTime,
             };
           }
         });
@@ -186,26 +191,26 @@ export default function WorkerManagePage() {
     }
 
     // payrollDeductionType에서 보험/세금 정보 추출
-    const deductionType = contract.payrollDeductionType || 'PART_TIME_NONE';
-    const socialInsurance = deductionType.includes('INSURANCE');
-    const withholdingTax = deductionType.includes('TAX');
+    const deductionType = contract.payrollDeductionType || "PART_TIME_NONE";
+    const socialInsurance = deductionType.includes("INSURANCE");
+    const withholdingTax = deductionType.includes("TAX");
 
     return {
       basicInfo: {
         name: contract.workerName,
-        birthDate: '정보 없음',  // 백엔드에서 제공하지 않음
-        phone: contract.workerPhone || '-',
-        email: '정보 없음',  // 백엔드에서 제공하지 않음
+        birthDate: "정보 없음", // 백엔드에서 제공하지 않음
+        phone: contract.workerPhone || "-",
+        email: "정보 없음", // 백엔드에서 제공하지 않음
       },
       workInfo: {
         workplace: selectedWorkplace,
         weeklySchedule: weeklySchedule,
-        breakTime: 0,  // 백엔드에서 제공하지 않음
+        breakTime: 0, // 백엔드에서 제공하지 않음
         hourlyWage: Number(contract.hourlyWage) || 0,
         payday: contract.paymentDay || 25,
         socialInsurance: socialInsurance,
         withholdingTax: withholdingTax,
-      }
+      },
     };
   }, [currentWorker, fullContractData, selectedWorkplace]);
 
@@ -220,7 +225,8 @@ export default function WorkerManagePage() {
       return editedWorkInfo;
     }
     // 저장된 수정 정보가 있으면 그것을 사용
-    const savedInfo = updatedWorkInfo[`${selectedWorkplace}-${currentWorker?.id}`];
+    const savedInfo =
+      updatedWorkInfo[`${selectedWorkplace}-${currentWorker?.id}`];
     if (savedInfo) {
       return savedInfo;
     }
@@ -296,8 +302,12 @@ export default function WorkerManagePage() {
           일: 7,
         };
 
-        const workSchedules = Object.entries(editedWorkInfo.weeklySchedule || {})
-          .filter(([day, schedule]) => schedule && schedule.start && schedule.end)
+        const workSchedules = Object.entries(
+          editedWorkInfo.weeklySchedule || {}
+        )
+          .filter(
+            ([day, schedule]) => schedule && schedule.start && schedule.end
+          )
           .map(([day, schedule]) => ({
             dayOfWeek: dayMapping[day],
             startTime: schedule.start,
@@ -329,14 +339,20 @@ export default function WorkerManagePage() {
         await fetchWorkers(selectedWorkplaceId);
 
         // 전체 계약 정보도 다시 조회하여 UI에 즉시 반영
-        const updatedContract = await contractService.getContract(currentWorker.id);
+        const updatedContract = await contractService.getContract(
+          currentWorker.id
+        );
         setFullContractData(updatedContract);
 
         Swal.fire("저장 완료", "근무 정보가 수정되었습니다.", "success");
         setIsEditingWork(false);
         setEditedWorkInfo(null);
       } catch (error) {
-        Swal.fire("수정 실패", error.message || "근무 정보 수정 중 오류가 발생했습니다.", "error");
+        Swal.fire(
+          "수정 실패",
+          error.message || "근무 정보 수정 중 오류가 발생했습니다.",
+          "error"
+        );
       }
     }
   };
@@ -432,7 +448,11 @@ export default function WorkerManagePage() {
         "success"
       );
     } catch (error) {
-      Swal.fire("추가 실패", error.message || "근무지 추가 중 오류가 발생했습니다.", "error");
+      Swal.fire(
+        "추가 실패",
+        error.message || "근무지 추가 중 오류가 발생했습니다.",
+        "error"
+      );
     }
   };
 
@@ -528,7 +548,11 @@ export default function WorkerManagePage() {
             "success"
           );
         } catch (error) {
-          Swal.fire("삭제 실패", error.message || "근무지 삭제 중 오류가 발생했습니다.", "error");
+          Swal.fire(
+            "삭제 실패",
+            error.message || "근무지 삭제 중 오류가 발생했습니다.",
+            "error"
+          );
         }
       }
     });
@@ -590,7 +614,9 @@ export default function WorkerManagePage() {
       );
 
       // 이름이 변경된 경우 workersList, addedWorkerInfo, updatedWorkInfo의 키도 업데이트
-      const oldWorkplace = workplaces.find((wp) => wp.id === editingWorkplace.id);
+      const oldWorkplace = workplaces.find(
+        (wp) => wp.id === editingWorkplace.id
+      );
       if (oldWorkplace && oldWorkplace.name !== editingWorkplace.name.trim()) {
         // workersList는 ID 기반이므로 변경 불필요
         // addedWorkerInfo와 updatedWorkInfo는 이름 기반 키를 사용하므로 업데이트 필요
@@ -632,7 +658,11 @@ export default function WorkerManagePage() {
 
       Swal.fire("수정 완료", "근무지 정보가 수정되었습니다.", "success");
     } catch (error) {
-      Swal.fire("수정 실패", error.message || "근무지 수정 중 오류가 발생했습니다.", "error");
+      Swal.fire(
+        "수정 실패",
+        error.message || "근무지 수정 중 오류가 발생했습니다.",
+        "error"
+      );
     }
   };
 
@@ -682,7 +712,9 @@ export default function WorkerManagePage() {
         // UI 업데이트
         setWorkersList((prev) => {
           const updated = { ...prev };
-          const workplaceWorkersList = [...(updated[selectedWorkplaceId] || [])];
+          const workplaceWorkersList = [
+            ...(updated[selectedWorkplaceId] || []),
+          ];
           const filtered = workplaceWorkersList.filter(
             (worker) => worker.id !== currentWorker.id
           );
@@ -701,7 +733,11 @@ export default function WorkerManagePage() {
           "success"
         );
       } catch (error) {
-        Swal.fire("퇴사 처리 실패", error.message || "퇴사 처리 중 오류가 발생했습니다.", "error");
+        Swal.fire(
+          "퇴사 처리 실패",
+          error.message || "퇴사 처리 중 오류가 발생했습니다.",
+          "error"
+        );
       }
     }
   };
@@ -809,7 +845,9 @@ export default function WorkerManagePage() {
         일: 7,
       };
 
-      const workSchedules = Object.entries(newWorkerWorkInfo.weeklySchedule || {})
+      const workSchedules = Object.entries(
+        newWorkerWorkInfo.weeklySchedule || {}
+      )
         .filter(([day, schedule]) => schedule && schedule.start && schedule.end)
         .map(([day, schedule]) => ({
           dayOfWeek: dayMapping[day],
@@ -829,7 +867,10 @@ export default function WorkerManagePage() {
 
       // payrollDeductionType 결정 (백엔드 Enum에 맞게 변환)
       let payrollDeductionType = "PART_TIME_NONE";
-      if (newWorkerWorkInfo.socialInsurance && newWorkerWorkInfo.withholdingTax) {
+      if (
+        newWorkerWorkInfo.socialInsurance &&
+        newWorkerWorkInfo.withholdingTax
+      ) {
         payrollDeductionType = "PART_TIME_TAX_AND_INSURANCE";
       } else if (newWorkerWorkInfo.socialInsurance) {
         // 4대보험만 적용하는 경우는 백엔드 Enum에 없으므로 세금도 함께 적용
@@ -1471,7 +1512,7 @@ export default function WorkerManagePage() {
                   </div>
 
                   {/* 4대보험 및 소득세 */}
-                  <div className="toggle-row">
+                  {/* <div className="toggle-row">
                     <div className="toggle-item">
                       <label className="toggle-label">4대 보험</label>
                       <label className="toggle-switch">
@@ -1504,7 +1545,7 @@ export default function WorkerManagePage() {
                         <span className="toggle-slider"></span>
                       </label>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="add-worker-button-container">
                     <button
@@ -1949,7 +1990,7 @@ export default function WorkerManagePage() {
                   </div>
                 </div>
 
-                <div className="toggle-row">
+                {/* <div className="toggle-row">
                   <div className="toggle-item">
                     <label className="toggle-label">4대 보험</label>
                     <label className="toggle-switch">
@@ -1992,7 +2033,7 @@ export default function WorkerManagePage() {
                       <span className="toggle-slider"></span>
                     </label>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </>
