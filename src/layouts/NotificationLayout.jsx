@@ -4,7 +4,7 @@ export default function NotificationLayout({ children }) {
   return (
     <>
       <Header />
-      <main className="app-main" style={{ paddingTop: "80px" }}>
+      <main className="app-main">
         {children}
       </main>
     </>
