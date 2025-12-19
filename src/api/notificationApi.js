@@ -16,3 +16,13 @@ export const getNotifications = async ({ size = 4, page = 1 } = {}) => {
   const response = await httpClient.get(`/api/notifications?${queryParams}`);
   return response;
 };
+
+/**
+ * 알림 읽음 처리
+ * @param {number} id - 알림 ID
+ * @returns {Promise<Object>} 읽음 처리 응답
+ */
+export const markNotificationAsRead = async (id) => {
+  const response = await httpClient.put(`/api/notifications/${id}/read`);
+  return response;
+};

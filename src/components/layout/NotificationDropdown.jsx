@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import { MdMic } from "react-icons/md";
-import { getNotifications } from "../../api/notificationApi";
+import { MdNotificationsNone } from "react-icons/md";
+import { getNotifications, markNotificationAsRead } from "../../api/notificationApi";
 import "../../styles/notificationDropdown.css";
 
 /**
@@ -37,6 +37,27 @@ export default function NotificationDropdown({ isOpen, onClose, onUnreadCountCha
     }
   }, [isOpen]);
 
+  // 읽지 않은 알림들을 읽음 처리
+  const markNotificationsAsRead = async (notificationsList) => {
+    const unreadNotifications = notificationsList.filter((n) => !n.isRead);
+
+    for (const notification of unreadNotifications) {
+      try {
+        await markNotificationAsRead(notification.id);
+      } catch (error) {
+        const errorMessage = error.error?.message || error.message || "알림 읽음 처리에 실패했습니다.";
+        toast.error(errorMessage);
+      }
+    }
+
+    // 읽음 처리 후 unreadCount 업데이트
+    if (unreadNotifications.length > 0 && onUnreadCountChange) {
+      const newUnreadCount = Math.max(0, unreadCount - unreadNotifications.length);
+      setUnreadCount(newUnreadCount);
+      onUnreadCountChange(newUnreadCount);
+    }
+  };
+
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
@@ -51,7 +72,8 @@ export default function NotificationDropdown({ isOpen, onClose, onUnreadCountCha
           type: notification.type,
           title: notification.title,
           time: formatDateTime(notification.createdAt),
-          icon: MdMic,
+          icon: MdNotificationsNone,
+          isRead: notification.isRead,
         }));
 
         setNotifications(formattedNotifications);
@@ -61,6 +83,9 @@ export default function NotificationDropdown({ isOpen, onClose, onUnreadCountCha
         if (onUnreadCountChange) {
           onUnreadCountChange(apiUnreadCount);
         }
+
+        // 읽지 않은 알림들을 읽음 처리
+        await markNotificationsAsRead(apiNotifications);
       }
     } catch (error) {
       // 에러 메시지 표시
