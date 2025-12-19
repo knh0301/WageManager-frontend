@@ -86,9 +86,27 @@
   white-space: nowrap;
 }
 
+.notification-page-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .notification-page-time {
   font-size: 12px;
   color: #9ca3af;
+}
+
+.notification-page-delete {
+  font-size: 12px;
+  color: #6b7280;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notification-page-delete:hover {
+  color: #ef4444;
 }
 
 /* 로딩 상태 */

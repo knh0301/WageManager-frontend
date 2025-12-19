@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { MdNotificationsNone } from "react-icons/md";
-import { getNotifications, markAllNotificationsAsRead } from "../api/notificationApi";
+import { getNotifications, markAllNotificationsAsRead, deleteNotification } from "../api/notificationApi";
 import "../styles/notificationPage.css";
 
 /**
@@ -71,6 +71,18 @@ export default function NotificationPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await deleteNotification(id);
+      toast.success("알림이 삭제되었습니다.");
+      // 삭제된 알림을 목록에서 제거
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (error) {
+      const errorMessage = error.error?.message || error.message || "알림 삭제에 실패했습니다.";
+      toast.error(errorMessage);
+    }
+  };
+
   return (
     <div className="notification-page">
       <div className="notification-page-container">
@@ -97,8 +109,16 @@ export default function NotificationPage() {
                     <div className="notification-page-title-text">
                       {notification.title}
                     </div>
-                    <div className="notification-page-time">
-                      {notification.time}
+                    <div className="notification-page-bottom">
+                      <span className="notification-page-time">
+                        {notification.time}
+                      </span>
+                      <span
+                        className="notification-page-delete"
+                        onClick={() => handleDelete(notification.id)}
+                      >
+                        삭제하기
+                      </span>
                     </div>
                   </div>
                 </div>

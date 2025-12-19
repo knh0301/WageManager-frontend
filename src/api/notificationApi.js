@@ -36,3 +36,12 @@ export const markAllNotificationsAsRead = async () => {
   return response;
 };
 
+/**
+ * 알림 삭제
+ * @param {number} id - 알림 ID
+ * @returns {Promise<Object>} 삭제 응답
+ */
+export const deleteNotification = async (id) => {
+  const response = await httpClient.delete(`/api/notifications/${id}`);
+  return response;
+};
