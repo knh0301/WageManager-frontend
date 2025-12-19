@@ -1,11 +1,76 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MdMic, MdAttachFile } from "react-icons/md";
+import { toast } from "react-toastify";
+import { MdMic } from "react-icons/md";
+import { getNotifications } from "../../api/notificationApi";
 import "../../styles/notificationDropdown.css";
 
-export default function NotificationDropdown({ isOpen, onClose }) {
+/**
+ * 서버 시간 포맷을 한국어 형식으로 변환
+ * @param {string} dateString - ISO 형식의 날짜 문자열 (예: 2025-12-18T00:40:37.565902)
+ * @returns {string} 한국어 형식의 날짜 문자열 (예: 2025년 12월 18일 00:40)
+ */
+const formatDateTime = (dateString) => {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
+};
+
+export default function NotificationDropdown({ isOpen, onClose, onUnreadCountChange }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 알림 데이터 가져오기
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getNotifications({ size: 4, page: 1 });
+
+      if (response.success && response.data) {
+        const { notifications: apiNotifications, unreadCount: apiUnreadCount } = response.data;
+
+        // API 응답을 컴포넌트 형식으로 변환
+        const formattedNotifications = apiNotifications.map((notification) => ({
+          id: notification.id,
+          type: notification.type,
+          title: notification.title,
+          time: formatDateTime(notification.createdAt),
+          icon: MdMic,
+        }));
+
+        setNotifications(formattedNotifications);
+        setUnreadCount(apiUnreadCount);
+
+        // 부모 컴포넌트에 unreadCount 전달
+        if (onUnreadCountChange) {
+          onUnreadCountChange(apiUnreadCount);
+        }
+      }
+    } catch (error) {
+      // 에러 메시지 표시
+      const errorMessage = error.error?.message || error.message || "알림을 불러오는데 실패했습니다.";
+      toast.error(errorMessage);
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleViewAll = () => {
     onClose();
@@ -16,41 +81,6 @@ export default function NotificationDropdown({ isOpen, onClose }) {
       navigate("/employer/notifications");
     }
   };
-  // 임시 알림 데이터 (나중에 API로 교체)
-  const notifications = [
-    {
-      id: 1,
-      type: "announcement",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 공지사항이 등록되었습니다.",
-      time: "20분전",
-      icon: MdMic,
-    },
-    {
-      id: 2,
-      type: "file",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
-      icon: MdAttachFile,
-    },
-    {
-      id: 3,
-      type: "file",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
-      icon: MdAttachFile,
-    },
-    {
-      id: 4,
-      type: "file",
-      title: "이산구조[202502-CSE1312-005]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "2일전",
-      icon: MdAttachFile,
-    },
-  ];
 
   if (!isOpen) return null;
 
@@ -60,25 +90,36 @@ export default function NotificationDropdown({ isOpen, onClose }) {
       <div className="notification-dropdown">
         <div className="notification-header">
           <h3>전체 알림</h3>
+          {unreadCount > 0 && (
+            <span className="notification-unread-badge">{unreadCount}</span>
+          )}
         </div>
         <div className="notification-list">
-          {notifications.map((notification) => {
-            const Icon = notification.icon;
-            return (
-              <div key={notification.id} className="notification-item">
-                <div className="notification-icon-wrapper">
-                  <Icon className="notification-icon" />
-                </div>
-                <div className="notification-content">
-                  <div className="notification-title">{notification.title}</div>
-                  <div className="notification-message">
-                    {notification.message}
+          {isLoading ? (
+            <div className="notification-loading">
+              <div className="notification-spinner"></div>
+              <span>알림을 불러오는 중...</span>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="notification-empty">
+              <span>알림이 없습니다.</span>
+            </div>
+          ) : (
+            notifications.map((notification) => {
+              const Icon = notification.icon;
+              return (
+                <div key={notification.id} className="notification-item">
+                  <div className="notification-icon-wrapper">
+                    <Icon className="notification-icon" />
                   </div>
-                  <div className="notification-time">{notification.time}</div>
+                  <div className="notification-content">
+                    <div className="notification-title">{notification.title}</div>
+                    <div className="notification-time">{notification.time}</div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
         <div className="notification-footer">
           <button
