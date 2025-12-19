@@ -5,6 +5,7 @@ import { setAuthToken } from "./features/auth/authSlice";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import WorkerLayout from "./layouts/WorkerLayout.jsx";
 import EmployerLayout from "./layouts/EmployerLayout.jsx";
+import NotificationLayout from "./layouts/NotificationLayout.jsx";
 import WorkerMonthlyCalendarPage from "./pages/workers/WorkerMonthlyCalendarPage.jsx";
 import WorkerWeeklyCalendarPage from "./pages/workers/WorkerWeeklyCalendarPage.jsx";
 import WorkerRemittancePage from "./pages/workers/WorkerRemittancePage.jsx";
@@ -45,6 +46,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/auth" element={<KakaoRedirect />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/notifications" element={<NotificationLayout><NotificationPage /></NotificationLayout>} />
         <Route path="/worker" element={<WorkerLayout />}>
           <Route
             index

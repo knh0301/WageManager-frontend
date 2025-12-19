@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MdNotificationsNone } from "react-icons/md";
 import { getNotifications, markNotificationAsRead } from "../../api/notificationApi";
@@ -25,7 +25,6 @@ const formatDateTime = (dateString) => {
 
 export default function NotificationDropdown({ isOpen, onClose, onUnreadCountChange }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -99,12 +98,7 @@ export default function NotificationDropdown({ isOpen, onClose, onUnreadCountCha
 
   const handleViewAll = () => {
     onClose();
-    // 현재 경로가 /worker 또는 /employer로 시작하는지 확인
-    if (location.pathname.startsWith("/worker")) {
-      navigate("/worker/notifications");
-    } else if (location.pathname.startsWith("/employer")) {
-      navigate("/employer/notifications");
-    }
+    navigate("/notifications");
   };
 
   if (!isOpen) return null;
