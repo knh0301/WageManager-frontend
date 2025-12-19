@@ -10,6 +10,8 @@ import { allowanceDefinitions } from "./utils/shiftUtils";
 import workplaceService from "../../services/workplaceService";
 import contractService from "../../services/contractService";
 import workRecordService from "../../services/workRecordService";
+import workerService from "../../services/workerService";
+import Swal from "sweetalert2";
 
 export default function RemittanceManagePage() {
   const today = new Date();
@@ -203,8 +205,99 @@ export default function RemittanceManagePage() {
     setExpandedRecordIndex(null);
   };
 
-  const handleRemittance = () => {
-    alert("카카오톡 송금하기 연결 예정");
+  const handleRemittance = async () => {
+    if (!currentSelectedWorker) {
+      Swal.fire("알림", "근로자를 선택해주세요.", "info");
+      return;
+    }
+
+    try {
+      let workerId = currentSelectedWorker?.workerId;
+
+      // workerId가 없으면 contractId로 상세 정보 조회
+      if (!workerId && currentSelectedWorker?.id) {
+        try {
+          const contractDetail = await contractService.getContract(
+            currentSelectedWorker.id
+          );
+          workerId = contractDetail?.workerId;
+        } catch (contractError) {
+          console.error("계약 상세 조회 실패:", contractError);
+          Swal.fire("오류", "계약 정보를 불러올 수 없습니다.", "error");
+          return;
+        }
+      }
+
+      if (!workerId) {
+        Swal.fire(
+          "알림",
+          "근로자 정보를 불러올 수 없습니다. 계약 정보를 확인해주세요.",
+          "error"
+        );
+        return;
+      }
+
+      // 근로자 정보 조회하여 카카오페이 링크 가져오기
+      try {
+        const workerData = await workerService.getWorkerById(workerId);
+        const kakaoPayLink = workerData?.kakaoPayLink;
+
+        if (!kakaoPayLink) {
+          Swal.fire(
+            "알림",
+            "해당 근로자의 카카오페이 송금 링크가 등록되어 있지 않습니다.",
+            "info"
+          );
+          return;
+        }
+
+        // 카카오페이 송금 링크로 이동
+        window.open(kakaoPayLink, "_blank");
+      } catch (workerError) {
+        console.error("근로자 정보 조회 실패:", workerError);
+        // 권한 문제일 수 있으므로 workerCode로 재시도
+        if (currentSelectedWorker?.workerCode) {
+          try {
+            const workerDataByCode = await workerService.getWorkerByCode(
+              currentSelectedWorker.workerCode
+            );
+            const kakaoPayLink = workerDataByCode?.kakaoPayLink;
+
+            if (!kakaoPayLink) {
+              Swal.fire(
+                "알림",
+                "해당 근로자의 카카오페이 송금 링크가 등록되어 있지 않습니다.",
+                "info"
+              );
+              return;
+            }
+
+            // 카카오페이 송금 링크로 이동
+            window.open(kakaoPayLink, "_blank");
+          } catch (codeError) {
+            console.error("근로자 코드로 조회 실패:", codeError);
+            Swal.fire(
+              "오류",
+              "근로자 정보에 접근할 수 없습니다. 권한을 확인해주세요.",
+              "error"
+            );
+          }
+        } else {
+          Swal.fire(
+            "오류",
+            "근로자 정보에 접근할 수 없습니다. 권한을 확인해주세요.",
+            "error"
+          );
+        }
+      }
+    } catch (error) {
+      console.error("카카오페이 링크 조회 실패:", error);
+      Swal.fire(
+        "오류",
+        "카카오페이 링크를 불러오는 중 오류가 발생했습니다.",
+        "error"
+      );
+    }
   };
 
   const handleRecordClick = (index) => {
