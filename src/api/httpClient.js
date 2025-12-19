@@ -26,7 +26,7 @@ const getAuthHeaders = () => {
 // 새로운 access token을 저장하는 헬퍼 함수
 const saveNewAccessToken = (newAccessToken) => {
   localStorage.setItem('token', newAccessToken);
-  
+
   // Redux에 저장 (기존 userId, name, userType 유지)
   const currentState = store.getState().auth;
   store.dispatch(setAuthToken({
@@ -35,7 +35,7 @@ const saveNewAccessToken = (newAccessToken) => {
     name: currentState.name,
     userType: currentState.userType,
   }));
-  
+
 };
 
 // Refresh token 실패 시 로그아웃 처리 (idempotent)
@@ -44,19 +44,19 @@ const handleRefreshTokenFailure = () => {
   if (isHandlingRefreshFailure) {
     return;
   }
-  
+
   isHandlingRefreshFailure = true;
-  
+
   try {
     // localStorage 초기화
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('name');
     localStorage.removeItem('userType');
-    
+
     // Redux 초기화
     store.dispatch(clearAuth());
-    
+
     // 로그인 페이지로 리다이렉트
     if (typeof window !== 'undefined') {
       window.location.href = '/';
@@ -124,7 +124,7 @@ const httpClient = {
       handleNetworkError(error);
     }
   },
-  
+
   async post(url, data, options = {}) {
     try {
       const authHeaders = getAuthHeaders();
@@ -135,15 +135,15 @@ const httpClient = {
       if (options.headers && options.headers.Authorization === undefined) {
         delete headers.Authorization;
       }
-      
+
       // Content-Type이 명시적으로 설정되지 않았으면 application/json으로 설정
       if (!headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
       }
-      
+
       // options에서 headers를 제외한 나머지만 사용
       const { headers: _, ...restOptions } = options;
-      
+
       const fullUrl = `${API_BASE_URL}${url}`;
       const requestBody = JSON.stringify(data);
 
@@ -290,9 +290,9 @@ const httpClient = {
       }
     }
 
-    // 401 에러 처리: Refresh token으로 토큰 갱신 후 재시도
-    // 403(Forbidden)은 권한 문제(비즈니스 로직)일 수 있으므로 토큰 갱신/로그아웃을 트리거하지 않음
-    if (response.status === 401 && !originalRequest) {
+    // 401(Unauthorized) 또는 403(Forbidden) 에러 처리: Refresh token으로 토큰 갱신 후 재시도
+    // 403은 권한 문제일 수도 있지만, 사용자의 요청에 따라 토큰 갱신을 시도함
+    if ((response.status === 401 || response.status === 403) && !originalRequest) {
 
       // 이미 refresh token 요청 중이면 대기
       if (isRefreshing && refreshPromise) {
@@ -318,7 +318,7 @@ const httpClient = {
           throw refreshError;
         }
       }
-      
+
       // Refresh token 요청 시작
       isRefreshing = true;
       refreshPromise = refreshAccessToken()
@@ -334,7 +334,7 @@ const httpClient = {
           handleRefreshTokenFailure();
           throw refreshError;
         });
-      
+
       await refreshPromise;
       // 토큰 갱신 성공 - 원래 요청 재시도는 호출한 곳에서 처리
       throw {
@@ -351,14 +351,14 @@ const httpClient = {
         shouldRetry: true, // 재시도 플래그
       };
     }
-    
+
     // response.ok가 false이고, 응답 데이터에 success가 false이거나 없으면 에러로 처리
     if (!response.ok) {
       // 백엔드가 success: true로 응답하는 경우 (404도 정상 응답으로 처리)
       if (data.success === true) {
         return data;
       }
-      
+
       // success가 false이거나 없으면 에러로 throw
       const error = {
         ...data,
@@ -373,7 +373,7 @@ const httpClient = {
         errorMessage: data.error?.message,
         fullErrorData: data,
       };
-      
+
       console.error('[httpClient] 에러로 처리됨:', error);
       if (response.status === 500) {
         console.error('[httpClient] ⚠️ 500 서버 에러 상세 정보:');
@@ -383,10 +383,10 @@ const httpClient = {
         console.error('[httpClient] - 원본 응답 텍스트:', text);
         console.error('[httpClient] 💡 백엔드 로그를 확인하세요!');
       }
-      
+
       throw error;
     }
-    
+
     // 200 응답인 경우
     return data;
   },
