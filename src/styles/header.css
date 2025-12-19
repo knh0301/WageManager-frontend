@@ -1,7 +1,8 @@
 /* 상단 헤더 스타일 */
 .header-bar {
   width: 100%;
-  background-color: #769fcd; /* 이미지의 상단 바 색상 */
+  background-color: #769fcd;
+  /* 이미지의 상단 바 색상 */
   color: white;
   padding: 15px 30px;
   display: flex;
@@ -28,7 +29,7 @@
   object-fit: contain;
 }
 
-.header-bar > div,
+.header-bar>div,
 .header-right {
   display: flex;
   align-items: center;
@@ -68,4 +69,23 @@
 
 .header-bar a:hover {
   text-decoration: underline;
+}
+
+/* 알림 배지 */
+.header-notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }

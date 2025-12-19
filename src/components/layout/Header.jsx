@@ -11,6 +11,7 @@ import logoImage from "../../image/logo.png";
 
 export default function Header() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const notificationButtonRef = useRef(null);
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ export default function Header() {
   // Redux에서 사용자 정보 가져오기
   const authState = useSelector((state) => state.auth);
   const userName = authState.name;
+  const userType = authState.userType || localStorage.getItem('userType');
   const accessToken = authState.accessToken || localStorage.getItem('token');
 
   const toggleNotification = () => {
@@ -29,25 +31,37 @@ export default function Header() {
     setIsNotificationOpen(false);
   };
 
+  const handleLogoClick = () => {
+    if (userType === 'EMPLOYER') {
+      navigate('/employer/daily-calendar');
+    } else {
+      navigate('/worker/monthly-calendar');
+    }
+  };
+
+  const handleUnreadCountChange = (count) => {
+    setUnreadCount(count);
+  };
+
   const handleLogout = async () => {
     try {
       // 이미 정의된 accessToken 사용
       const response = await logout(accessToken);
-      
+
       // 200 응답인 경우
       if (response.success && response.data) {
         // Redux 상태 초기화
         dispatch(clearAuth());
-        
+
         // LocalStorage 초기화
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
         localStorage.removeItem('name');
         localStorage.removeItem('userType');
-        
+
         // 성공 메시지 표시
         toast.success('로그아웃이 완료되었습니다.');
-        
+
         // 로그인 페이지로 이동
         navigate('/');
       } else {
@@ -57,7 +71,7 @@ export default function Header() {
         localStorage.removeItem('userId');
         localStorage.removeItem('name');
         localStorage.removeItem('userType');
-        
+
         const errorMessage = response.error?.message || '로그아웃 처리 중 오류가 발생했습니다.';
         const errorCode = response.error?.code || 'UNKNOWN';
         toast.error(`[${errorCode}] ${errorMessage}`);
@@ -70,16 +84,16 @@ export default function Header() {
       const errorCode = error.error?.code || error.errorCode || 'UNKNOWN';
       const statusCode = error.status || error.response?.status || '';
       const statusText = statusCode ? `[${statusCode}]` : '';
-      
+
       toast.error(`${statusText} [${errorCode}] ${errorMessage}`);
-      
+
       // 에러가 발생해도 로컬 상태는 초기화 (보안상 안전)
       dispatch(clearAuth());
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       localStorage.removeItem('name');
       localStorage.removeItem('userType');
-      
+
       // 로그인 페이지로 이동
       navigate('/');
     }
@@ -109,7 +123,13 @@ export default function Header() {
 
   return (
     <header className="header-bar">
-      <img src={logoImage} alt="월급 관리소" className="header-logo" />
+      <img
+        src={logoImage}
+        alt="월급 관리소"
+        className="header-logo"
+        onClick={handleLogoClick}
+        style={{ cursor: 'pointer' }}
+      />
       <div className="header-right">
         <div className="header-notification-wrapper" ref={notificationButtonRef}>
           <button
@@ -118,22 +138,26 @@ export default function Header() {
             onClick={toggleNotification}
           >
             <MdNotificationsNone />
+            {unreadCount > 0 && (
+              <span className="header-notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            )}
           </button>
           {isNotificationOpen && (
             <div ref={dropdownRef}>
               <NotificationDropdown
                 isOpen={isNotificationOpen}
                 onClose={closeNotification}
+                onUnreadCountChange={handleUnreadCountChange}
               />
             </div>
           )}
         </div>
         <span>{userName || '사용자'} 님</span>
-        <button 
+        <button
           onClick={handleLogout}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
+          style={{
+            background: 'none',
+            border: 'none',
             cursor: 'pointer',
             color: 'inherit',
             textDecoration: 'underline'

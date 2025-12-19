@@ -86,8 +86,87 @@
   white-space: nowrap;
 }
 
+.notification-page-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .notification-page-time {
   font-size: 12px;
   color: #9ca3af;
 }
 
+.notification-page-delete {
+  font-size: 12px;
+  color: #6b7280;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notification-page-delete:hover {
+  color: #ef4444;
+}
+
+/* 로딩 상태 */
+.notification-page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.notification-page-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #769fcd;
+  border-radius: 50%;
+  animation: notification-page-spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes notification-page-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 빈 상태 */
+.notification-page-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+/* 더 보기 버튼 */
+.notification-load-more {
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notification-load-more:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.notification-load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}

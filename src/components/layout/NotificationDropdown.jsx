@@ -1,56 +1,99 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { MdMic, MdAttachFile } from "react-icons/md";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { MdNotificationsNone } from "react-icons/md";
+import { getNotifications, markNotificationAsRead } from "../../api/notificationApi";
+import { formatDateTime } from "../../utils/dateUtils";
 import "../../styles/notificationDropdown.css";
 
-export default function NotificationDropdown({ isOpen, onClose }) {
+
+export default function NotificationDropdown({ isOpen, onClose, onUnreadCountChange }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 알림 데이터 가져오기
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
+
+  // 읽지 않은 알림들을 읽음 처리 (병렬 실행)
+  const markNotificationsAsRead = async (notificationsList) => {
+    const unreadNotifications = notificationsList.filter((n) => !n.isRead);
+
+    if (unreadNotifications.length === 0) return;
+
+    // 모든 읽음 처리 요청을 병렬로 실행
+    const results = await Promise.allSettled(
+      unreadNotifications.map((notification) => markNotificationAsRead(notification.id))
+    );
+
+    // 성공/실패 개수 계산
+    let successCount = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successCount++;
+      } else {
+        // 실패한 경우 에러 토스트 표시
+        const errorMessage = result.reason?.error?.message || result.reason?.message || "알림 읽음 처리에 실패했습니다.";
+        toast.error(errorMessage);
+      }
+    });
+
+    // 성공한 개수만큼 unreadCount 업데이트
+    if (successCount > 0 && onUnreadCountChange) {
+      const newUnreadCount = Math.max(0, unreadCount - successCount);
+      setUnreadCount(newUnreadCount);
+      onUnreadCountChange(newUnreadCount);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getNotifications({ size: 4, page: 1 });
+
+      if (response.success && response.data) {
+        const { notifications: apiNotifications, unreadCount: apiUnreadCount } = response.data;
+
+        // API 응답을 컴포넌트 형식으로 변환
+        const formattedNotifications = apiNotifications.map((notification) => ({
+          id: notification.id,
+          type: notification.type,
+          title: notification.title,
+          time: formatDateTime(notification.createdAt),
+          icon: MdNotificationsNone,
+          isRead: notification.isRead,
+        }));
+
+        setNotifications(formattedNotifications);
+        setUnreadCount(apiUnreadCount);
+
+        // 부모 컴포넌트에 unreadCount 전달
+        if (onUnreadCountChange) {
+          onUnreadCountChange(apiUnreadCount);
+        }
+
+        // 읽지 않은 알림들을 읽음 처리
+        await markNotificationsAsRead(apiNotifications);
+      }
+    } catch (error) {
+      // 에러 메시지 표시
+      const errorMessage = error.error?.message || error.message || "알림을 불러오는데 실패했습니다.";
+      toast.error(errorMessage);
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleViewAll = () => {
     onClose();
-    // 현재 경로가 /worker 또는 /employer로 시작하는지 확인
-    if (location.pathname.startsWith("/worker")) {
-      navigate("/worker/notifications");
-    } else if (location.pathname.startsWith("/employer")) {
-      navigate("/employer/notifications");
-    }
+    navigate("/notifications");
   };
-  // 임시 알림 데이터 (나중에 API로 교체)
-  const notifications = [
-    {
-      id: 1,
-      type: "announcement",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 공지사항이 등록되었습니다.",
-      time: "20분전",
-      icon: MdMic,
-    },
-    {
-      id: 2,
-      type: "file",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
-      icon: MdAttachFile,
-    },
-    {
-      id: 3,
-      type: "file",
-      title: "시스템 프로그래밍[202502-CSE3209-002]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "42분전",
-      icon: MdAttachFile,
-    },
-    {
-      id: 4,
-      type: "file",
-      title: "이산구조[202502-CSE1312-005]",
-      message: "새 파일이(가) 등록되었습니다.",
-      time: "2일전",
-      icon: MdAttachFile,
-    },
-  ];
 
   if (!isOpen) return null;
 
@@ -60,25 +103,36 @@ export default function NotificationDropdown({ isOpen, onClose }) {
       <div className="notification-dropdown">
         <div className="notification-header">
           <h3>전체 알림</h3>
+          {unreadCount > 0 && (
+            <span className="notification-unread-badge">{unreadCount}</span>
+          )}
         </div>
         <div className="notification-list">
-          {notifications.map((notification) => {
-            const Icon = notification.icon;
-            return (
-              <div key={notification.id} className="notification-item">
-                <div className="notification-icon-wrapper">
-                  <Icon className="notification-icon" />
-                </div>
-                <div className="notification-content">
-                  <div className="notification-title">{notification.title}</div>
-                  <div className="notification-message">
-                    {notification.message}
+          {isLoading ? (
+            <div className="notification-loading">
+              <div className="notification-spinner"></div>
+              <span>알림을 불러오는 중...</span>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="notification-empty">
+              <span>알림이 없습니다.</span>
+            </div>
+          ) : (
+            notifications.map((notification) => {
+              const Icon = notification.icon;
+              return (
+                <div key={notification.id} className="notification-item">
+                  <div className="notification-icon-wrapper">
+                    <Icon className="notification-icon" />
                   </div>
-                  <div className="notification-time">{notification.time}</div>
+                  <div className="notification-content">
+                    <div className="notification-title">{notification.title}</div>
+                    <div className="notification-time">{notification.time}</div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
         <div className="notification-footer">
           <button
