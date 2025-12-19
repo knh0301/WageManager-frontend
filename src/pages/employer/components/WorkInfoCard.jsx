@@ -146,21 +146,25 @@ export default function WorkInfoCard({
                     <div className="time-display">
                       {schedule ? (
                         <>
-                          {`${schedule.start} - ${schedule.end}`}
-                          {(() => {
-                            const [startHour, startMin] = schedule.start
-                              .split(":")
-                              .map(Number);
-                            const [endHour, endMin] = schedule.end
-                              .split(":")
-                              .map(Number);
-                            const startDecimal = startHour + startMin / 60;
-                            const endDecimal = endHour + endMin / 60;
-                            const crossesMidnight = endDecimal <= startDecimal;
-                            return crossesMidnight ? (
-                              <span className="overnight-label"> (익일)</span>
-                            ) : null;
-                          })()}
+                          <div className="time-start">{schedule.start}</div>
+                          <div className="time-end">
+                            {schedule.end}
+                            {(() => {
+                              const [startHour, startMin] = schedule.start
+                                .split(":")
+                                .map(Number);
+                              const [endHour, endMin] = schedule.end
+                                .split(":")
+                                .map(Number);
+                              const startDecimal = startHour + startMin / 60;
+                              const endDecimal = endHour + endMin / 60;
+                              const crossesMidnight =
+                                endDecimal <= startDecimal;
+                              return crossesMidnight ? (
+                                <span className="overnight-label"> (익일)</span>
+                              ) : null;
+                            })()}
+                          </div>
                         </>
                       ) : (
                         "휴무"
