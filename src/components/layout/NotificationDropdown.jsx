@@ -3,25 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { MdNotificationsNone } from "react-icons/md";
 import { getNotifications, markNotificationAsRead } from "../../api/notificationApi";
+import { formatDateTime } from "../../utils/dateUtils";
 import "../../styles/notificationDropdown.css";
 
-/**
- * 서버 시간 포맷을 한국어 형식으로 변환
- * @param {string} dateString - ISO 형식의 날짜 문자열 (예: 2025-12-18T00:40:37.565902)
- * @returns {string} 한국어 형식의 날짜 문자열 (예: 2025년 12월 18일 00:40)
- */
-const formatDateTime = (dateString) => {
-  if (!dateString) return "";
-
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
-};
 
 export default function NotificationDropdown({ isOpen, onClose, onUnreadCountChange }) {
   const navigate = useNavigate();
