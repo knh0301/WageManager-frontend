@@ -71,7 +71,7 @@
 | **최영찬** | Backend |
 
 ## Visit our Notion Page and Get the App (available only in South Korea).
-Notion: https://www.notion.so/GOAT-27b6550d6d4480019236d1a9d4c9ef54?source=copy_link
+Notion: [click](https://www.notion.so/GOAT-27b6550d6d4480019236d1a9d4c9ef54?source=copy_link)
 
 ## 📁 프로젝트 구조
 
