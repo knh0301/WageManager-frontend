@@ -1,5 +1,6 @@
 # WageManager
 <img src="./src/assets/wagemanager.png">
+
 ## 🎯 목표
 
 단기 근로자와 소규모 자영업 고용주를 위한 투명하고 간편한 급여 관리 솔루션 제공
